@@ -3,9 +3,11 @@
 #include "Content/pch.h"
 
 #include <Content/framework.h>
-#include <Content/Resource.h>
 
 #include <Engine/EngineMain.h>
+
+#include <Engine/Manager/SceneManager.h>
+#include <Content/TestScene.h>
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -14,6 +16,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 {
     using namespace engine;
     EngineMain::GetInst().Init(hInstance);
+
+    SceneManager::GetInst().ChangeScene(std::make_shared<TestScene>());
 
     return EngineMain::GetInst().Run();
 }
