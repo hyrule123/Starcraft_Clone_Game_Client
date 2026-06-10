@@ -4,9 +4,9 @@
 #include <Engine/Manager/GraphicsDevice.h>
 #include <Engine/Manager/ResourceManager.h>
 #include <Engine/Resource/Mesh/Mesh.h>
-#include <Engine/Resource/Graphics/InputLayout.h>
-#include <Engine/Resource/Graphics/VertexShader.h>
-#include <Engine/Resource/Graphics/PixelShader.h>
+#include <Engine/Resource/GraphicsPipeline/InputLayout.h>
+#include <Engine/Resource/GraphicsPipeline/VertexShader.h>
+#include <Engine/Resource/GraphicsPipeline/PixelShader.h>
 
 
 namespace engine

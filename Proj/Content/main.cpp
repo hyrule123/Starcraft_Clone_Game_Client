@@ -4,7 +4,7 @@
 
 #include <Content/framework.h>
 
-#include <Engine/EngineMain.h>
+#include <Engine/Core/EngineMain.h>
 
 #include <Engine/Manager/SceneManager.h>
 #include <Content/TestScene.h>
