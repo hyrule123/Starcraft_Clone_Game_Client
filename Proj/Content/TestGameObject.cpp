@@ -5,6 +5,7 @@
 #include <Engine/Game/Component/Renderer.h>
 
 #include <Engine/Resource/Mesh/Mesh.h>
+#include <Engine/Resource/Material/Material.h>
 
 #include <Engine/Manager/ResourceManager.h>
 
@@ -26,10 +27,13 @@ namespace engine
 		auto renderer = AddComponent<Renderer>();
 
 		auto& resmgr = ResourceManager::GetInst();
-		s_ptr<Mesh> debugmesh = resmgr.Find<Mesh>("DebugMesh");
+		s_ptr<Mesh> mesh = resmgr.Find<Mesh>("Debug_Mesh");
+		s_ptr<Material> material = resmgr.Find<Material>("Debug_Material");
 
-		ASSERT(debugmesh);
+		ASSERT(mesh);
+		ASSERT(material);
 
-		renderer->SetMesh(debugmesh);
+		renderer->SetMesh(mesh);
+		renderer->SetMaterial(material);
 	}
 }
