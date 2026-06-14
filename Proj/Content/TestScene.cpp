@@ -8,11 +8,18 @@
 #include <Engine/Resource/GraphicsPipeline/VertexShader.h>
 #include <Engine/Resource/GraphicsPipeline/PixelShader.h>
 
+#include <Engine/Game/GameObject.h>
+#include <Engine/Game/Component/Transform.h>
+#include <Engine/Game/Component/Script.h>
+
+#include <Engine/Core/Debug.h>
+
+#include <Content/TestGameObject.h>
 
 namespace engine
 {
 	TestScene::TestScene()
-		: Scene("TestScene")
+		: Scene(STRINGIFY(TestScene))
 	{
 	}
 
@@ -22,31 +29,32 @@ namespace engine
 
 	void TestScene::Init()
 	{
-		Scene::Init();
+		Super::Init();
 
-		auto& resmgr = ResourceManager::GetInst();
+		s_ptr<TestGameObject> testobj = std::make_shared<TestGameObject>();
 
-		il_ = resmgr.Find<InputLayout>("Debug_IL");
-		vs_ = resmgr.Find<VertexShader>("Shader/Debug_VS.cso");
-		ps_ = resmgr.Find<PixelShader>("Shader/Debug_PS.cso");
-		msh_ = resmgr.Find<Mesh>("DebugMesh");
+		AddGameObject(testobj);
 
-		if (!(il_ && vs_ && ps_ && msh_))
-		{
-			ERROR_MESSAGE("뭔가 로딩 안됨");
-		}
+		//GameObject
+		s_ptr<GameObject> obj = std::make_shared<GameObject>();
+
+		auto tr = obj->AddComponent<Transform>();
+
+		auto sc = obj->AddComponent<Script>();
+
+		AddGameObject(obj);
+
+		int a = 3;
+	}
+	void TestScene::Update()
+	{
+		Super::Update();
 	}
 	void TestScene::Render()
 	{
-		Scene::Render();
+		Super::Render();
 
-		auto context = GraphicsDevice::GetInst().GetContext();
 
-		il_->Bind(context);
-		vs_->Bind(context);
-		ps_->Bind(context);
-
-		msh_->Render();
 	}
 }
 
