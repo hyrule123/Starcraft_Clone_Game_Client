@@ -1,6 +1,8 @@
 #include "Content/pch.h"
 #include "TestGameObject.h"
 
+#include <Content/ControlScript.h>
+
 #include <Engine/Game/Component/Transform.h>
 #include <Engine/Game/Component/Renderer.h>
 
@@ -35,5 +37,7 @@ namespace engine
 
 		renderer->SetMesh(mesh);
 		renderer->SetMaterial(material);
+
+		AddComponent<ControlScript>();
 	}
 }

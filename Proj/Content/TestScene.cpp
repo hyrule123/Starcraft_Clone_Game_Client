@@ -10,7 +10,6 @@
 
 #include <Engine/Game/GameObject.h>
 #include <Engine/Game/Component/Transform.h>
-#include <Engine/Game/Component/Script.h>
 
 #include <Engine/Core/Debug.h>
 
@@ -39,8 +38,6 @@ namespace engine
 		s_ptr<GameObject> obj = std::make_shared<GameObject>();
 
 		auto tr = obj->AddComponent<Transform>();
-
-		auto sc = obj->AddComponent<Script>();
 
 		AddGameObject(obj);
 
