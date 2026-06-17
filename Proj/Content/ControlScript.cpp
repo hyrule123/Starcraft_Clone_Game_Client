@@ -19,6 +19,11 @@ namespace engine
 	{
 		Super::Update();
 
+		KeyDownDebug();
+		//MousePosDebug();
+	}
+	void ControlScript::KeyDownDebug()
+	{
 		const auto& down_keys = InputManager::GetInst().GetDownKeys();
 		const auto& pressed_keys = InputManager::GetInst().GetPressedKeys();
 		const auto& up_keys = InputManager::GetInst().GetUpKeys();
@@ -28,7 +33,7 @@ namespace engine
 			if (down_keys[i])
 			{
 				std::string msg;
-				msg += kKeyCodeNames[i]; 
+				msg += kKeyCodeNames[i];
 				msg += " Key Down!";
 				DEBUG_LOG_A(msg.c_str());
 			}
@@ -45,10 +50,18 @@ namespace engine
 			{
 				std::string msg;
 				msg += kKeyCodeNames[i];
-				msg	+= " Key Up!";
+				msg += " Key Up!";
 				DEBUG_LOG_A(msg.c_str());
 			}
 		}
+	}
+	void ControlScript::MousePosDebug()
+	{
+		int32_2 mousepos = InputManager::GetInst().GetMousePos();
+		std::string msg = "Mouse Pos: x(";
+		msg += std::to_string(mousepos.x) + ") (";
+		msg += std::to_string(mousepos.y) + ")";
+		DEBUG_LOG_A(msg.c_str());
 	}
 }
 

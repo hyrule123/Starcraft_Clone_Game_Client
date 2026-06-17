@@ -16,6 +16,10 @@ namespace engine
         virtual void Update() override;
 
     private:
+        void KeyDownDebug();
+        void MousePosDebug();
+
+    private:
         
     };
 }
