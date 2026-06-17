@@ -25,7 +25,6 @@ namespace engine
 	{
 		Super::Init();
 
-		AddComponent<Transform>();
 		auto renderer = AddComponent<Renderer>();
 
 		auto& resmgr = ResourceManager::GetInst();

@@ -34,13 +34,6 @@ namespace engine
 
 		AddGameObject(testobj);
 
-		//GameObject
-		s_ptr<GameObject> obj = std::make_shared<GameObject>();
-
-		auto tr = obj->AddComponent<Transform>();
-
-		AddGameObject(obj);
-
 		int a = 3;
 	}
 	void TestScene::Update()

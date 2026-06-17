@@ -2,8 +2,11 @@
 #include "ControlScript.h"
 
 #include <Engine/Manager/InputManager.h>
+#include <Engine/Manager/TimeManager.h>
 
 #include <Engine/Core/Debug.h>
+
+#include <Engine/Game/Component/Transform.h>
 
 namespace engine
 {
@@ -19,7 +22,38 @@ namespace engine
 	{
 		Super::Update();
 
-		KeyDownDebug();
+		InputManager& input = InputManager::GetInst();
+		float dt = TimeManager::GetInst().DeltaTime();
+		
+		s_ptr<Transform> tr = GetComponent<Transform>();
+		float3 pos = tr->GetLocalPosition();
+
+		if (input.GetKey(KeyCode::kUp))
+		{
+			pos.y += dt * 10.0f;
+		}
+		else if (input.GetKey(KeyCode::kDown))
+		{
+			pos.y -= dt * 10.0f;
+		}
+
+		if (input.GetKey(KeyCode::kLeft))
+		{
+			pos.x -= dt * 10.0f;
+		}
+		else if (input.GetKey(KeyCode::kRight))
+		{
+			pos.x += dt * 10.0f;
+		}
+
+		tr->SetLocalPosition(pos);
+
+
+		int a = 3;
+		//input.GetKey()
+
+
+		//KeyDownDebug();
 		//MousePosDebug();
 	}
 	void ControlScript::KeyDownDebug()
