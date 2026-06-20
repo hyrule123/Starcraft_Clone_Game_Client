@@ -13,6 +13,7 @@ namespace engine
         ControlScript();
         virtual ~ControlScript() override;
 
+        virtual void Awake() override;
         virtual void Update() override;
 
     private:

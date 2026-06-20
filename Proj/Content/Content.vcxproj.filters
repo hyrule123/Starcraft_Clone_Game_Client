@@ -67,4 +67,7 @@
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Dummy.hlsl" />
+  </ItemGroup>
 </Project>

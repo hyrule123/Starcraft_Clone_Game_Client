@@ -10,6 +10,7 @@
 
 #include <Engine/Game/GameObject.h>
 #include <Engine/Game/Component/Transform.h>
+#include <Engine/Game/Component/Camera.h>
 
 #include <Engine/Core/Debug.h>
 
@@ -30,11 +31,10 @@ namespace engine
 	{
 		Super::Init();
 
-		s_ptr<TestGameObject> testobj = std::make_shared<TestGameObject>();
+		s_ptr<GameObject> camobj = AddGameObject<GameObject>();
+		camobj->AddComponent<Camera>();
 
-		AddGameObject(testobj);
-
-		int a = 3;
+		s_ptr<TestGameObject> testobj = AddGameObject<TestGameObject>();
 	}
 	void TestScene::Update()
 	{
