@@ -13,8 +13,6 @@ namespace engine
         virtual ~TestScene() override;
 
         virtual void Init() override;
-        virtual void Update() override;
-        virtual void Render() override;
     private:
     };
 }

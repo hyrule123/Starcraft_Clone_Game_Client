@@ -3,6 +3,7 @@
 
 #include <Engine/Manager/GraphicsDevice.h>
 #include <Engine/Manager/ResourceManager.h>
+
 #include <Engine/Resource/Mesh/Mesh.h>
 #include <Engine/Resource/GraphicsPipeline/InputLayout.h>
 #include <Engine/Resource/GraphicsPipeline/VertexShader.h>
@@ -31,20 +32,10 @@ namespace engine
 	{
 		Super::Init();
 
-		s_ptr<GameObject> camobj = AddGameObject<GameObject>();
-		camobj->AddComponent<Camera>();
-
 		s_ptr<TestGameObject> testobj = AddGameObject<TestGameObject>();
-	}
-	void TestScene::Update()
-	{
-		Super::Update();
-	}
-	void TestScene::Render()
-	{
-		Super::Render();
 
-
+		s_ptr<GameObject> camobj = AddGameObject<GameObject>();
+		auto cam = camobj->AddComponent<Camera>();
 	}
 }
 
