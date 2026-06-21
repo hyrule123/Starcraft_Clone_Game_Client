@@ -372,3 +372,10 @@ FodyWeavers.xsd
 *.[iI][dD][bB]
 ## HLSL Compiled Shader
 *.[cC][sS][oO]
+
+#Resource directory
+Res/
+
+#External
+External/*
+!External/Dummy.txt
