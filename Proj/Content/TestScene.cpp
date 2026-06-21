@@ -8,6 +8,7 @@
 #include <Engine/Resource/GraphicsPipeline/InputLayout.h>
 #include <Engine/Resource/GraphicsPipeline/VertexShader.h>
 #include <Engine/Resource/GraphicsPipeline/PixelShader.h>
+#include <Engine/Resource/Texture2D.h>
 
 #include <Engine/Game/GameObject.h>
 #include <Engine/Game/Component/Transform.h>
@@ -36,6 +37,10 @@ namespace engine
 
 		s_ptr<GameObject> camobj = AddGameObject<GameObject>();
 		auto cam = camobj->AddComponent<Camera>();
+
+		ResourceManager::GetInst().LoadFromFile<Texture2D>("Texture2D/Magenta.png");
+
+		int a = 3;
 	}
 }
 

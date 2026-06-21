@@ -74,29 +74,33 @@
     <OutDir>$(SolutionDir)Bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)BinObj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)..</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(SolutionDir)BinLib\$(Platform)\$(Configuration)</LibraryPath>
     <MultiProcFXC>true</MultiProcFXC>
+    <LibraryPath>$(SolutionDir)BinLib\$(Platform)\$(Configuration);$(SolutionDir)External;$(LibraryPath)</LibraryPath>
+    <ExternalIncludePath>$(SolutionDir)External;$(ExternalIncludePath)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)Bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)BinObj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)..</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(SolutionDir)BinLib\$(Platform)\$(Configuration)</LibraryPath>
     <MultiProcFXC>true</MultiProcFXC>
+    <LibraryPath>$(SolutionDir)BinLib\$(Platform)\$(Configuration);$(SolutionDir)External;$(LibraryPath)</LibraryPath>
+    <ExternalIncludePath>$(SolutionDir)External;$(ExternalIncludePath)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)Bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)BinObj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)..</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(SolutionDir)BinLib\$(Platform)\$(Configuration)</LibraryPath>
     <MultiProcFXC>true</MultiProcFXC>
+    <LibraryPath>$(SolutionDir)BinLib\$(Platform)\$(Configuration);$(SolutionDir)External;$(LibraryPath)</LibraryPath>
+    <ExternalIncludePath>$(SolutionDir)External;$(ExternalIncludePath)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)Bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)BinObj\$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)..</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(SolutionDir)BinLib\$(Platform)\$(Configuration)</LibraryPath>
     <MultiProcFXC>true</MultiProcFXC>
+    <LibraryPath>$(SolutionDir)BinLib\$(Platform)\$(Configuration);$(SolutionDir)External;$(LibraryPath)</LibraryPath>
+    <ExternalIncludePath>$(SolutionDir)External;$(ExternalIncludePath)</ExternalIncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
