@@ -14,7 +14,6 @@ namespace engine
         virtual void Init() override;
 
     private:
-
     };
 }
 
