@@ -36,7 +36,6 @@ namespace engine
 		
 		s_ptr<Texture2D> tex = resmgr.LoadFromFile<Texture2D>("Texture2D/Magenta.png");
 		material->SetTexture(tex, SLOT_T_BASE_COLOR);
-		
 
 		ASSERT(mesh);
 		ASSERT(material);
