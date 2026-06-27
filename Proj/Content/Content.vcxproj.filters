@@ -36,6 +36,9 @@
     <ClInclude Include="ControlScript.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TerranMarine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -51,6 +54,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ControlScript.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TerranMarine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
