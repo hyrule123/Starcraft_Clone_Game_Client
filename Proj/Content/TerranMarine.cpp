@@ -3,7 +3,7 @@
 
 #include <Engine/Manager/ResourceManager.h>
 
-#include <Engine/Resource/Graphics/Buffer/Texture2D.h>
+#include <Engine/Resource/Graphics/Buffer/SpriteTextureArray.h>
 #include <Engine/Resource/Graphics/Material.h>
 
 #include <Engine/Game/Component/Transform.h>
@@ -33,10 +33,11 @@ namespace engine
 			mtrl_ = ResourceManager::GetInst().Find<Material>("Sprite_Material")->Clone();
 			ResourceManager::GetInst().AddResource("Marine_Material", mtrl_);
 
-			s_ptr<Texture2D> marine_tex = ResourceManager::GetInst().LoadFromFile<Texture2D>("Texture2D/SC/Terran/Marine.bmp");
+			s_ptr<SpriteTextureArray> marine_tex = ResourceManager::GetInst().LoadFromFile<SpriteTextureArray>("Texture2D/SC/Terran/Marine.bmp");
+			marine_tex->CreateSpriteFromAtlas(14, 17);
+
 			mtrl_->SetTextures({ marine_tex, });
 		}
-
 		auto sprdr = AddComponent<SpriteRenderer>();
 		sprdr->SetMaterial(mtrl_);
 	}
