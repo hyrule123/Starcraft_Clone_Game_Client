@@ -5,6 +5,7 @@
 
 namespace engine
 {
+    class SpriteAnimation;
     class Material;
     class TerranMarine :
         public GameObject
@@ -17,7 +18,7 @@ namespace engine
         virtual void Init() override;
 
     private:
-        s_ptr<Material> mtrl_ = {};
+        s_ptr<SpriteAnimation> anim_ = {};
     };
 }
 
