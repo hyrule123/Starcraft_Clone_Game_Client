@@ -4,7 +4,8 @@
 #include <Engine/Manager/ResourceManager.h>
 
 #include <Engine/Resource/Graphics/Buffer/Texture2DArray.h>
-#include <Engine/Resource/Graphics/Material.h>
+
+#include <Engine/Resource/SpriteAnimClip.h>
 #include <Engine/Resource/SpriteAnimation.h>
 
 #include <Engine/Game/Component/Transform.h>
@@ -27,7 +28,7 @@ namespace engine
 		Super::Init();
 
 		auto tr = GetTransform();
-		tr->SetLocalScale({ 1000.f, 1000.f, 1.0f });
+		tr->SetLocalScale({ 300.0f, 300.0f, 1.0f });
 		tr->SetLocalPosition({ 10.0f, 10.0f, 10.0f });
 
 		auto renderer = AddComponent<SpriteRenderer>();
@@ -49,14 +50,15 @@ namespace engine
 			res_mgr.AddResource("Marine_SpriteAnimation", anim_);
 			anim_->SetSprite(marine_sprite);
 
-			AnimationClip clip = {};
+			s_ptr<SpriteAnimClip> clip = std::make_shared<SpriteAnimClip>();
+			std::vector<uint32> frames = {};
 			for (uint32 i = 0; i < 9; ++i)
 			{
 				uint32 frame = 68u + 17u * i;
-				clip.frames.push_back(frame);
+				frames.push_back(frame);
 			}
-			clip.duration = 2.0f;
-			clip.is_loop = true;
+			clip->AddFrames(frames, 0.75f);
+			clip->SetLoop(true);
 
 			anim_->AddAnimationClip("Walk_Forward", clip);
 		}
