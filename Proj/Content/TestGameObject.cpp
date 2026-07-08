@@ -4,7 +4,7 @@
 #include <Content/ControlScript.h>
 
 #include <Engine/Game/Component/Transform.h>
-#include <Engine/Game/Component/Renderer.h>
+#include <Engine/Game/Component/SpriteRenderer.h>
 
 #include <Engine/Resource/Graphics/Mesh.h>
 #include <Engine/Resource/Graphics/Material.h>
@@ -28,7 +28,7 @@ namespace engine
 	{
 		Super::Init();
 
-		auto renderer = AddComponent<Renderer>();
+		auto renderer = AddComponent<SpriteRenderer>();
 
 		auto& resmgr = ResourceManager::GetInst();
 		s_ptr<Mesh> mesh = resmgr.Find<Mesh>("Sprite_Mesh");
