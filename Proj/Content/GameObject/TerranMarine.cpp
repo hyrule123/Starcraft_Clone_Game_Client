@@ -10,17 +10,17 @@
 #include <Engine/Resource/Graphics/Material.h>
 
 #include <Engine/Game/Component/Transform.h>
-#include <Engine/Game/Component/SpriteRenderer.h>
-#include <Engine/Game/Component/SpriteAnimator.h>
 #include <Engine/Game/Component/HFSM.h>
 #include <Engine/Game/Component/Blackboard.h>
+
+#include <Engine/Core/Debug.h>
+
+#include <Content/Component/SCSpriteAnimator.h>
+#include <Content/Component/SCSpriteRenderer.h>
 
 #include <Content/Script/IdleState.h>
 #include <Content/Script/MoveState.h>
 #include <Content/Script/UnitInputHandler.h>
-
-#include <Engine/Core/Debug.h>
-
 
 namespace engine
 {
@@ -41,8 +41,8 @@ namespace engine
 		tr->SetLocalScale({ 300.0f, 300.0f, 1.0f });
 		tr->SetLocalPosition({ 10.0f, 10.0f, 10.0f });
 
-		auto renderer = AddComponent<SpriteRenderer>();
-		auto animator = AddComponent<SpriteAnimator>();
+		auto renderer = AddComponent<SCSpriteRenderer>();
+		auto animator = AddComponent<SCSpriteAnimator>();
 		auto hfsm = AddComponent<HFSM>();
 		auto blackboard = AddComponent<Blackboard>();
 		auto unit_input_handler = AddComponent<UnitInputHandler>();
@@ -152,7 +152,7 @@ namespace engine
 		//고유 Material이 없을 경우 새로 생성 후 Renderer에 텍스처 지정
 		if (!mtrl)
 		{
-			mtrl = res_mgr.Find<Material>("Material_Sprite"_hash);
+			mtrl = res_mgr.Find<Material>("Material_SCSprite"_hash);
 			ASSERT((bool)mtrl);
 			mtrl = mtrl->Clone();
 			mtrl->SetTextures({ anim_->GetSprite(), });

@@ -7,7 +7,7 @@
 #include <Engine/Core/EngineMain.h>
 
 #include <Engine/Manager/SceneManager.h>
-#include <Content/Scene/TestScene.h>
+#include <Content/Scene/MainGameScene.h>
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -17,7 +17,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     using namespace engine;
     EngineMain::GetInst().Init(hInstance);
 
-    SceneManager::GetInst().ChangeScene(std::make_shared<TestScene>());
+    SceneManager::GetInst().ChangeScene(std::make_shared<MainGameScene>());
 
     return EngineMain::GetInst().Run();
 }

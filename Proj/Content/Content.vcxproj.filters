@@ -27,7 +27,7 @@
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Scene\TestScene.h">
+    <ClInclude Include="Scene\MainGameScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GameObject\TestGameObject.h">
@@ -60,6 +60,12 @@
     <ClInclude Include="Commands.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Component\SCSpriteRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Component\SCSpriteAnimator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -68,7 +74,7 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Scene\TestScene.cpp">
+    <ClCompile Include="Scene\MainGameScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GameObject\TestGameObject.cpp">
@@ -98,6 +104,12 @@
     <ClCompile Include="Script\MoveState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Component\SCSpriteRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Component\SCSpriteAnimator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Content.rc">
@@ -114,5 +126,10 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\Dummy.hlsl" />
+    <FxCompile Include="Shader\SCSprite_PS.hlsl" />
+    <FxCompile Include="Shader\SCSprite_VS.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shader\SCSprite.hlsli" />
   </ItemGroup>
 </Project>

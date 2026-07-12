@@ -4,16 +4,18 @@
 
 namespace engine
 {
-    class TestScene :
+    class MainGameScene :
         public Scene
     {
-        CLASS_INFO(TestScene, Scene)
+        CLASS_INFO(MainGameScene, Scene)
     public:
-        TestScene();
-        virtual ~TestScene() override;
+        MainGameScene();
+        virtual ~MainGameScene() override;
 
         virtual void Init() override;
     private:
+		void LoadResources();
+
     };
 }
 
