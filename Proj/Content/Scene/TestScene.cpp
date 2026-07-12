@@ -12,8 +12,8 @@
 
 #include <Engine/Core/Debug.h>
 
-#include <Content/TerranMarine.h>
-#include <Content/TerranMedic.h>
+#include <Content/GameObject/TerranMarine.h>
+#include <Content/GameObject/TerranMedic.h>
 
 namespace engine
 {

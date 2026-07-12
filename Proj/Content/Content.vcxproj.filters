@@ -27,19 +27,37 @@
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TestScene.h">
+    <ClInclude Include="Scene\TestScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TestGameObject.h">
+    <ClInclude Include="GameObject\TestGameObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ControlScript.h">
+    <ClInclude Include="Script\ControlScript.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TerranMarine.h">
+    <ClInclude Include="GameObject\TerranMarine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TerranMedic.h">
+    <ClInclude Include="GameObject\TerranMedic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\IdleState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\UnitController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\UnitInputHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\CommandHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\MoveState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Commands.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -50,19 +68,34 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TestScene.cpp">
+    <ClCompile Include="Scene\TestScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TestGameObject.cpp">
+    <ClCompile Include="GameObject\TestGameObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ControlScript.cpp">
+    <ClCompile Include="Script\ControlScript.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TerranMarine.cpp">
+    <ClCompile Include="GameObject\TerranMarine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TerranMedic.cpp">
+    <ClCompile Include="GameObject\TerranMedic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\IdleState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\UnitController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\UnitInputHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\CommandHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\MoveState.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -80,6 +113,6 @@
     </Image>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Dummy.hlsl" />
+    <FxCompile Include="Shader\Dummy.hlsl" />
   </ItemGroup>
 </Project>

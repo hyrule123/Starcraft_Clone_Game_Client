@@ -8,7 +8,7 @@ namespace engine
     class ControlScript :
         public Script
     {
-        CLASS_INFO(ControlScript, Script);
+        CLASS_INFO(ControlScript, Script)
     public:
         ControlScript();
         virtual ~ControlScript() override;

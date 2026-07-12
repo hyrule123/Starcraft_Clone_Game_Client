@@ -1,7 +1,7 @@
 #include "Content/pch.h"
 #include "TestGameObject.h"
 
-#include <Content/ControlScript.h>
+#include <Content/Script/ControlScript.h>
 
 #include <Engine/Game/Component/Transform.h>
 #include <Engine/Game/Component/SpriteRenderer.h>
@@ -30,18 +30,18 @@ namespace engine
 
 		auto renderer = AddComponent<SpriteRenderer>();
 
-		auto& resmgr = ResourceManager::GetInst();
-		s_ptr<Mesh> mesh = resmgr.Find<Mesh>("Sprite_Mesh");
-		s_ptr<Material> material = resmgr.Find<Material>("Sprite_Material");
-		
-		s_ptr<Texture2D> tex = resmgr.LoadFromFile<Texture2D>("Texture2D/Magenta.png");
-		material->SetTexture(tex, SLOT_T_BASE_COLOR);
+		//auto& resmgr = ResourceManager::GetInst();
+		//s_ptr<Mesh> mesh = resmgr.Find<Mesh>("Sprite_Mesh");
+		//s_ptr<Material> material = resmgr.Find<Material>("Sprite_Material");
+		//
+		//s_ptr<Texture2D> tex = resmgr.LoadFromFile<Texture2D>("Texture2D/Magenta.png");
+		//material->SetTexture(tex, SLOT_T_BASE_COLOR);
 
-		ASSERT(mesh);
-		ASSERT(material);
+		//ASSERT(mesh);
+		//ASSERT(material);
 
-		renderer->SetMesh(mesh);
-		renderer->SetMaterial(material);
+		//renderer->SetMesh(mesh);
+		//renderer->SetMaterial(material);
 
 		AddComponent<ControlScript>();
 	}

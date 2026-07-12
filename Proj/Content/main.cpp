@@ -7,7 +7,7 @@
 #include <Engine/Core/EngineMain.h>
 
 #include <Engine/Manager/SceneManager.h>
-#include <Content/TestScene.h>
+#include <Content/Scene/TestScene.h>
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,

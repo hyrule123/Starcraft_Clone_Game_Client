@@ -211,18 +211,27 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="ControlScript.h" />
+    <ClInclude Include="Commands.h" />
+    <ClInclude Include="Script\MoveState.h" />
+    <ClInclude Include="Script\CommandHandler.h" />
+    <ClInclude Include="Script\ControlScript.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="Script\IdleState.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="TerranMarine.h" />
-    <ClInclude Include="TerranMedic.h" />
-    <ClInclude Include="TestGameObject.h" />
-    <ClInclude Include="TestScene.h" />
+    <ClInclude Include="GameObject\TerranMarine.h" />
+    <ClInclude Include="GameObject\TerranMedic.h" />
+    <ClInclude Include="GameObject\TestGameObject.h" />
+    <ClInclude Include="Scene\TestScene.h" />
+    <ClInclude Include="Script\UnitController.h" />
+    <ClInclude Include="Script\UnitInputHandler.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ControlScript.cpp" />
+    <ClCompile Include="Script\MoveState.cpp" />
+    <ClCompile Include="Script\CommandHandler.cpp" />
+    <ClCompile Include="Script\ControlScript.cpp" />
+    <ClCompile Include="Script\IdleState.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -230,10 +239,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="TerranMarine.cpp" />
-    <ClCompile Include="TerranMedic.cpp" />
-    <ClCompile Include="TestGameObject.cpp" />
-    <ClCompile Include="TestScene.cpp" />
+    <ClCompile Include="GameObject\TerranMarine.cpp" />
+    <ClCompile Include="GameObject\TerranMedic.cpp" />
+    <ClCompile Include="GameObject\TestGameObject.cpp" />
+    <ClCompile Include="Scene\TestScene.cpp" />
+    <ClCompile Include="Script\UnitController.cpp" />
+    <ClCompile Include="Script\UnitInputHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Content.rc" />
@@ -243,7 +254,7 @@
     <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Dummy.hlsl">
+    <FxCompile Include="Shader\Dummy.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
