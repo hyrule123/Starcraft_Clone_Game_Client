@@ -11,7 +11,8 @@ namespace engine
 		MoveState();
 		virtual ~MoveState() override;
 
-
+		virtual void OnEnter() override;
+		virtual void OnExit() override;
     };
 }
 

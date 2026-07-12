@@ -7,12 +7,13 @@
 #include <Engine/Manager/TimeManager.h>
 
 #include <Engine/Game/Component/HFSM.h>
-#include <Engine/Game/Component/SpriteAnimator.h>
 #include <Engine/Game/Component/Blackboard.h>
 
 #include <Engine/Util/StringHashTable.h>
 
 #include <array>
+
+#include <Content/Component/SCSpriteAnimator.h>
 
 namespace engine
 {
@@ -51,10 +52,16 @@ namespace engine
 		//IdleState에 진입했을 때 수행할 로직 작성
 		DEBUG_LOG("IdleState::OnEnter() called.");
 
-		animator_ = GetOwnerHFSM()->GetOwner()->GetComponent<SpriteAnimator>();
+		animator_ = GetOwnerHFSM()->GetOwner()->GetComponent<SCSpriteAnimator>();
 		ASSERT(!animator_.expired());
 
 		animator_.lock()->Play("Idle_0"_hash);
+	}
+	void IdleState::OnExit()
+	{
+		Super::OnExit();
+
+		DEBUG_LOG("IdleState::OnExit() called.");
 	}
 	void IdleState::OnUpdate()
 	{
@@ -78,7 +85,7 @@ namespace engine
 
 		if (dest)
 		{
-			int a = 3;
+			return "Move"_hash;
 		}
 
 

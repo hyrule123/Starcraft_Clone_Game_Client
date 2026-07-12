@@ -5,7 +5,7 @@
 
 namespace engine
 {
-	class SpriteAnimator;
+	class SCSpriteAnimator;
 
     class IdleState :
         public HFSMState
@@ -16,6 +16,7 @@ namespace engine
 		virtual ~IdleState() override;
 
 		virtual void OnEnter() override;
+		virtual void OnExit() override;
 		virtual void OnUpdate() override;
 
 		virtual HashedStringView CheckTransition() override;
@@ -25,7 +26,7 @@ namespace engine
 		float acc_time_ = 0.0f;
 		uint32 cur_dir_idx_ = 0u;
 
-		w_ptr<SpriteAnimator> animator_ = {};
+		w_ptr<SCSpriteAnimator> animator_ = {};
     };
 }
 
