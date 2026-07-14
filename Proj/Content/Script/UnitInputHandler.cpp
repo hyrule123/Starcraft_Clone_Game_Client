@@ -7,9 +7,12 @@
 
 #include <Engine/Game/Component/Camera.h>
 #include <Engine/Game/Component/Transform.h>
+
 #include <Engine/Game/Component/Blackboard.h>
 
 #include <Engine/Core/Debug.h>
+
+#include <Content/SCConstants/Command.h>
 
 namespace engine
 {
@@ -39,23 +42,21 @@ namespace engine
 			ASSERT(cam);
 
 			//1. 화면의 가운데가 원점 -> 일치시키기
-
+			//윈도우 기준 좌상단이 0, 0 / 게임 기준 좌상단 -width / 2, height / 2
+			//윈도우 기준 우하단이 width, height / 게임 기준 width / 2, height / 2
+			// 선형 변환 시 GameX = (WindowX - width / 2), GameY = (height / 2 - WindowY)
 			//일단은 스왑체인의 해상도를 사용
-			float2 screen_center = { GraphicsDevice::GetInst().GetResolutionWidth() / 2.0f, GraphicsDevice::GetInst().GetResolutionHeight() / 2.0f };
+			mouse_pos.x = mouse_pos.x - (float)(GraphicsDevice::GetInst().GetResolutionWidth()) * 0.5f;
+			mouse_pos.y = (float)(GraphicsDevice::GetInst().GetResolutionHeight()) * 0.5f - mouse_pos.y;
 
-			mouse_pos -= screen_center;
+			//여기에 카메라의 위치를 더해주면 월드 좌표계(Transform이 완성되지 않았으므로 일단은 LocalPosition으로) 기준 좌표로 변환됨
+			const auto& cam_pos = cam->GetOwner()->GetTransform()->GetLocalPosition();
+			mouse_pos.x += cam_pos.x;
+			mouse_pos.y += cam_pos.y;
 
-			//2. Y축 반전
-			mouse_pos.y = -mouse_pos.y;
-
-			//일단은 수동 계산
-			const auto& view_mat = cam->GetViewMatrix();
-			mouse_pos.x = mouse_pos.x - view_mat._41;
-			mouse_pos.y = mouse_pos.y - view_mat._42;
-
-			int a = 3;
-
-			blackboard_.lock()->SetValue("Destination"_hash, mouse_pos);
+			s_ptr<Blackboard> bb = blackboard_.lock();
+			
+			bb->SetValue("Command"_hash, Command(MoveCommand(mouse_pos)));
 		}
 	}
 }

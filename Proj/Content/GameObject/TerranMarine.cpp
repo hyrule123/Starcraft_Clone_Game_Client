@@ -4,7 +4,6 @@
 #include <Engine/Manager/ResourceManager.h>
 
 #include <Engine/Resource/Graphics/Buffer/Texture2DArray.h>
-
 #include <Engine/Resource/SpriteAnimClip.h>
 #include <Engine/Resource/SpriteAnimation.h>
 #include <Engine/Resource/Graphics/Material.h>
@@ -12,14 +11,18 @@
 #include <Engine/Game/Component/Transform.h>
 #include <Engine/Game/Component/HFSM.h>
 #include <Engine/Game/Component/Blackboard.h>
+#include <Engine/Game/Component/SpriteAnimator.h>
+#include <Engine/Game/Component/SpriteRenderer.h>
 
 #include <Engine/Core/Debug.h>
 
-#include <Content/Component/SCSpriteAnimator.h>
-#include <Content/Component/SCSpriteRenderer.h>
+#include <Content/Script/MovementController.h>
 
-#include <Content/Script/IdleState.h>
-#include <Content/Script/MoveState.h>
+#include <Content/HFSMState/UnitRoot.h>
+#include <Content/HFSMState/Idle.h>
+#include <Content/HFSMState/Locomotion.h>
+#include <Content/HFSMState/Move.h>
+
 #include <Content/Script/UnitInputHandler.h>
 
 namespace engine
@@ -39,20 +42,24 @@ namespace engine
 
 		auto tr = GetTransform();
 		tr->SetLocalScale({ 300.0f, 300.0f, 1.0f });
-		tr->SetLocalPosition({ 10.0f, 10.0f, 10.0f });
+		tr->SetLocalPosition({ -600.0f, 300.0f, 10.0f });
 
-		auto renderer = AddComponent<SCSpriteRenderer>();
-		auto animator = AddComponent<SCSpriteAnimator>();
+		auto renderer = AddComponent<SpriteRenderer>();
+		auto animator = AddComponent<SpriteAnimator>();
 		auto hfsm = AddComponent<HFSM>();
 		auto blackboard = AddComponent<Blackboard>();
 		auto unit_input_handler = AddComponent<UnitInputHandler>();
-		
+		auto movement_controller = AddComponent<MovementController>();
 
 		auto& res_mgr = ResourceManager::GetInst();
+
+		//읽기 전용 및 validation 예정, MovementController에서 사용할 용도
+		static std::vector<SpriteAnimClip*> move_clips = {};
 
 		anim_ = res_mgr.Find<SpriteAnimation>("Marine_SpriteAnimation"_hash);
 		if (!anim_)
 		{
+			move_clips.clear();
 			s_ptr<Texture2DArray> marine_sprite =
 				res_mgr.LoadFromFileWithoutAdd<Texture2DArray>("Texture2D/SC/Terran/marine.png"_hash);
 			ASSERT((bool)marine_sprite);
@@ -66,7 +73,9 @@ namespace engine
 			
 			std::vector<uint32> frames = {};
 			std::vector<SpriteAnimClip::Frame> frame_with_time = {};
-			//총 18개 direction
+			
+
+			//총 9개 direction
 			for (uint32 i = 0; i < 9; ++i)
 			{
 				//Idle
@@ -122,9 +131,11 @@ namespace engine
 
 				move_clip->AddFrames(frames, 0.4f);
 				move_clip->SetLoop(true);
+				move_clips.push_back(move_clip.get());	//MovementController에서 사용하기 위해서 raw pointer를 저장
 				HashedString move_clip_name = "Move_" + std::to_string(i);
 				anim_->AddAnimationClip(move_clip_name, std::move(move_clip));
 			}
+			movement_controller->SetMoveClips(move_clips);
 
 			//Death
 			u_ptr<SpriteAnimClip> death_clip = std::make_unique<SpriteAnimClip>();
@@ -152,7 +163,7 @@ namespace engine
 		//고유 Material이 없을 경우 새로 생성 후 Renderer에 텍스처 지정
 		if (!mtrl)
 		{
-			mtrl = res_mgr.Find<Material>("Material_SCSprite"_hash);
+			mtrl = res_mgr.Find<Material>("Material_Sprite"_hash);
 			ASSERT((bool)mtrl);
 			mtrl = mtrl->Clone();
 			mtrl->SetTextures({ anim_->GetSprite(), });
@@ -161,15 +172,19 @@ namespace engine
 		}
 		renderer->SetMaterial(mtrl);
 
-		auto idle_state = std::make_unique<IdleState>();
-		idle_state->SetParentState(hfsm->GetRootState());
-		
-		auto move_state = std::make_unique<MoveState>();
-		move_state->SetParentState(hfsm->GetRootState());
+		auto root_state = hfsm->AddState("UnitRoot"_hash, std::make_unique<UnitRoot>());
+		hfsm->SetRootState(root_state);
+		auto idle_state = hfsm->AddState("Idle"_hash, std::make_unique<Idle>());
+		auto locomotion_state = hfsm->AddState("Locomotion"_hash, std::make_unique<Locomotion>());
+		auto move_state = hfsm->AddState("Move"_hash, std::make_unique<Move>());
 
-		hfsm->AddState("Idle"_hash, std::move(idle_state));
-		hfsm->AddState("Move"_hash, std::move(move_state));
+		idle_state->SetParentState(root_state);
+		locomotion_state->SetParentState(root_state);
+		move_state->SetParentState(locomotion_state);
+		
 		hfsm->SetInitialState("Idle"_hash);
+
+		movement_controller->SetMoveClips(move_clips);
 	}
 }
 

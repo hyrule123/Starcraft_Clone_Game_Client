@@ -216,28 +216,29 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Commands.h" />
-    <ClInclude Include="Script\MoveState.h" />
-    <ClInclude Include="Script\CommandHandler.h" />
+    <ClInclude Include="HFSMState\Locomotion.h" />
+    <ClInclude Include="HFSMState\Move.h" />
+    <ClInclude Include="SCConstants\Command.h" />
     <ClInclude Include="Script\ControlScript.h" />
     <ClInclude Include="framework.h" />
-    <ClInclude Include="Script\IdleState.h" />
+    <ClInclude Include="HFSMState\Idle.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
-    <ClInclude Include="Component\SCSpriteRenderer.h" />
-    <ClInclude Include="Component\SCSpriteAnimator.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="GameObject\TerranMarine.h" />
     <ClInclude Include="GameObject\TerranMedic.h" />
     <ClInclude Include="GameObject\TestGameObject.h" />
     <ClInclude Include="Scene\MainGameScene.h" />
-    <ClInclude Include="Script\UnitController.h" />
+    <ClInclude Include="Script\MovementController.h" />
     <ClInclude Include="Script\UnitInputHandler.h" />
+    <ClInclude Include="Script\UnitStats.h" />
+    <ClInclude Include="HFSMState\UnitRoot.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Script\MoveState.cpp" />
-    <ClCompile Include="Script\CommandHandler.cpp" />
+    <ClCompile Include="HFSMState\Locomotion.cpp" />
+    <ClCompile Include="HFSMState\Move.cpp" />
     <ClCompile Include="Script\ControlScript.cpp" />
-    <ClCompile Include="Script\IdleState.cpp" />
+    <ClCompile Include="HFSMState\Idle.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -249,10 +250,10 @@
     <ClCompile Include="GameObject\TerranMedic.cpp" />
     <ClCompile Include="GameObject\TestGameObject.cpp" />
     <ClCompile Include="Scene\MainGameScene.cpp" />
-    <ClCompile Include="Script\UnitController.cpp" />
+    <ClCompile Include="Script\MovementController.cpp" />
     <ClCompile Include="Script\UnitInputHandler.cpp" />
-    <ClCompile Include="Component\SCSpriteRenderer.cpp" />
-    <ClCompile Include="Component\SCSpriteAnimator.cpp" />
+    <ClCompile Include="Script\UnitStats.cpp" />
+    <ClCompile Include="HFSMState\UnitRoot.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Content.rc" />
@@ -260,29 +261,6 @@
   <ItemGroup>
     <Image Include="Content.ico" />
     <Image Include="small.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shader\Dummy.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-    </FxCompile>
-    <FxCompile Include="Shader\SCSprite_PS.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-    </FxCompile>
-    <FxCompile Include="Shader\SCSprite_VS.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-    </FxCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Shader\SCSprite.hlsli" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

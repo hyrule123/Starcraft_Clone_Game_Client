@@ -1,5 +1,5 @@
 #include "Content/pch.h"
-#include "IdleState.h"
+#include "Idle.h"
 
 #include <Engine/Core/Debug.h>
 #include <Engine/Core/Math.h>
@@ -13,7 +13,9 @@
 
 #include <array>
 
-#include <Content/Component/SCSpriteAnimator.h>
+#include <Engine/Game/Component/SpriteAnimator.h>
+
+#include <Content/SCConstants/Command.h>
 
 namespace engine
 {
@@ -41,32 +43,31 @@ namespace engine
 	"Move_8"_hash,
 	};
 
-	IdleState::IdleState()
-		: Super(IdleState::kClassConcreteName)
+	Idle::Idle()
+		: Super(Idle::kClassConcreteName)
 	{}
-	IdleState::~IdleState()
+	Idle::~Idle()
 	{}
-	void IdleState::OnEnter()
+	void Idle::OnEnter(const AIContext& ai_context)
 	{
-		Super::OnEnter();
-		//IdleState에 진입했을 때 수행할 로직 작성
-		DEBUG_LOG("IdleState::OnEnter() called.");
+		Super::OnEnter(ai_context);
+		//Idle에 진입했을 때 수행할 로직 작성
+		DEBUG_LOG("Idle::OnEnter() called.");
 
-		animator_ = GetOwnerHFSM()->GetOwner()->GetComponent<SCSpriteAnimator>();
+		animator_ = ai_context.owner.lock()->GetComponent<SpriteAnimator>();
 		ASSERT(!animator_.expired());
 
 		animator_.lock()->Play("Idle_0"_hash);
 	}
-	void IdleState::OnExit()
+	void Idle::OnExit(const AIContext& ai_context)
 	{
-		Super::OnExit();
+		Super::OnExit(ai_context);
 
-		DEBUG_LOG("IdleState::OnExit() called.");
+		DEBUG_LOG("Idle::OnExit() called.");
 	}
-	void IdleState::OnUpdate()
+	void Idle::OnUpdate(const AIContext& ai_context)
 	{
-		Super::OnUpdate();
-
+		Super::OnUpdate(ai_context);
 		acc_time_ += TimeManager::GetInst().DeltaTime();
 
 		if (acc_time_ >= wait_time_)
@@ -79,15 +80,16 @@ namespace engine
 		}
 
 	}
-	HashedStringView IdleState::CheckTransition()
+	HashedStringView Idle::CheckTransition(const AIContext& ai_context)
 	{
-		float2* dest = GetOwnerHFSM()->GetBlackboard()->GetValue<float2>("Destination"_hash);
+		ASSERT(ai_context.blackboard.expired() == false);
 
-		if (dest)
+		Command* requested_cmd= ai_context.blackboard.lock()->GetValue<Command>("Command"_hash);
+
+		if (auto* move_cmd = std::get_if<MoveCommand>(requested_cmd))
 		{
 			return "Move"_hash;
 		}
-
 
 		return ""_hash;
 	}

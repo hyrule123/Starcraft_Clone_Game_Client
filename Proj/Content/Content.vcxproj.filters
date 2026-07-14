@@ -42,28 +42,31 @@
     <ClInclude Include="GameObject\TerranMedic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Script\IdleState.h">
+    <ClInclude Include="HFSMState\Idle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Script\UnitController.h">
+    <ClInclude Include="Script\MovementController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Script\UnitInputHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Script\CommandHandler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Script\MoveState.h">
+    <ClInclude Include="HFSMState\Move.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Commands.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Component\SCSpriteRenderer.h">
+    <ClInclude Include="HFSMState\Locomotion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Component\SCSpriteAnimator.h">
+    <ClInclude Include="Script\UnitStats.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SCConstants\Command.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HFSMState\UnitRoot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -89,25 +92,25 @@
     <ClCompile Include="GameObject\TerranMedic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Script\IdleState.cpp">
+    <ClCompile Include="HFSMState\Idle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Script\UnitController.cpp">
+    <ClCompile Include="Script\MovementController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Script\UnitInputHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Script\CommandHandler.cpp">
+    <ClCompile Include="HFSMState\Move.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Script\MoveState.cpp">
+    <ClCompile Include="HFSMState\Locomotion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Component\SCSpriteRenderer.cpp">
+    <ClCompile Include="Script\UnitStats.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Component\SCSpriteAnimator.cpp">
+    <ClCompile Include="HFSMState\UnitRoot.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -123,13 +126,5 @@
     <Image Include="Content.ico">
       <Filter>Resource Files</Filter>
     </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="Shader\Dummy.hlsl" />
-    <FxCompile Include="Shader\SCSprite_PS.hlsl" />
-    <FxCompile Include="Shader\SCSprite_VS.hlsl" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Shader\SCSprite.hlsli" />
   </ItemGroup>
 </Project>
