@@ -3,6 +3,8 @@
 
 #include <Engine/Core/CoreMinimal.h>
 
+
+
 namespace engine
 {
 	class SpriteAnimator;
@@ -15,6 +17,7 @@ namespace engine
 		Idle();
 		virtual ~Idle() override;
 
+		virtual void OnAwake(const AIContext& ai_context) override;
 		virtual void OnEnter(const AIContext& ai_context) override;
 		virtual void OnExit(const AIContext& ai_context) override;
 		virtual void OnUpdate(const AIContext& ai_context) override;
@@ -22,11 +25,7 @@ namespace engine
 		virtual HashedStringView CheckTransition(const AIContext& ai_context) override;
 
     private:
-        constexpr inline static float wait_time_ = 3.0f;
-		float acc_time_ = 0.0f;
-		uint32 cur_dir_idx_ = 0u;
-
-		w_ptr<SpriteAnimator> animator_ = {};
+		HashedStringView* playing_animation_ = {};
     };
 }
 

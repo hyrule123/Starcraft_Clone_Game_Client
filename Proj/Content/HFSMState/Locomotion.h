@@ -3,17 +3,28 @@
 
 #include <Engine/Core/CoreMinimal.h>
 
+#include <Engine/Core/Math.h>
+
 namespace engine
 {
+    class BlackBoard;
     class Locomotion :
         public HFSMState
     {
         CLASS_INFO(Locomotion, HFSMState)
-	public:
+    public:
         Locomotion();
-		virtual ~Locomotion() override;
+        virtual ~Locomotion() override;
 
-		virtual void OnEnter(const AIContext& ai_context) override;
+		virtual void OnAwake(const AIContext& ai_context) override;
+        virtual void OnEnter(const AIContext& ai_context) override;
+
+        virtual HashedStringView CheckTransition(const AIContext& ai_context) override;
+
+    private:
+        float2* direction_ = {};
+		float2* destination_ = {};
+		float* speed_ = {};
     };
 }
 

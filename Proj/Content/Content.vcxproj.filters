@@ -45,7 +45,7 @@
     <ClInclude Include="HFSMState\Idle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Script\MovementController.h">
+    <ClInclude Include="Script\AnimationHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Script\UnitInputHandler.h">
@@ -67,6 +67,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HFSMState\UnitRoot.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HFSMState\Turn.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SCConstants\Constant.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -95,7 +101,7 @@
     <ClCompile Include="HFSMState\Idle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Script\MovementController.cpp">
+    <ClCompile Include="Script\AnimationHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Script\UnitInputHandler.cpp">
@@ -111,6 +117,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="HFSMState\UnitRoot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HFSMState\Turn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

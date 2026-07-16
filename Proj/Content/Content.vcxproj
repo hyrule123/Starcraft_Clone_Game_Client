@@ -219,6 +219,7 @@
     <ClInclude Include="HFSMState\Locomotion.h" />
     <ClInclude Include="HFSMState\Move.h" />
     <ClInclude Include="SCConstants\Command.h" />
+    <ClInclude Include="SCConstants\Constant.h" />
     <ClInclude Include="Script\ControlScript.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="HFSMState\Idle.h" />
@@ -229,10 +230,11 @@
     <ClInclude Include="GameObject\TerranMedic.h" />
     <ClInclude Include="GameObject\TestGameObject.h" />
     <ClInclude Include="Scene\MainGameScene.h" />
-    <ClInclude Include="Script\MovementController.h" />
+    <ClInclude Include="Script\AnimationHandler.h" />
     <ClInclude Include="Script\UnitInputHandler.h" />
     <ClInclude Include="Script\UnitStats.h" />
     <ClInclude Include="HFSMState\UnitRoot.h" />
+    <ClInclude Include="HFSMState\Turn.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HFSMState\Locomotion.cpp" />
@@ -250,10 +252,11 @@
     <ClCompile Include="GameObject\TerranMedic.cpp" />
     <ClCompile Include="GameObject\TestGameObject.cpp" />
     <ClCompile Include="Scene\MainGameScene.cpp" />
-    <ClCompile Include="Script\MovementController.cpp" />
+    <ClCompile Include="Script\AnimationHandler.cpp" />
     <ClCompile Include="Script\UnitInputHandler.cpp" />
     <ClCompile Include="Script\UnitStats.cpp" />
     <ClCompile Include="HFSMState\UnitRoot.cpp" />
+    <ClCompile Include="HFSMState\Turn.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Content.rc" />

@@ -8,11 +8,12 @@
 #include <Engine/Game/Component/Camera.h>
 #include <Engine/Game/Component/Transform.h>
 
-#include <Engine/Game/Component/Blackboard.h>
+#include <Engine/Game/Component/BlackBoard.h>
+
 
 #include <Engine/Core/Debug.h>
 
-#include <Content/SCConstants/Command.h>
+
 
 namespace engine
 {
@@ -26,8 +27,15 @@ namespace engine
 	{
 		Super::Awake();
 
-		blackboard_ = GetOwner()->GetComponent<Blackboard>();
-		ASSERT(!blackboard_.expired());
+		s_ptr<BlackBoard> bb = GetOwner()->GetComponent<BlackBoard>();
+		ASSERT(bb);
+		blackboard_ = bb;
+
+		command_input_ = bb->GetValue<HashedStringView>("CommandInput"_hash);
+		destination_ = bb->GetValue<float2>("Destination"_hash);
+
+		ASSERT(command_input_);
+		ASSERT(destination_);
 	}
 	void UnitInputHandler::Update()
 	{
@@ -53,10 +61,10 @@ namespace engine
 			const auto& cam_pos = cam->GetOwner()->GetTransform()->GetLocalPosition();
 			mouse_pos.x += cam_pos.x;
 			mouse_pos.y += cam_pos.y;
-
-			s_ptr<Blackboard> bb = blackboard_.lock();
 			
-			bb->SetValue("Command"_hash, Command(MoveCommand(mouse_pos)));
+			//우클릭 강제이동
+			*command_input_ = "ForceMove"_hash;
+			*destination_ = mouse_pos;
 		}
 	}
 }

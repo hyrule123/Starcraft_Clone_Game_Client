@@ -8,7 +8,7 @@ namespace engine
 {
     class InputManager;
     class Camera;
-    class Blackboard;
+    class BlackBoard;
 
     class UnitInputHandler :
         public Script
@@ -23,7 +23,10 @@ namespace engine
 
     private:
         InputManager& input_mgr_;
-		w_ptr<Blackboard> blackboard_ = {};
+		w_ptr<BlackBoard> blackboard_ = {};
+
+		HashedStringView* command_input_ = {};
+		float2* destination_ = {};
     };
 }
 
