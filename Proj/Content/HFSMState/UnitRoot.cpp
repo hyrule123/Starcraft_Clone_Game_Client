@@ -37,7 +37,11 @@ namespace engine
 		blackboard->SetValue("Speed"_hash, 100.0f);
 		blackboard->SetValue("IsMoving"_hash, false);
 
-		float turn_speed = SC::DegreePerSecond(40.0f);
+		//SC는 256단계 선회각을 사용
+		//회전의 최대 선회각 = 180 deg
+		//선회 속도가 127일 경우 즉시 선회가 가능. (127/256 * 360 = 178.59375 deg)
+		//SC의 선회 속도를 라디안으로 변환하면 다음과 같다
+		float turn_speed = 40.0f / 256.0f * 2.0f * kPi * SC::kFPS;
 		blackboard->SetValue("TurnSpeed"_hash, turn_speed);
 
 		command_input_ = blackboard->GetValue<HashedStringView>("CommandInput"_hash);
