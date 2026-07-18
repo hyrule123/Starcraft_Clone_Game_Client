@@ -15,7 +15,6 @@ namespace engine
         virtual void Init() override;
     private:
 		void LoadResources();
-
     };
 }
 

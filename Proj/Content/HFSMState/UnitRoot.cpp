@@ -6,7 +6,7 @@
 
 #include <Engine/Core/Debug.h>
 
-#include <Content/SCConstants/Constant.h>
+#include <Content/SCData/Constant.h>
 
 namespace engine
 {

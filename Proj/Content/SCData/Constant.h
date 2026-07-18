@@ -1,11 +1,15 @@
 #pragma once
 
+#include <Engine/Core/StdType.h>
 #include <Engine/Core/Math.h>
 
 namespace engine
 {
 	namespace SC
 	{
+		constexpr uint32 kResolutionWidth = 640;
+		constexpr uint32 kResolutionHeight = 480;
+
 		constexpr float kFPS = 23.81f;
 		constexpr float kFrameTime = 1.0f / kFPS;
 		constexpr float kDegree = 256.0f;	//내부적으로 256단계로 분할

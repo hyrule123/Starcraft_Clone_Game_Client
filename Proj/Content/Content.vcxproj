@@ -218,8 +218,8 @@
     <ClInclude Include="Commands.h" />
     <ClInclude Include="HFSMState\Locomotion.h" />
     <ClInclude Include="HFSMState\Move.h" />
-    <ClInclude Include="SCConstants\Command.h" />
-    <ClInclude Include="SCConstants\Constant.h" />
+    <ClInclude Include="SCData\Command.h" />
+    <ClInclude Include="SCData\Constant.h" />
     <ClInclude Include="Script\ControlScript.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="HFSMState\Idle.h" />

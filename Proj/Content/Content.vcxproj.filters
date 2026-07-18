@@ -63,7 +63,7 @@
     <ClInclude Include="Script\UnitStats.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCConstants\Command.h">
+    <ClInclude Include="SCData\Command.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HFSMState\UnitRoot.h">
@@ -72,7 +72,7 @@
     <ClInclude Include="HFSMState\Turn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCConstants\Constant.h">
+    <ClInclude Include="SCData\Constant.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

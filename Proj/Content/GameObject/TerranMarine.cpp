@@ -42,7 +42,7 @@ namespace engine
 		Super::Init();
 
 		auto tr = GetTransform();
-		tr->SetLocalScale({ 300.0f, 300.0f, 1.0f });
+		tr->SetLocalScale({ 64.0f, 64.0f, 1.0f });
 		tr->SetLocalPosition({ 0.0f, 0.0f, 10.0f });
 
 		auto renderer = AddComponent<SpriteRenderer>();
