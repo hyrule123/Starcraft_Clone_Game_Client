@@ -68,11 +68,11 @@ namespace engine
 		s_ptr<RenderTargetView> sc_rtv = std::make_shared<RenderTargetView>();
 
 		
-		bool result = sc_rtv->CreateDefault(device.Get(), (UINT)SC::kResolutionWidth, (UINT)SC::kResolutionHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
+		bool result = sc_rtv->CreateDefault((UINT)SC::kResolutionWidth, (UINT)SC::kResolutionHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
 		ASSERT_RELEASE(result);
 
 		//최종 렌더타겟에 이어붙일 때는 SRV가 필요
-		sc_rtv->CreateSRV(device.Get(), nullptr);
+		sc_rtv->CreateSRV(nullptr);
 
 		s_ptr<DepthStencilView> dsv = std::make_shared<DepthStencilView>();
 		D3D11_TEXTURE2D_DESC depth_buffer_desc = {};
@@ -92,7 +92,7 @@ namespace engine
 		depth_buffer_desc.BindFlags = D3D11_BIND_DEPTH_STENCIL; // 이 텍스처의 용도는 깊이/스텐실 도화지임을 명시
 		depth_buffer_desc.CPUAccessFlags = 0;
 		depth_buffer_desc.MiscFlags = 0;
-		result = dsv->CreateTexture2D(device.Get(), &depth_buffer_desc);
+		result = dsv->CreateTexture2D(&depth_buffer_desc);
 		ASSERT_RELEASE(result);
 
 		sc_rendertarget_group->SetRenderTargets({sc_rtv, });
