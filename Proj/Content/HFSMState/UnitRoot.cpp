@@ -51,11 +51,24 @@ namespace engine
 	}
 	HashedStringView UnitRoot::CheckTransition(const AIContext& ai_context)
 	{
-		if ((*command_input_) == "ForceMove"_hash)
+		//Consume command input
+		HashedStringView entered_command = *command_input_;
+		(*command_input_) = ""_hash;
+
+		//다를 떄만 처리, 같으면 이미 진행 중이므로 무시
+		if (entered_command != (*current_action_))
 		{
-			*command_input_ = ""_hash;
-			*current_action_ = "ForceMove"_hash;
-			return "Locomotion"_hash;
+			if (entered_command == "ForceMove"_hash)
+			{
+				// action 이미 ForceMove 상태일 경우 전환하지 않음(진행 중)
+				if ((*current_action_) == "ForceMove"_hash)
+				{
+					return ""_hash;
+				}
+
+				*current_action_ = "ForceMove"_hash;
+				return "Locomotion"_hash;
+			}
 		}
 
 		return ""_hash;
