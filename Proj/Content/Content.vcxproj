@@ -215,7 +215,9 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Script\ActiveEnableTest.h" />
     <ClInclude Include="Commands.h" />
+    <ClInclude Include="Script\DestroyTestScript.h" />
     <ClInclude Include="HFSMState\Locomotion.h" />
     <ClInclude Include="HFSMState\Move.h" />
     <ClInclude Include="SCData\Command.h" />
@@ -237,6 +239,8 @@
     <ClInclude Include="HFSMState\Turn.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Script\ActiveEnableTest.cpp" />
+    <ClCompile Include="Script\DestroyTestScript.cpp" />
     <ClCompile Include="HFSMState\Locomotion.cpp" />
     <ClCompile Include="HFSMState\Move.cpp" />
     <ClCompile Include="Script\ControlScript.cpp" />

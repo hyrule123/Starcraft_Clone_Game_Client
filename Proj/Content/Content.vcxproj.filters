@@ -75,6 +75,12 @@
     <ClInclude Include="SCData\Constant.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Script\DestroyTestScript.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\ActiveEnableTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -120,6 +126,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="HFSMState\Turn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\DestroyTestScript.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\ActiveEnableTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

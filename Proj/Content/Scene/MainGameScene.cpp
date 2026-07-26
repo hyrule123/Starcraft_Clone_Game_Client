@@ -23,6 +23,9 @@
 
 #include <Content/SCData/Constant.h>
 
+#include <Content/Script/DestroyTestScript.h>
+#include <Content/Script/ActiveEnableTest.h>
+
 namespace engine
 {
 	MainGameScene::MainGameScene()
@@ -41,6 +44,7 @@ namespace engine
 		LoadResources();
 
 		auto one = AddGameObject<TerranMarine>();
+		one->AddComponent<ActiveEnableTest>();
 		//one->GetTransform()->SetLocalPosition({ -200.0f, 0, 10.0f });
 		//auto two = AddGameObject<TerranMarine>();
 		//two->GetTransform()->SetLocalPosition({ 100.0f, 0, 10.0f });
@@ -49,6 +53,7 @@ namespace engine
 		//three->GetTransform()->SetLocalPosition({ 400.0f, 0, 10.0f });
 
 		s_ptr<GameObject> camobj = AddGameObject<GameObject>();
+		camobj->SetName("MainCamera");
 		auto cam = camobj->AddComponent<Camera>();
 		Camera::ProjectionMatrixDesc proj_desc = cam->GetProjectionMatrixDesc();
 		proj_desc.proj_mode = Camera::ProjectionMode::Orthographic;

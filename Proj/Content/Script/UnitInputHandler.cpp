@@ -27,7 +27,7 @@ namespace engine
 	{
 		Super::Awake();
 
-		s_ptr<BlackBoard> bb = GetOwner()->GetComponent<BlackBoard>();
+		s_ptr<BlackBoard> bb = GetOwnerGameObject()->GetComponent<BlackBoard>();
 		ASSERT(bb);
 		blackboard_ = bb;
 
@@ -67,7 +67,7 @@ namespace engine
 			mouse_pos.y = (SC::kResolutionHeight * 0.5f - mouse_pos.y);
 
 			//여기에 카메라의 위치를 더해주면 월드 좌표계(Transform이 완성되지 않았으므로 일단은 LocalPosition으로) 기준 좌표로 변환됨
-			const auto& cam_pos = cam->GetOwner()->GetTransform()->GetLocalPosition();
+			const auto& cam_pos = cam->GetOwnerGameObject()->GetTransform()->GetLocalPosition();
 			mouse_pos.x += cam_pos.x;
 			mouse_pos.y += cam_pos.y;
 			

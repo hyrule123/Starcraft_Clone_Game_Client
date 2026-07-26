@@ -23,10 +23,10 @@ namespace engine
 	{
 		Super::Awake();
 
-		transform_ = GetOwner()->GetComponent<Transform>();
-		animator_ = GetOwner()->GetComponent<SpriteAnimator>();
-		renderer_ = GetOwner()->GetComponent<SpriteRenderer>();
-		blackboard_ = GetOwner()->GetComponent<BlackBoard>();
+		transform_ = GetOwnerGameObject()->GetComponent<Transform>();
+		animator_ = GetOwnerGameObject()->GetComponent<SpriteAnimator>();
+		renderer_ = GetOwnerGameObject()->GetComponent<SpriteRenderer>();
+		blackboard_ = GetOwnerGameObject()->GetComponent<BlackBoard>();
 
 		ASSERT(false == transform_.expired());
 		ASSERT(false == animator_.expired());
