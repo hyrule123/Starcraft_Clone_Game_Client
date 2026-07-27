@@ -5,6 +5,7 @@
 #include <Engine/Manager/ResourceManager.h>
 #include <Engine/Manager/RenderManager.h>
 
+
 #include <Engine/Resource/Graphics/RenderTargetGroup.h>
 #include <Engine/Resource/Graphics/Buffer/RenderTargetView.h>
 #include <Engine/Resource/Graphics/Buffer/DepthStencilView.h>
@@ -29,7 +30,7 @@
 namespace engine
 {
 	MainGameScene::MainGameScene()
-		: Scene(STRINGIFY(MainGameScene))
+		: Scene(MainGameScene::kClassConcreteName)
 	{
 	}
 
@@ -43,14 +44,8 @@ namespace engine
 
 		LoadResources();
 
-		auto one = AddGameObject<TerranMarine>();
+		auto one = AddGameObject("TerranMarine"_hash);
 		one->AddComponent<ActiveEnableTest>();
-		//one->GetTransform()->SetLocalPosition({ -200.0f, 0, 10.0f });
-		//auto two = AddGameObject<TerranMarine>();
-		//two->GetTransform()->SetLocalPosition({ 100.0f, 0, 10.0f });
-		//
-		//auto three = AddGameObject<TerranMedic>();
-		//three->GetTransform()->SetLocalPosition({ 400.0f, 0, 10.0f });
 
 		s_ptr<GameObject> camobj = AddGameObject<GameObject>();
 		camobj->SetName("MainCamera");

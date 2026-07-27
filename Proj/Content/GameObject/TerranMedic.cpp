@@ -18,7 +18,7 @@
 namespace engine
 {
 	TerranMedic::TerranMedic()
-		:Super(STRINGIFY(TerranMedic))
+		:Super(TerranMedic::kClassConcreteName)
 	{}
 
 	TerranMedic::~TerranMedic()

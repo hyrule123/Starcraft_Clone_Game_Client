@@ -11,7 +11,7 @@
 namespace engine
 {
 	ControlScript::ControlScript()
-		: Super(STRINGIFY(ControlScript))
+		: Super(ControlScript::kClassConcreteName)
 	{}
 
 	ControlScript::~ControlScript()

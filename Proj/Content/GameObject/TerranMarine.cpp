@@ -32,7 +32,7 @@ namespace engine
 	constexpr size_t sprite_direction_count = 9u;
 
 	TerranMarine::TerranMarine()
-		:Super(STRINGIFY(TerranMarine))
+		:Super(TerranMarine::kClassConcreteName)
 	{}
 
 	TerranMarine::~TerranMarine()
