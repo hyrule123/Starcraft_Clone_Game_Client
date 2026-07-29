@@ -144,6 +144,8 @@ namespace engine
 				move_clip->SetLoop(true);
 				HashedString move_clip_name = "Move_" + std::to_string(i);
 
+				move_clip->SetFrameNotifyName((uint32)(frames.size() - 1), "MoveEnd"_hash);
+
 				move_clips_per_direction_.push_back(move_clip.get());	//AnimationHandler에서 사용하기 위해서 raw pointer를 저장
 				anim_->AddAnimationClip(move_clip_name, std::move(move_clip));
 			}

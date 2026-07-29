@@ -237,6 +237,7 @@
     <ClInclude Include="Script\UnitStats.h" />
     <ClInclude Include="HFSMState\UnitRoot.h" />
     <ClInclude Include="HFSMState\Turn.h" />
+    <ClInclude Include="Script\TestScript.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Script\ActiveEnableTest.cpp" />
@@ -261,6 +262,7 @@
     <ClCompile Include="Script\UnitStats.cpp" />
     <ClCompile Include="HFSMState\UnitRoot.cpp" />
     <ClCompile Include="HFSMState\Turn.cpp" />
+    <ClCompile Include="Script\TestScript.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Content.rc" />

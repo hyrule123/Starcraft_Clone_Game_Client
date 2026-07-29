@@ -45,7 +45,8 @@ namespace engine
 		LoadResources();
 
 		auto one = AddGameObject("TerranMarine"_hash);
-		one->AddComponent<ActiveEnableTest>();
+		one->AddComponent("DestroyTestScript"_hash);
+		one->AddComponent("TestScript"_hash);
 
 		s_ptr<GameObject> camobj = AddGameObject<GameObject>();
 		camobj->SetName("MainCamera");

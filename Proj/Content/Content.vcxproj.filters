@@ -81,6 +81,9 @@
     <ClInclude Include="Script\ActiveEnableTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Script\TestScript.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -132,6 +135,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Script\ActiveEnableTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\TestScript.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
