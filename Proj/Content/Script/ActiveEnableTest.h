@@ -12,7 +12,9 @@ namespace engine
         ActiveEnableTest();
 		virtual ~ActiveEnableTest() override;
 
+		virtual void OnEnable() override;
 		virtual void Update() override;
+		virtual void OnDisable() override;
 
     private:
 		float remain_time_ = 3.0f;

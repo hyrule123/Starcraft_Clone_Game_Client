@@ -26,6 +26,7 @@
 
 #include <Content/Script/DestroyTestScript.h>
 #include <Content/Script/ActiveEnableTest.h>
+#include <Content/Script/TestScript.h>
 
 namespace engine
 {
@@ -44,9 +45,8 @@ namespace engine
 
 		LoadResources();
 
-		auto one = AddGameObject("TerranMarine"_hash);
-		one->AddComponent("DestroyTestScript"_hash);
-		one->AddComponent("TestScript"_hash);
+		auto marine = AddGameObject("TerranMarine"_hash);
+		//marine->AddComponent("TestScript"_hash);
 
 		s_ptr<GameObject> camobj = AddGameObject<GameObject>();
 		camobj->SetName("MainCamera");
@@ -56,6 +56,9 @@ namespace engine
 		proj_desc.viewport_width = (float)SC::kResolutionWidth;
 		proj_desc.viewport_height = (float)SC::kResolutionHeight;
 		cam->CreateProjMatrix(proj_desc);
+
+		auto test_script = camobj->AddComponent<TestScript>();
+		test_script->SetTargetEnableObject(marine);
 	}
 	void MainGameScene::LoadResources()
 	{

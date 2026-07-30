@@ -41,6 +41,8 @@ namespace engine
 	{
 		Super::Init();
 
+		SetName("TerranMarine");
+
 		auto tr = GetTransform();
 		tr->SetLocalScale({ 64.0f, 64.0f, 1.0f });
 		tr->SetLocalPosition({ 0.0f, 0.0f, 10.0f });

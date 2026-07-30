@@ -12,6 +12,11 @@ namespace engine
 	{}
 	ActiveEnableTest::~ActiveEnableTest()
 	{}
+	void ActiveEnableTest::OnEnable()
+	{
+		Super::OnEnable();
+		DEBUG_LOG("ActiveEnableTest::OnEnable() Called!");
+	}
 	void ActiveEnableTest::Update()
 	{
 		Super::Update();
@@ -36,5 +41,10 @@ namespace engine
 			DEBUG_LOG("ActiveEnableTest::Update() - Inactivating GameObject.");
 			GetOwnerGameObject()->SetActive(false);
 		}
+	}
+	void ActiveEnableTest::OnDisable()
+	{
+		Super::OnDisable();
+		DEBUG_LOG("ActiveEnableTest::OnDisable() Called!");
 	}
 }
