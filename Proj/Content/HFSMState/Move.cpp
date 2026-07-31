@@ -68,7 +68,7 @@ namespace engine
 
 		if (*is_moving_)
 		{
-			float dt = TimeManager::GetInst().DeltaTime();
+			float dt = TimeManager::GetInst().GetDeltaTime();
 
 			//현재 위치 받고
 			const float2 cur_pos_2d = { cur_pos.x, cur_pos.y };

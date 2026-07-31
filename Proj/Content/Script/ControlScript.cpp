@@ -31,7 +31,7 @@ namespace engine
 		Super::Update();
 
 		InputManager& input = InputManager::GetInst();
-		float dt = TimeManager::GetInst().DeltaTime();
+		float dt = TimeManager::GetInst().GetDeltaTime();
 		
 		s_ptr<Transform> tr = GetComponent<Transform>();
 		float3 pos = tr->GetLocalPosition();

@@ -25,7 +25,7 @@ namespace engine
 
 		if (!has_test_started_) { return; }
 
-		remain_time_ -= TimeManager::GetInst().DeltaTime();
+		remain_time_ -= TimeManager::GetInst().GetDeltaTime();
 		if ((int)prev_time_ != (int)remain_time_)
 		{
 			std::string msg = "DestroyTestScript::Update() - Remaining Time: " + std::to_string((int)remain_time_ + 1) + " seconds.";
