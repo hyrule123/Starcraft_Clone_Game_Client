@@ -13,6 +13,7 @@
 #include <Engine/Game/Component/BlackBoard.h>
 #include <Engine/Game/Component/SpriteAnimator.h>
 #include <Engine/Game/Component/SpriteRenderer.h>
+#include <Engine/Game/Component/AABBCollider2D.h>
 
 #include <Engine/Core/Debug.h>
 
@@ -53,6 +54,7 @@ namespace engine
 		auto blackboard = AddComponent<BlackBoard>();
 		auto unit_input_handler = AddComponent<UnitInputHandler>();
 		auto anim_handler = AddComponent<AnimationHandler>();
+		auto collider = AddComponent<AABBCollider2D>();
 
 		auto& res_mgr = ResourceManager::GetInst();
 

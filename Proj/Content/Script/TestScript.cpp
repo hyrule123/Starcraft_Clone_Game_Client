@@ -2,6 +2,7 @@
 #include "TestScript.h"
 
 #include <Engine/Core/Debug.h>
+#include <Engine/Core/Constant.h>
 
 #include <Engine/Manager/InputManager.h>
 #include <Engine/Game/Component/SpriteAnimator.h>
@@ -46,21 +47,21 @@ namespace engine
 		{
 			DEBUG_LOG("TestScript::Update() - Q key pressed.");
 
-			if (target_enable_obj.expired())
+			if (target_obj_.expired())
 			{
 				DEBUG_LOG("Creating New TerranMarine Object...");
 
-				target_enable_obj = GetOwnerGameObject()->GetOwnerScene()->AddGameObject("TerranMarine"_hash);
+				target_obj_ = GetOwnerGameObject()->GetOwnerScene()->AddGameObject("TerranMarine"_hash);
 			}
 			else
 			{
 				DEBUG_LOG("Destroying Target GameObject...");
 
-				target_enable_obj.lock()->Destroy();
+				target_obj_.lock()->Destroy();
 			}
 		}
 
-		if (auto target_obj = target_enable_obj.lock())
+		if (auto target_obj = target_obj_.lock())
 		{
 			if (InputManager::GetInst().GetKeyDown(KeyCode::kSpace))
 			{
@@ -71,7 +72,20 @@ namespace engine
 
 				target_obj->SetActive(!is_active);
 			}
+
+
+			if (InputManager::GetInst().GetKeyDown(KeyCode::kC))
+			{
+				static uint32 layer = 0;
+				layer = (target_obj->GetLayer() + 1) % kLayerMaxCount;
+				target_obj->SetLayer(layer);
+
+				std::string msg = "TestScript::Update() - Changing target GameObject layer to: " + std::to_string(layer);
+				DEBUG_LOG_A(msg.c_str());
+			}
 		}
+
+
 	}
 	void TestScript::OnDisable()
 	{
