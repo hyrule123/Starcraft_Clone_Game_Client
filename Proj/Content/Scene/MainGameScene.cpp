@@ -16,6 +16,7 @@
 #include <Engine/Game/GameObject.h>
 #include <Engine/Game/Component/Camera.h>
 #include <Engine/Game/Component/Transform.h>
+#include <Engine/Game/Component/AABBCollider2D.h>
 
 #include <Engine/Core/Debug.h>
 
@@ -43,10 +44,18 @@ namespace engine
 	{
 		Super::Init();
 
+		GetCollisionSystem2D()->SetCellSize(SC::kCellSize);
+		SetCollisionMask(0, 0, true);
+
 		LoadResources();
 
 		auto marine = AddGameObject("TerranMarine"_hash);
 		marine->AddComponent("TestScript"_hash);
+		
+		for (size_t i = 0; i < 30; ++i)
+		{
+			AddGameObject("TestGameObject"_hash);
+		}
 
 		s_ptr<GameObject> camobj = AddGameObject<GameObject>();
 		camobj->SetName("MainCamera");
