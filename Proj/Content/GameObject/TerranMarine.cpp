@@ -145,7 +145,8 @@ namespace engine
 					frames.push_back(frame);
 				}
 
-				move_clip->AddFrames(frames, 0.4f);
+				//move_clip->AddFrames(frames, 0.4f);
+				move_clip->AddFrames(frames, 1.0f);
 				move_clip->SetLoop(true);
 				HashedString move_clip_name = "Move_" + std::to_string(i);
 
