@@ -47,7 +47,7 @@ namespace engine
 		{
 			DEBUG_LOG("TestScript::Update() - Q key pressed.");
 
-			if (!target_obj_)
+			if (target_obj_.get() == nullptr)
 			{
 				DEBUG_LOG("Creating New TerranMarine Object...");
 
@@ -55,9 +55,11 @@ namespace engine
 			}
 			else
 			{
+
 				DEBUG_LOG("Destroying Target GameObject...");
 
 				target_obj_.get()->Destroy();
+				target_obj_ = nullptr;
 			}
 		}
 

@@ -55,10 +55,10 @@ namespace engine
 		auto blackboard = AddComponent<BlackBoard>();
 		auto unit_input_handler = AddComponent<UnitInputHandler>();
 		auto anim_handler = AddComponent<AnimationHandler>();
-		auto collider = AddComponent<AABBCollider2D>();
+		//auto collider = AddComponent<AABBCollider2D>();
 		
 		// 64 * 64 사이즈의 AABB Collider
-		collider->SetLocalBounds({ { -32.0f, -32.0f }, { 32.0f, 32.0f } });
+		//collider->SetLocalBounds({ { -32.0f, -32.0f }, { 32.0f, 32.0f } });
 
 		auto& res_mgr = ResourceManager::GetInst();
 

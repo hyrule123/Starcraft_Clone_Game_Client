@@ -50,7 +50,6 @@ namespace engine
 		LoadResources();
 
 		auto marine = AddGameObject("TerranMarine"_hash);
-		marine->AddComponent("TestScript"_hash);
 		
 		for (size_t i = 0; i < 30; ++i)
 		{

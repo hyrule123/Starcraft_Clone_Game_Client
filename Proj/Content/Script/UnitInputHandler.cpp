@@ -46,7 +46,7 @@ namespace engine
 			//스크린 좌표계 기준 마우스 위치
 			float2 mouse_pos = { (float)input_mgr_.GetMousePos().x, (float)input_mgr_.GetMousePos().y };
 
-			auto cam = RenderManager::GetInst().GetMainCamera();
+			Camera* cam = RenderManager::GetInst().GetMainCamera().get();
 			ASSERT(cam);
 
 			//게임 해상도와 현재 윈도우 해상도가 다를 수 있으므로 비율을 구해서 곱해주어야 함
