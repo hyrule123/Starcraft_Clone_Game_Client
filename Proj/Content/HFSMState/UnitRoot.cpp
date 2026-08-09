@@ -22,11 +22,12 @@ namespace engine
 		Super::OnAwake(ai_context);
 
 		//BlackBoard에 필요한 초기값을 등록
-		s_ptr<BlackBoard> blackboard = ai_context.black_board.lock();
-		ASSERT(blackboard);
+		ASSERT(ai_context.black_board);
+		BlackBoard* blackboard = ai_context.black_board;
 
-		s_ptr<Transform> tr = ai_context.game_object.lock()->GetTransform();
-		ASSERT(tr);
+		ASSERT(ai_context.game_object);
+		ASSERT(ai_context.transform);
+		Transform* tr = ai_context.transform;
 		float2 pos = { tr->GetLocalPosition().x, tr->GetLocalPosition().y };
 
 		blackboard->SetValue("CommandInput"_hash, HashedStringView(""_hash));

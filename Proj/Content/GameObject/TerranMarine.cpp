@@ -45,6 +45,7 @@ namespace engine
 		SetName("TerranMarine");
 
 		auto tr = GetTransform();
+		ASSERT(tr);
 		tr->SetLocalScale({ 64.0f, 64.0f, 1.0f });
 		tr->SetLocalPosition({ 0.0f, 0.0f, 10.0f });
 
@@ -80,7 +81,7 @@ namespace engine
 			bool result = marine_sprite->Slice(n_row, n_col);
 			ASSERT(result);
 
-			anim_ = std::make_shared<SpriteAnimation>();
+			anim_ = EntityManager::CreateEntity<SpriteAnimation>();
 			res_mgr.AddResource("Marine_SpriteAnimation"_hash, anim_);
 			anim_->SetSprite(marine_sprite);
 			

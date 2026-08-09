@@ -57,7 +57,7 @@ namespace engine
 			AddGameObject("TestGameObject"_hash);
 		}
 
-		s_ptr<GameObject> camobj = AddGameObject<GameObject>();
+		GameObject* camobj = AddGameObject<GameObject>();
 		camobj->SetName("MainCamera");
 		auto cam = camobj->AddComponent<Camera>();
 		Camera::ProjectionMatrixDesc proj_desc = cam->GetProjectionMatrixDesc();
@@ -77,9 +77,8 @@ namespace engine
 		auto device = GraphicsDevice::GetInst().GetDevice();
 
 		// Render Target
-		s_ptr<RenderTargetGroup> sc_rendertarget_group = std::make_shared<RenderTargetGroup>();
-		s_ptr<RenderTargetView> sc_rtv = std::make_shared<RenderTargetView>();
-
+		s_ptr<RenderTargetGroup> sc_rendertarget_group = std::move(EntityManager::CreateEntity<RenderTargetGroup>());
+		s_ptr<RenderTargetView> sc_rtv = std::move(EntityManager::CreateEntity<RenderTargetView>());
 		
 		bool result = sc_rtv->CreateDefault((UINT)SC::kResolutionWidth, (UINT)SC::kResolutionHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
 		ASSERT_RELEASE(result);
@@ -87,7 +86,7 @@ namespace engine
 		//최종 렌더타겟에 이어붙일 때는 SRV가 필요
 		sc_rtv->CreateSRV(nullptr);
 
-		s_ptr<DepthStencilView> dsv = std::make_shared<DepthStencilView>();
+		s_ptr<DepthStencilView> dsv = std::move(EntityManager::CreateEntity<DepthStencilView>());
 		D3D11_TEXTURE2D_DESC depth_buffer_desc = {};
 		depth_buffer_desc.Width = (UINT)SC::kResolutionWidth;            // RTV의 가로 크기와 완전히 일치해야 합니다.
 		depth_buffer_desc.Height = (UINT)SC::kResolutionHeight;          // RTV의 세로 크기와 완전히 일치해야 합니다.

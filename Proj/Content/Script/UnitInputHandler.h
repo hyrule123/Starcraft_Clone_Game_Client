@@ -13,7 +13,7 @@ namespace engine
     class UnitInputHandler :
         public Script
     {
-		CLASS_INFO(UnitInputHandler, Script)
+		ENTITY_INFO(UnitInputHandler, Script)
     public:
         UnitInputHandler();
 		virtual ~UnitInputHandler() override;
@@ -23,7 +23,7 @@ namespace engine
 
     private:
         InputManager& input_mgr_;
-		w_ptr<BlackBoard> blackboard_ = {};
+		BlackBoard* blackboard_ = {};
 
 		HashedStringView* command_input_ = {};
 		float2* destination_ = {};

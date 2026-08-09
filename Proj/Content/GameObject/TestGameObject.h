@@ -6,7 +6,7 @@ namespace engine
     class TestGameObject :
         public GameObject
     {
-        CLASS_INFO(TestGameObject, GameObject)
+        ENTITY_INFO(TestGameObject, GameObject)
     public:
         TestGameObject();
         virtual ~TestGameObject() override;

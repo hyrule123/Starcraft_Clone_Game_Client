@@ -49,11 +49,10 @@ namespace engine
 	void Idle::OnAwake(const AIContext& ai_context)
 	{
 		Super::OnAwake(ai_context);
+		
+		ASSERT(ai_context.black_board);
 
-		s_ptr<BlackBoard> blackboard = ai_context.black_board.lock();
-		ASSERT_MESSAGE(blackboard, "BlackBoard가 없어요...");
-
-		playing_animation_ = blackboard->GetValue<HashedStringView>("PlayingAnimation"_hash);
+		playing_animation_ = ai_context.black_board->GetValue<HashedStringView>("PlayingAnimation"_hash);
 		ASSERT(playing_animation_);
 	}
 	void Idle::OnEnter(const AIContext& ai_context)

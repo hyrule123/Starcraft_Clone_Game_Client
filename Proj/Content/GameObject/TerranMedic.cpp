@@ -46,7 +46,7 @@ namespace engine
 		//	bool result = medic_sprite->Slice(14, 17);
 		//	ASSERT(result);
 
-		//	anim_ = std::make_shared<SpriteAnimation>();
+		//	anim_ = EntityManager::CreateEntity<SpriteAnimation>();
 		//	res_mgr.AddResource("Medic_SpriteAnimation", anim_);
 		//	anim_->SetSprite(medic_sprite);
 

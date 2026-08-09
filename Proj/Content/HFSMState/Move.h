@@ -11,7 +11,7 @@ namespace engine
     class Move :
         public HFSMState
     {
-		CLASS_INFO(Move, HFSMState)
+		ENTITY_INFO(Move, HFSMState)
 	public:
 		Move();
 		virtual ~Move() override;

@@ -7,7 +7,7 @@ namespace engine
     class MainGameScene :
         public Scene
     {
-        CLASS_INFO(MainGameScene, Scene)
+        ENTITY_INFO(MainGameScene, Scene)
     public:
         MainGameScene();
         virtual ~MainGameScene() override;

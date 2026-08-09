@@ -6,7 +6,7 @@ namespace engine
     class DestroyTestScript :
         public Script
     {
-		CLASS_INFO(DestroyTestScript, Script)
+		ENTITY_INFO(DestroyTestScript, Script)
 	public:
 		DestroyTestScript();
 		virtual ~DestroyTestScript() override;

@@ -5,8 +5,6 @@
 
 #include <Engine/Core/Math.h>
 
-
-
 namespace engine
 {
 	class Transform;
@@ -21,7 +19,7 @@ namespace engine
     class AnimationHandler :
         public Script
     {
-        CLASS_INFO(AnimationHandler, Script)
+        ENTITY_INFO(AnimationHandler, Script)
 	public:
 		AnimationHandler();
 		virtual ~AnimationHandler() override;
@@ -40,10 +38,10 @@ namespace engine
 		void PlayAnimation(const HashedStringView& key);
 
     private:
-		w_ptr<Transform> transform_ = {};
-		w_ptr<SpriteAnimator> animator_ = {};
-		w_ptr<SpriteRenderer> renderer_ = {};
-		w_ptr<BlackBoard> blackboard_ = {};
+		Transform* transform_ = {};
+		SpriteAnimator* animator_ = {};
+		SpriteRenderer* renderer_ = {};
+		BlackBoard* blackboard_ = {};
 
 		size_t direction_count_ = {};
 		

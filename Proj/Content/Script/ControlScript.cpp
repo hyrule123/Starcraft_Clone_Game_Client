@@ -22,7 +22,7 @@ namespace engine
 	{
 		Super::Awake();
 
-		s_ptr<Transform> tf = GetComponent<Transform>();
+		Transform* tf = GetComponent<Transform>();
 		tf->SetLocalPosition(float3(0.0f, 0.0f, 1.5f));
 		tf->SetLocalScale(float3(100.0f, 100.0f, 1.0f));
 	}
@@ -33,7 +33,7 @@ namespace engine
 		InputManager& input = InputManager::GetInst();
 		float dt = TimeManager::GetInst().GetDeltaTime();
 		
-		s_ptr<Transform> tr = GetComponent<Transform>();
+		Transform* tr = GetComponent<Transform>();
 		float3 pos = tr->GetLocalPosition();
 
 		if (input.GetKey(KeyCode::kUp))

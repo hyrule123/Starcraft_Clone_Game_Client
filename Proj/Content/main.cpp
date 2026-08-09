@@ -17,7 +17,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     using namespace engine;
     EngineMain::GetInst().Init(hInstance);
 
-    SceneManager::GetInst().ChangeScene(std::make_shared<MainGameScene>());
+    SceneManager::GetInst().ChangeScene(EntityManager::CreateEntity<MainGameScene>());
 
     return EngineMain::GetInst().Run();
 }

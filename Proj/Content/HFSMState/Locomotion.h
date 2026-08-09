@@ -11,7 +11,7 @@ namespace engine
     class Locomotion :
         public HFSMState
     {
-        CLASS_INFO(Locomotion, HFSMState)
+        ENTITY_INFO(Locomotion, HFSMState)
     public:
         Locomotion();
         virtual ~Locomotion() override;

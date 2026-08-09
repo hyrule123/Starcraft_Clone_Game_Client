@@ -12,7 +12,7 @@ namespace engine
     class Idle :
         public HFSMState
     {
-		CLASS_INFO(Idle, HFSMState)
+		ENTITY_INFO(Idle, HFSMState)
     public:
 		Idle();
 		virtual ~Idle() override;

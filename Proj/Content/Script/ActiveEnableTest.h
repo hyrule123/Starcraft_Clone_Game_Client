@@ -6,7 +6,7 @@ namespace engine
     class ActiveEnableTest :
         public Script
     {
-		CLASS_INFO(ActiveEnableTest, Script)
+		ENTITY_INFO(ActiveEnableTest, Script)
 
     public:
         ActiveEnableTest();

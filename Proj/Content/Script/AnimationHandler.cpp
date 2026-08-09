@@ -28,17 +28,10 @@ namespace engine
 		renderer_ = GetOwnerGameObject()->GetComponent<SpriteRenderer>();
 		blackboard_ = GetOwnerGameObject()->GetComponent<BlackBoard>();
 
-		ASSERT(false == transform_.expired());
-		ASSERT(false == animator_.expired());
-		ASSERT(false == renderer_.expired());
-		ASSERT(false == blackboard_.expired());
-
-		s_ptr<BlackBoard> bb = blackboard_.lock();
-
-		direction_ = bb->GetValue<float2>("Direction"_hash);
+		direction_ = blackboard_->GetValue<float2>("Direction"_hash);
 		ASSERT(direction_);
 
-		playing_animation_ = bb->GetValue<HashedStringView>("PlayingAnimation"_hash);
+		playing_animation_ = blackboard_->GetValue<HashedStringView>("PlayingAnimation"_hash);
 		ASSERT(playing_animation_);
 
 		ASSERT(false == anim_clips_table_.cont.empty());
@@ -56,9 +49,8 @@ namespace engine
 	{
 		Super::Update();
 
-		s_ptr<Transform> tr = transform_.lock();
-		ASSERT(tr);
-		const float3 current_pos = tr->GetLocalPosition();
+		ASSERT(transform_);
+		const float3 current_pos = transform_->GetLocalPosition();
 
 		bool is_dir_changed = false;
 		bool is_anim_changed = false;
@@ -104,14 +96,18 @@ namespace engine
 		//애니메이션이 바뀌었을 때: 새로 플레이, Direction도 바뀌었을 수 있으므로 반영
 		if (is_anim_changed)
 		{
-			animator_.lock()->Play((*current_anim_clip_ptr_)[direction_idx_]);
-			renderer_.lock()->SetFlipLeftRight(needs_flip_lr_);
+			ASSERT(animator_);
+			animator_->Play((*current_anim_clip_ptr_)[direction_idx_]);
+			ASSERT(renderer_);
+			renderer_->SetFlipLeftRight(needs_flip_lr_);
 		}
 		//애니메이션은 안 바뀌고 방향만 바뀌었을 때: 현재 프레임 유지한 채로 애니메이션 전환
 		else if(is_dir_changed)
 		{
-			animator_.lock()->SwitchAnimKeepFrame((*current_anim_clip_ptr_)[direction_idx_]);
-			renderer_.lock()->SetFlipLeftRight(needs_flip_lr_);
+			ASSERT(animator_);
+			animator_->SwitchAnimKeepFrame((*current_anim_clip_ptr_)[direction_idx_]);
+			ASSERT(renderer_);
+			renderer_->SetFlipLeftRight(needs_flip_lr_);
 		}
 		//이외: 아무것도 변경할 필요 없음
 

@@ -23,28 +23,26 @@ namespace engine
 	{
 		Super::OnAwake(ai_context);
 
-		s_ptr<GameObject> obj = ai_context.game_object.lock();
-		ASSERT(obj);
+		ASSERT(ai_context.game_object);
 
-		s_ptr<BlackBoard> blackboard = ai_context.black_board.lock();
-		ASSERT(blackboard);
+		ASSERT(ai_context.black_board);
 
-		playing_animation_ = blackboard->GetValue<HashedStringView>("PlayingAnimation"_hash);
+		playing_animation_ = ai_context.black_board->GetValue<HashedStringView>("PlayingAnimation"_hash);
 		ASSERT(playing_animation_);
 
-		is_moving_ = blackboard->GetValue<bool>("IsMoving"_hash);
+		is_moving_ = ai_context.black_board->GetValue<bool>("IsMoving"_hash);
 		ASSERT(is_moving_);
 
-		cur_direction_ = blackboard->GetValue<float2>("Direction"_hash);
+		cur_direction_ = ai_context.black_board->GetValue<float2>("Direction"_hash);
 		ASSERT(cur_direction_);
 
-		destination_ = blackboard->GetValue<float2>("Destination"_hash);
+		destination_ = ai_context.black_board->GetValue<float2>("Destination"_hash);
 		ASSERT(destination_);
 
-		speed_ = blackboard->GetValue<float>("Speed"_hash);
+		speed_ = ai_context.black_board->GetValue<float>("Speed"_hash);
 		ASSERT(speed_);
 
-		turn_speed_ = blackboard->GetValue<float>("TurnSpeed"_hash);
+		turn_speed_ = ai_context.black_board->GetValue<float>("TurnSpeed"_hash);
 		ASSERT(turn_speed_);
 	}
 
@@ -60,8 +58,8 @@ namespace engine
 	{
 		Super::OnUpdate(ai_context);
 
-		s_ptr<Transform> tr = ai_context.transform.lock();
-		ASSERT(tr);
+		ASSERT(ai_context.transform);
+		Transform* tr = ai_context.transform;
 		float3 cur_pos = tr->GetLocalPosition();
 
 		*is_moving_ = (cur_pos.x != destination_->x || cur_pos.y != destination_->y);

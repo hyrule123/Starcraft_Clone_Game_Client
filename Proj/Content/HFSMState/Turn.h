@@ -10,7 +10,7 @@ namespace engine
     class Turn :
         public HFSMState
     {
-		CLASS_INFO(Turn, HFSMState)
+		ENTITY_INFO(Turn, HFSMState)
     public:
         Turn();
 		virtual ~Turn() override;  

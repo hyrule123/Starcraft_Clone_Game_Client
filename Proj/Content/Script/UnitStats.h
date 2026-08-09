@@ -8,7 +8,7 @@ namespace engine
     class UnitStats :
         public Script
     {
-		CLASS_INFO(UnitStats, Script)
+		ENTITY_INFO(UnitStats, Script)
     public:
         UnitStats();
 		virtual ~UnitStats() override;

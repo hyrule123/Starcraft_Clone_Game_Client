@@ -10,7 +10,7 @@ namespace engine
     class TerranMedic :
         public GameObject
     {
-        CLASS_INFO(TerranMedic, GameObject)
+        ENTITY_INFO(TerranMedic, GameObject)
     public:
         TerranMedic();
         virtual ~TerranMedic() override;

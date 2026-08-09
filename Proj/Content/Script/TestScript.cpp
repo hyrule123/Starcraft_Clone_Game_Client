@@ -47,7 +47,7 @@ namespace engine
 		{
 			DEBUG_LOG("TestScript::Update() - Q key pressed.");
 
-			if (target_obj_.expired())
+			if (!target_obj_)
 			{
 				DEBUG_LOG("Creating New TerranMarine Object...");
 
@@ -57,11 +57,11 @@ namespace engine
 			{
 				DEBUG_LOG("Destroying Target GameObject...");
 
-				target_obj_.lock()->Destroy();
+				target_obj_.get()->Destroy();
 			}
 		}
 
-		if (auto target_obj = target_obj_.lock())
+		if (auto target_obj = target_obj_.get())
 		{
 			if (InputManager::GetInst().GetKeyDown(KeyCode::kSpace))
 			{

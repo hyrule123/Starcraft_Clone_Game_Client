@@ -6,7 +6,7 @@ namespace engine
 	class UnitRoot :
 		public HFSMState
 	{
-		CLASS_INFO(UnitRoot, HFSMState)
+		ENTITY_INFO(UnitRoot, HFSMState)
 	public:
 		UnitRoot();
 		virtual ~UnitRoot() override;

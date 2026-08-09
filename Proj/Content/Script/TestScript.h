@@ -6,7 +6,7 @@ namespace engine
 	class TestScript :
 		public Script
 	{
-		CLASS_INFO(TestScript, Script)
+		ENTITY_INFO(TestScript, Script)
 	public:
 		TestScript();
 		virtual ~TestScript() override;
@@ -17,10 +17,10 @@ namespace engine
 		virtual void Update() override;
 		virtual void OnDisable() override;
 
-		void SetTargetEnableObject(const s_ptr<GameObject>& obj) { target_obj_ = obj; }
+		void SetTargetEnableObject(wh_ptr<GameObject> obj) { target_obj_ = obj; }
 
 	private:
-		w_ptr<GameObject> target_obj_ = {};
+		wh_ptr<GameObject> target_obj_ = {};
 	};
 }
 

@@ -27,12 +27,11 @@ namespace engine
 	{
 		Super::Awake();
 
-		s_ptr<BlackBoard> bb = GetOwnerGameObject()->GetComponent<BlackBoard>();
-		ASSERT(bb);
-		blackboard_ = bb;
+		blackboard_ = GetOwnerGameObject()->GetComponent<BlackBoard>();
+		ASSERT(blackboard_);
 
-		command_input_ = bb->GetValue<HashedStringView>("CommandInput"_hash);
-		destination_ = bb->GetValue<float2>("Destination"_hash);
+		command_input_ = blackboard_->GetValue<HashedStringView>("CommandInput"_hash);
+		destination_ = blackboard_->GetValue<float2>("Destination"_hash);
 
 		ASSERT(command_input_);
 		ASSERT(destination_);

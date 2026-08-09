@@ -11,7 +11,7 @@ namespace engine
     class TerranMarine :
         public GameObject
     {
-        CLASS_INFO(TerranMarine, GameObject)
+        ENTITY_INFO(TerranMarine, GameObject)
     public:
         TerranMarine();
         virtual ~TerranMarine() override;
