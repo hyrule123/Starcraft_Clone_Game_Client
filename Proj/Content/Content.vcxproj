@@ -215,6 +215,7 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="MarineTestScript.h" />
     <ClInclude Include="Script\ActiveEnableTest.h" />
     <ClInclude Include="Commands.h" />
     <ClInclude Include="Script\DestroyTestScript.h" />
@@ -240,6 +241,7 @@
     <ClInclude Include="Script\TestScript.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="MarineTestScript.cpp" />
     <ClCompile Include="Script\ActiveEnableTest.cpp" />
     <ClCompile Include="Script\DestroyTestScript.cpp" />
     <ClCompile Include="HFSMState\Locomotion.cpp" />

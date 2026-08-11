@@ -49,16 +49,18 @@ namespace engine
 		tr->SetLocalScale({ 64.0f, 64.0f, 1.0f });
 		tr->SetLocalPosition({ 0.0f, 0.0f, 10.0f });
 
+
 		auto renderer = AddComponent<SpriteRenderer>();
 		auto animator = AddComponent<SpriteAnimator>();
 		auto hfsm = AddComponent<HFSM>();
 		auto blackboard = AddComponent<BlackBoard>();
 		auto unit_input_handler = AddComponent<UnitInputHandler>();
 		auto anim_handler = AddComponent<AnimationHandler>();
-		//auto collider = AddComponent<AABBCollider2D>();
+		auto collider = AddComponent<AABBCollider2D>();
+		AddComponent("MarineTestScript"_hash);
 		
 		// 64 * 64 사이즈의 AABB Collider
-		//collider->SetLocalBounds({ { -32.0f, -32.0f }, { 32.0f, 32.0f } });
+		collider->SetLocalBounds({ { -32.0f, -32.0f }, { 32.0f, 32.0f } });
 
 		auto& res_mgr = ResourceManager::GetInst();
 
