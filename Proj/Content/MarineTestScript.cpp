@@ -16,7 +16,7 @@ namespace engine
 	{
 		Super::Init();
 
-		SubscribeCollisionEvents(true);
+		Subscribe(SubscribeType::kCollision);
 	}
 	void MarineTestScript::OnCollisionEnter2D(const Collision2D& _info)
 	{
