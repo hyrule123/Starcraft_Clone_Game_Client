@@ -43,9 +43,9 @@ namespace engine
 	{
 		Super::Update();
 		
-		if (InputManager::GetInst().GetKeyDown(KeyCode::kQ))
+		if (InputManager::GetInst().GetKeyDown(KeyCode::kE))
 		{
-			DEBUG_LOG("TestScript::Update() - Q key pressed.");
+			DEBUG_LOG("TestScript::Update() - E key pressed.");
 
 			if (target_obj_.get() == nullptr)
 			{

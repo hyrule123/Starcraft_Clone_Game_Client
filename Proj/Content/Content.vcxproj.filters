@@ -87,6 +87,12 @@
     <ClInclude Include="MarineTestScript.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SCMapLoader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MPQArchive.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -144,6 +150,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MarineTestScript.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SCMapLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MPQArchive.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

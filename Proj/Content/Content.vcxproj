@@ -216,6 +216,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="MarineTestScript.h" />
+    <ClInclude Include="MPQArchive.h" />
+    <ClInclude Include="SCMapLoader.h" />
     <ClInclude Include="Script\ActiveEnableTest.h" />
     <ClInclude Include="Commands.h" />
     <ClInclude Include="Script\DestroyTestScript.h" />
@@ -242,6 +244,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MarineTestScript.cpp" />
+    <ClCompile Include="MPQArchive.cpp" />
+    <ClCompile Include="SCMapLoader.cpp" />
     <ClCompile Include="Script\ActiveEnableTest.cpp" />
     <ClCompile Include="Script\DestroyTestScript.cpp" />
     <ClCompile Include="HFSMState\Locomotion.cpp" />
