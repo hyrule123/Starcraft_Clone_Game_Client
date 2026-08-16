@@ -7,9 +7,13 @@
 
 #include <Engine/Util/file_system.h>
 
+#include <Engine/Resource/Graphics/Buffer/Texture2D.h>
+
 #include <Content/SCData/MPQArchive.h>
 
 #include <fstream>
+
+
 
 namespace engine
 {
@@ -99,10 +103,108 @@ namespace engine
 
 		// 맵 데이터 해석
 		auto mega_tile_count = GetMegaTileCount(map_data_table);
+		if (mega_tile_count[0] == 0 || mega_tile_count[1] == 0)
+		{
+			ERROR_MESSAGE("Invalid map size. Width and height must be between 1 and 256.");
+			return false;
+		}
+		const uint32& map_width = mega_tile_count[0];
+		const uint32& map_height = mega_tile_count[1];
+
 		auto terrain_type = GetTerrainType(map_data_table);
+		if (terrain_type == TileSetType::kEND)
+		{
+			ERROR_MESSAGE("Invalid terrain type.");
+			return false;
+		}
+
+		const TileSet& tileset = tileset_data_[(size_t)terrain_type];
+
+		auto mtxm = GetMTXM(map_data_table, map_width, map_height);
+
+		// unit_data는 비어있어도 에러는 아님
 		auto unit_data = GetUnitData(map_data_table);
 
+		// 픽셀 색 정보 컨테이너 할당
+		size_t pixel_width = (size_t)map_width * (size_t)32;
+		size_t pixel_height = (size_t)map_height * (size_t)32;
+		std::vector<RGBA> pixels(pixel_width * pixel_height);
 
+		//채워넣기
+		for (uint32 ty = 0; ty < map_height; ++ty)
+		{
+			for (uint32 tx = 0; tx < map_width; ++tx)
+			{
+				// 1. MTXM에서 타일 정보 가져오기
+				const uint16 v = mtxm[ty * map_width + tx];
+
+				// CV5 인덱스
+				const uint32 group = MTXMGroup(v);
+
+				// CV5 내 타일 인덱스 (0 ~ 15)
+				const uint32 tile = MTXMTile(v);
+
+				// 널 타일 → 검정
+				if (group >= tileset.cv5.size()) { continue; }
+
+				// CV5[group]의 megatile[tile]
+				const uint16 mega = tileset.cv5[group].megatile[tile];
+				if (mega >= tileset.vx4.size()) { continue; }
+
+				// 메가타일 안의 미니타일 4*4 참조
+				for (uint32 m = 0; m < 16; ++m)
+				{
+					// VX4에서 VR4 참조 및 반전 여부 확인
+					const uint16 ref = tileset.vx4[mega].minitile[m];
+					const uint16 vr4_id = VX4Ref(ref);
+					const bool   flipped = VX4Flipped(ref);
+					if (vr4_id >= tileset.vr4.size()) { continue; }
+
+					const uint32 mx = (m % 4) * 8;
+					const uint32 my = (m / 4) * 8;
+
+					for (uint32 py = 0; py < 8; ++py)
+					{
+						for (uint32 px = 0; px < 8; ++px)
+						{
+							// VR4에서 WPE 색인 가져오기
+							const uint8 idx = tileset.vr4[vr4_id].pixel[py][flipped ? 7 - px : px];
+							const WPE& c = tileset.wpe[idx];
+
+							// 최종 픽셀 좌표 계산
+							const uint32 x = tx * 32 + mx + px;
+							const uint32 y = ty * 32 + my + py;
+
+							RGBA& pixel = pixels[y * pixel_width + x];
+							pixel.r = c.r;
+							pixel.g = c.g;
+							pixel.b = c.b;
+							pixel.a = 0xFF;	 // 알파 채널은 항상 255로 설정(원래 없음)
+						}
+					}
+
+				}
+			}
+		}
+
+
+		D3D11_TEXTURE2D_DESC desc = {};
+		desc.Width = (UINT)pixel_width;
+		desc.Height = (UINT)pixel_height;
+		desc.MipLevels = 1;
+		desc.ArraySize = 1;
+		desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		desc.SampleDesc.Count = 1;
+		desc.Usage = D3D11_USAGE_IMMUTABLE;
+		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+		D3D11_SUBRESOURCE_DATA init = {};
+		init.pSysMem = pixels.data();
+		init.SysMemPitch = (UINT)(pixel_width * 4);      // 바이트 단위
+
+		map_texture_ = EntityManager::CreateEntity<Texture2D>();
+		map_texture_->CreateTexture2D(&desc, &init);
+		map_texture_->CreateSRV(nullptr);
 
 		return true;
 	}
@@ -252,6 +354,32 @@ namespace engine
 		}
 
 		return unit_data_vector;
+	}
+	std::vector<MTXM> SCMapLoader::GetMTXM(const StringHashTable<std::vector<uint8>>& map_data_table, uint32 megatile_width, uint32 megatile_height)
+	{
+		auto it = map_data_table.find(SCChunkTypeName[(uint32)SCChunkType::kTileMapAtlas]);
+		if (it == map_data_table.end())
+		{
+			ERROR_MESSAGE("MTXM chunk not found in map data.");
+			return {};
+		}
+
+		const std::vector<uint8>& mtxm_data = it->second;
+		
+		std::vector<MTXM> mtxms((size_t)megatile_width * (size_t)megatile_height);
+
+#ifdef max
+#undef max
+#endif
+#ifdef min
+#undef min
+#endif
+		// 데이터 사이즈가 모자라도 정상 동작이라고 함(null tile)
+		size_t copy_size = std::min(mtxm_data.size(), mtxms.size() * sizeof(MTXM));
+
+		memcpy(mtxms.data(), mtxm_data.data(), copy_size);
+
+		return mtxms;
 	}
 }
 

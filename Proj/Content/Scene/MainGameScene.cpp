@@ -15,8 +15,8 @@
 
 #include <Engine/Game/GameObject.h>
 #include <Engine/Game/Component/Camera.h>
+#include <Engine/Game/Component/SpriteRenderer.h>
 #include <Engine/Game/Component/Transform.h>
-#include <Engine/Game/Component/AABBCollider2D.h>
 
 #include <Engine/Core/Debug.h>
 
@@ -44,17 +44,6 @@ namespace engine
 
 	void MainGameScene::Init()
 	{
-		// Test Area
-		
-		
-		stdfs::path map_path = ResourceManager::GetInst().GetResourceDir();
-		map_path /= "SCMap";
-		map_path /= L"(4)   투혼1.4.scx";
-
-		SCMapLoader map_loader;
-		bool load_result = map_loader.LoadMapData(map_path);
-		// 
-
 		Super::Init();
 
 		GetCollisionSystem2D()->SetCellSize(SC::kCellSize);
@@ -64,10 +53,10 @@ namespace engine
 
 		auto marine = AddGameObject("TerranMarine"_hash);
 		
-		for (size_t i = 0; i < 30; ++i)
-		{
-			AddGameObject("TestGameObject"_hash);
-		}
+		//for (size_t i = 0; i < 30; ++i)
+		//{
+		//	AddGameObject("TestGameObject"_hash);
+		//}
 
 		GameObject* camobj = AddGameObject<GameObject>();
 		camobj->SetName("MainCamera");
@@ -125,6 +114,31 @@ namespace engine
 		//렌더링
 		RenderManager::GetInst().GetOpaquePass()->SetRenderTargetGroup(sc_rendertarget_group);
 		RenderManager::GetInst().GetPresentPass()->SetSourceRenderTarget(sc_rendertarget_group);
+
+
+
+
+		// Test Area
+		stdfs::path map_path = ResourceManager::GetInst().GetResourceDir();
+		map_path /= "SCMap";
+		map_path /= L"(4)   투혼1.4.scx";
+
+		SCMapLoader map_loader;
+		bool load_result = map_loader.LoadMapData(map_path);
+
+		s_ptr<Texture2D> map_tex = map_loader.GetMapTexture();
+
+		map_tex->SaveToFile(ResourceManager::GetInst().GetResourceDir() / L"MapTexture.png");
+
+		GameObject* map_obj = AddGameObject<GameObject>();
+		map_obj->SetName("MapObject");
+		SpriteRenderer* renderer = map_obj->AddComponent<SpriteRenderer>();
+		s_ptr<Material> map_mtrl = renderer->GetMaterial()->Clone();
+		map_mtrl->SetTexture(map_tex, 0);
+		renderer->SetMaterial(map_mtrl);
+
+		map_obj->GetTransform()->SetLocalPosition({ 0.0f, 0.0f, 100.0f });
+		map_obj->GetTransform()->SetLocalScale({(float)map_tex->GetWidth(), (float)map_tex->GetHeight(), 1.0f});
 	}
 }
 
