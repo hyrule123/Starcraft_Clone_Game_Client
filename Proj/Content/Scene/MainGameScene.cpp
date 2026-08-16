@@ -29,7 +29,7 @@
 #include <Content/Script/ActiveEnableTest.h>
 #include <Content/Script/TestScript.h>
 
-#include <Content/MPQArchive.h>
+#include <Content/SCData/SCMapLoader.h>
 
 namespace engine
 {
@@ -51,17 +51,8 @@ namespace engine
 		map_path /= "SCMap";
 		map_path /= L"(4)   투혼1.4.scx";
 
-		MPQArchive* mpq_archive = new MPQArchive();
-		bool result = mpq_archive->OpenMPQFile(map_path);
-		if (result)
-		{
-			std::vector<uint8> map_data = mpq_archive->ExtractMapData();
-
-			int a = 3;
-		}
-		
-
-		delete mpq_archive;
+		SCMapLoader map_loader;
+		bool load_result = map_loader.LoadMapData(map_path);
 		// 
 
 		Super::Init();
