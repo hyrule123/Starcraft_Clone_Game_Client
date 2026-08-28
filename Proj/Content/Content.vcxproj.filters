@@ -93,6 +93,12 @@
     <ClInclude Include="SCData\MPQArchive.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SCData\SCMapBakeComputePass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SCData\SCMapCommon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -158,6 +164,9 @@
     <ClCompile Include="SCData\MPQArchive.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SCData\SCMapBakeComputePass.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Content.rc">
@@ -171,5 +180,8 @@
     <Image Include="Content.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="HLSL\SCMapBaker_CS.hlsl" />
   </ItemGroup>
 </Project>

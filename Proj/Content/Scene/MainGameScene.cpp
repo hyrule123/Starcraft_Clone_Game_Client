@@ -81,7 +81,7 @@ namespace engine
 		s_ptr<RenderTargetGroup> sc_rendertarget_group = std::move(EntityManager::CreateEntity<RenderTargetGroup>());
 		s_ptr<RenderTargetView> sc_rtv = std::move(EntityManager::CreateEntity<RenderTargetView>());
 		
-		bool result = sc_rtv->CreateDefault((UINT)SC::kResolutionWidth, (UINT)SC::kResolutionHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
+		bool result = sc_rtv->CreateDefaultBuffer((UINT)SC::kResolutionWidth, (UINT)SC::kResolutionHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
 		ASSERT_RELEASE(result);
 
 		//최종 렌더타겟에 이어붙일 때는 SRV가 필요
@@ -124,7 +124,11 @@ namespace engine
 		map_path /= L"(4)   투혼1.4.scx";
 
 		SCMapLoader map_loader;
-		bool load_result = map_loader.LoadMapData(map_path);
+
+		result = map_loader.LoadMapDataGPU(map_path);
+
+		/*
+		bool load_result = map_loader.LoadMapDataCPU(map_path);
 
 		s_ptr<Texture2D> map_tex = map_loader.GetMapTexture();
 
@@ -139,6 +143,7 @@ namespace engine
 
 		map_obj->GetTransform()->SetLocalPosition({ 0.0f, 0.0f, 100.0f });
 		map_obj->GetTransform()->SetLocalScale({(float)map_tex->GetWidth(), (float)map_tex->GetHeight(), 1.0f});
+		*/
 	}
 }
 

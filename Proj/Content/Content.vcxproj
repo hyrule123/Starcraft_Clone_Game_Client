@@ -217,7 +217,9 @@
   <ItemGroup>
     <ClInclude Include="MarineTestScript.h" />
     <ClInclude Include="SCData\MPQArchive.h" />
+    <ClInclude Include="SCData\SCMapCommon.h" />
     <ClInclude Include="SCData\SCMapLoader.h" />
+    <ClInclude Include="SCData\SCMapBakeComputePass.h" />
     <ClInclude Include="Script\ActiveEnableTest.h" />
     <ClInclude Include="Commands.h" />
     <ClInclude Include="Script\DestroyTestScript.h" />
@@ -246,6 +248,7 @@
     <ClCompile Include="MarineTestScript.cpp" />
     <ClCompile Include="SCData\MPQArchive.cpp" />
     <ClCompile Include="SCData\SCMapLoader.cpp" />
+    <ClCompile Include="SCData\SCMapBakeComputePass.cpp" />
     <ClCompile Include="Script\ActiveEnableTest.cpp" />
     <ClCompile Include="Script\DestroyTestScript.cpp" />
     <ClCompile Include="HFSMState\Locomotion.cpp" />
@@ -276,6 +279,18 @@
   <ItemGroup>
     <Image Include="Content.ico" />
     <Image Include="small.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="HLSL\SCMapBaker_CS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
