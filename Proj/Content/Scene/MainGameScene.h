@@ -14,6 +14,8 @@ namespace engine
 
         virtual void Init() override;
     private:
+        void PrepareMapLoader();
+
 		void LoadResources();
     };
 }

@@ -9,6 +9,9 @@
 #include <Engine/Resource/Graphics/RenderTargetGroup.h>
 #include <Engine/Resource/Graphics/Buffer/RenderTargetView.h>
 #include <Engine/Resource/Graphics/Buffer/DepthStencilView.h>
+#include <Engine/Resource/Graphics/Buffer/TypedBuffer.h>
+
+
 #include <Engine/Resource/Graphics/Material.h>
 #include <Engine/Resource/Graphics/Mesh.h>
 #include <Engine/Resource/Graphics/GraphicsShaderSet.h>
@@ -30,6 +33,11 @@
 #include <Content/Script/TestScript.h>
 
 #include <Content/SCData/SCMapLoader.h>
+#include <Content/SCData/SCMapBakeComputePass.h>
+
+#include <Content/SCMapRenderer.h>
+
+#include <Content/HLSL/SCMapRender.hlsli>
 
 namespace engine
 {
@@ -69,7 +77,49 @@ namespace engine
 
 		auto test_script = camobj->AddComponent<TestScript>();
 		test_script->SetTargetEnableObject(marine);
+
+		{
+			// Test Area
+			stdfs::path map_path = ResourceManager::GetInst().GetResourceDir();
+			map_path /= "SCMap";
+			map_path /= L"(4)   투혼1.4.scx";
+
+			u_ptr<SCMapLoader> map_loader = EntityManager::CreateEntity<SCMapLoader>();
+
+			bool result = false;
+			s_ptr<Texture2D> map_tex;
+
+			//result = map_loader->TestMap(map_path);
+			//ASSERT(result);
+			//map_tex = map_loader->GetMapTexture();
+			//map_path = ResourceManager::GetInst().GetResourceDir();
+			//map_path /= "MapTest.png";
+			//map_tex->SaveToFile(map_path);
+
+			result = map_loader->LoadMapDataGPU(map_path);
+			ASSERT(result);
+			map_tex = map_loader->GetMapTexture();
+
+			GameObject* map_obj = AddGameObject<GameObject>();
+			SCMapRenderer* renderer = map_obj->AddComponent<SCMapRenderer>();
+			auto mtrl = renderer->GetMaterial();
+			mtrl->SetTexture(map_tex, SLOT_T_MAP_TEXTURE);
+
+			auto* map_baker = map_loader->GetMapBaker();
+			ASSERT(map_baker != nullptr);
+
+			const MapInfo& map_info = map_baker->GetMapInfo();
+
+			const TileSetGPUData& tileset_gpu_data = map_baker->GetTileSetGPUData(map_info.terrain_type);
+
+			tileset_gpu_data.WPE_color_palettes->BindSRV(GraphicsDevice::GetInst().GetContext(), 1, ShaderStage::kPS);
+
+			renderer->SetMapLoader(std::move(map_loader));
+
+		}
 	}
+	void MainGameScene::PrepareMapLoader()
+	{}
 	void MainGameScene::LoadResources()
 	{
 		auto& res_mgr = ResourceManager::GetInst();
@@ -114,18 +164,6 @@ namespace engine
 		//렌더링
 		RenderManager::GetInst().GetOpaquePass()->SetRenderTargetGroup(sc_rendertarget_group);
 		RenderManager::GetInst().GetPresentPass()->SetSourceRenderTarget(sc_rendertarget_group);
-
-
-
-
-		// Test Area
-		stdfs::path map_path = ResourceManager::GetInst().GetResourceDir();
-		map_path /= "SCMap";
-		map_path /= L"(4)   투혼1.4.scx";
-
-		SCMapLoader map_loader;
-
-		result = map_loader.LoadMapDataGPU(map_path);
 
 		/*
 		bool load_result = map_loader.LoadMapDataCPU(map_path);

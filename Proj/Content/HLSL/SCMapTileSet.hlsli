@@ -3,6 +3,8 @@
 
 #include <Engine/HLSL/CppShared/CoreMinimal.hlsli>
 
+#include <Content/HLSL/SCMapCommon.hlsli>
+
 // 맵 정보(상수 버퍼)
 #define SLOT_B_MAP_INFO REG_B(0)
 
@@ -18,17 +20,11 @@
 // 아웃풋
 #define SLOT_U_MAP_TEXTURE REG_U(0)
 
-struct alignas(16) MapInfoCB
-{
-	uint2 megatile_size;
-	uint2 padding;
-};
-
 #ifdef  __HLSL
 
-cbuffer cbuffer_map_info : register(SLOT_B_MAP_INFO)
+cbuffer cbuffer_map_info : register(SLOT_B_PER_INSTANCE)
 {
-	MapInfoCB g_CB_map_info;
+	MapInfoCB g_map_info;
 };
 
 // 조회 체인:

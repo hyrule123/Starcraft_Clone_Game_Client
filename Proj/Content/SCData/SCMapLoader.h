@@ -1,4 +1,6 @@
 #pragma once
+#include <Engine/Core/Entity.h>
+
 #include <Engine/Core/CoreMinimal.h>
 #include <Engine/Core/Math.h>
 
@@ -12,8 +14,9 @@ namespace engine
 
 	class Texture2D;
 	class SCMapBakeComputePass;
-	class SCMapLoader
+	class SCMapLoader : public Entity
 	{
+		ENTITY_INFO(SCMapLoader, Entity)
 	public:
 		SCMapLoader();
 		~SCMapLoader();
@@ -23,7 +26,11 @@ namespace engine
 		bool LoadMapDataCPU(const stdfs::path& map_path);
 		bool LoadMapDataGPU(const stdfs::path& map_path);
 
+		bool TestMap(const stdfs::path& map_path);
+
 		s_ptr<Texture2D> GetMapTexture() const { return map_texture_; }
+
+		SCMapBakeComputePass* GetMapBaker() const { return sc_map_baker_.get(); }
 
 	private:
 		StringHashTable<std::vector<uint8>> ParseMapData(const std::vector<uint8>& map_data);

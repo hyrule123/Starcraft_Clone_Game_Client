@@ -12,7 +12,7 @@
 #include <Engine/Manager/ResourceManager.h>
 #include <Engine/Manager/GraphicsDevice.h>
 
-#include <Content/HLSL/SCTileSet.hlsli>
+#include <Content/HLSL/SCMapTileSet.hlsli>
 
 #include <span>
 
@@ -148,11 +148,13 @@ namespace engine
 			map_info_buffer_ = EntityManager::CreateEntity<ConstantBuffer>();
 			result = map_info_buffer_->Create<MapInfoCB>();
 			if (!result) { return nullptr; }
+
+			ResourceManager::GetInst().AddResource("MapInfoCB"_hash, map_info_buffer_);
 		}
 		map_info_buffer_->Upload(context, map_info_cb);
 
 		// CB bind
-		map_info_buffer_->Bind(context, ShaderStage::kCS, SLOT_B_MAP_INFO);
+		map_info_buffer_->Bind(context, ShaderStage::kCS, SLOT_B_PER_INSTANCE);
 
 		s_ptr<Texture2D> map_texture = EntityManager::CreateEntity<Texture2D>();
 		D3D11_TEXTURE2D_DESC desc = {};
@@ -189,7 +191,15 @@ namespace engine
 
 		map_texture->UnbindUAV(context, SLOT_U_MAP_TEXTURE);
 
+		map_info_ = map_info;
+
 		return map_texture;
+	}
+	const TileSetGPUData& SCMapBakeComputePass::GetTileSetGPUData(TileSetType type) const
+	{
+		size_t idx = (size_t)type;
+		ASSERT(idx < tileset_gpu_data_.size());
+		return tileset_gpu_data_[idx];
 	}
 	void SCMapBakeComputePass::BindResources(ID3D11DeviceContext* context)
 	{

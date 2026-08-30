@@ -32,13 +32,16 @@ namespace engine
 
 		s_ptr<Texture2D> BakeMapTexture(const MapInfo& map_info);
 
+		const TileSetGPUData& GetTileSetGPUData(TileSetType type) const;
+		const MapInfo& GetMapInfo() const { return map_info_; }
+
 	protected:
 		virtual void BindResources(ID3D11DeviceContext* context) override;
 		virtual void UnbindResources(ID3D11DeviceContext* context) override;
 		virtual std::array<UINT, 3> GetThreadCount() const override;
 
 	private:
-		u_ptr<ConstantBuffer> map_info_buffer_ = {};
+		s_ptr<ConstantBuffer> map_info_buffer_ = {};
 		std::vector<TileSetGPUData> tileset_gpu_data_ = {};
 		
 		MapInfo map_info_ = {};

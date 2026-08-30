@@ -99,6 +99,9 @@
     <ClInclude Include="SCData\SCMapCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SCMapRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -167,6 +170,9 @@
     <ClCompile Include="SCData\SCMapBakeComputePass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SCMapRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Content.rc">
@@ -183,5 +189,12 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="HLSL\SCMapBaker_CS.hlsl" />
+    <FxCompile Include="HLSL\SCMapRender_PS.hlsl" />
+    <FxCompile Include="HLSL\SCMapRender_VS.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="HLSL\SCMapRender.hlsli" />
+    <None Include="HLSL\SCMapCommon.hlsli" />
+    <None Include="HLSL\SCMapTileSet.hlsli" />
   </ItemGroup>
 </Project>

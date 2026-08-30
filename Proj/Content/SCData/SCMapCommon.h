@@ -1,7 +1,7 @@
 #pragma once
 #include <Engine/Core/CoreMinimal.h>
 
-#include <Content/HLSL/SCTileSet.hlsli>
+#include <Content/HLSL/SCMapTileSet.hlsli>
 
 namespace engine
 {
