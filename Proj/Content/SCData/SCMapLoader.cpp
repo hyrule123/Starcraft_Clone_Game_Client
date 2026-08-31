@@ -22,7 +22,6 @@
 namespace engine
 {
 	SCMapLoader::SCMapLoader()
-		: Super(SCMapLoader::kClassConcreteName)
 	{
 		LoadTilesetData();
 	}
@@ -35,12 +34,10 @@ namespace engine
 		tileset_path /= "SCMap";
 		tileset_path /= "TileSet";
 
-		// kEND까지의 TileSet을 담을 수 있는 배열을 생성
-		tileset_data_.resize((size_t)TileSetType::kEND);
-
-		for (int TileSetIdx = 0; TileSetIdx < (int)TileSetType::kEND; ++TileSetIdx)
+		for (size_t TileSetIdx = 0; TileSetIdx < (size_t)TileSetType::kEND; ++TileSetIdx)
 		{
-			TileSet& tileset = tileset_data_[TileSetIdx];
+			tilesets_[TileSetIdx] = TileSet();
+			TileSet& tileset = tilesets_[TileSetIdx];
 
 			stdfs::path each_tileset_path = tileset_path / kTileSetTypeNames[TileSetIdx];
 
@@ -81,7 +78,7 @@ namespace engine
 		}
 		
 		sc_map_baker_ = EntityManager::CreateEntity<SCMapBakeComputePass>();
-		bool result = sc_map_baker_->CreateTileSetGPUData(tileset_data_);
+		bool result = sc_map_baker_->CreateTileSetGPUData(tilesets_);
 		if (!result)
 		{
 			ERROR_MESSAGE("Failed to create TileSet GPU data.");
@@ -91,62 +88,28 @@ namespace engine
 		return true;
 	}
 
-	bool SCMapLoader::LoadMapDataCPU(const stdfs::path& map_path)
+	u_ptr<SCMap> SCMapLoader::LoadMapDataCPU(const stdfs::path& map_path)
 	{
-		MPQArchive mpq_archive;
-		bool result = mpq_archive.OpenMPQFile(map_path);
+		ASSERT(sc_map_baker_ != nullptr);
 
-		if (false == result)
-		{
-			ERROR_MESSAGE("Failed to open MPQ archive.");
-			return false;
-		}
+		SCMapLoadingData map_data = LoadMapLoadingData(map_path);
 
-		std::vector<uint8> map_data = mpq_archive.OpenInnerFile("staredit\\scenario.chk");
-		if (map_data.empty())
-		{
-			ERROR_MESSAGE("Failed to open scenario.chk file.");
-			return false;
-		}
-
-		StringHashTable<std::vector<uint8>> map_data_table = ParseMapData(map_data);
-
-		// 맵 데이터 해석
-		auto mega_tile_count = GetMegaTileCount(map_data_table);
-		if (mega_tile_count[0] == 0 || mega_tile_count[1] == 0)
-		{
-			ERROR_MESSAGE("Invalid map size. Width and height must be between 1 and 256.");
-			return false;
-		}
-		const uint32& map_width = mega_tile_count[0];
-		const uint32& map_height = mega_tile_count[1];
-
-		auto terrain_type = GetTerrainType(map_data_table);
-		if (terrain_type == TileSetType::kEND)
-		{
-			ERROR_MESSAGE("Invalid terrain type.");
-			return false;
-		}
-
-		const TileSet& tileset = tileset_data_[(size_t)terrain_type];
-
-		auto mtxm = GetMTXM(map_data_table, map_width, map_height);
-
-		// unit_data는 비어있어도 에러는 아님
-		auto unit_data = GetUnitData(map_data_table);
+		// 지형 타입에 맞는 타일셋
+		TileSet& tileset = tilesets_[(size_t)map_data.terrain_type];
 
 		// 픽셀 색 정보 컨테이너 할당
-		size_t pixel_width = (size_t)map_width * (size_t)32;
-		size_t pixel_height = (size_t)map_height * (size_t)32;
-		std::vector<RGBA> pixels(pixel_width * pixel_height);
+		size_t pixel_width = (size_t)map_data.megatile_width * (size_t)32;
+		size_t pixel_height = (size_t)map_data.megatile_height * (size_t)32;
+		std::vector<uint8> WPE_idx;
+		WPE_idx.resize(pixel_width * pixel_height);
 
 		//채워넣기
-		for (uint32 ty = 0; ty < map_height; ++ty)
+		for (uint32 ty = 0; ty < map_data.megatile_height; ++ty)
 		{
-			for (uint32 tx = 0; tx < map_width; ++tx)
+			for (uint32 tx = 0; tx < map_data.megatile_width; ++tx)
 			{
 				// 1. MTXM에서 타일 정보 가져오기
-				const uint16 v = mtxm[ty * map_width + tx];
+				const uint16 v = map_data.mtxm[ty * map_data.megatile_width + tx];
 
 				// CV5 인덱스
 				const uint32 group = MTXMGroup(v);
@@ -179,17 +142,20 @@ namespace engine
 						{
 							// VR4에서 WPE 색인 가져오기
 							const uint8 idx = tileset.vr4[vr4_id].pixels[py][flipped ? 7 - px : px];
-							const WPE& c = tileset.wpe[idx];
 
 							// 최종 픽셀 좌표 계산
 							const uint32 x = tx * 32 + mx + px;
 							const uint32 y = ty * 32 + my + py;
 
-							RGBA& pixel = pixels[y * pixel_width + x];
-							pixel.r = c.r;
-							pixel.g = c.g;
-							pixel.b = c.b;
-							pixel.a = 0xFF;	 // 알파 채널은 항상 255로 설정(원래 없음)
+							WPE_idx[y * pixel_width + x] = idx;
+
+							// 색상을 가져오지 않고, WPE 색인만 저장하도록 변경했음.
+							//const WPE& c = tileset->wpe[idx];
+							//RGBA& pixel = pixels[y * pixel_width + x];
+							//pixel.r = c.r;
+							//pixel.g = c.g;
+							//pixel.b = c.b;
+							//pixel.a = 0xFF;	 // 알파 채널은 항상 255로 설정(원래 없음)
 						}
 					}
 
@@ -197,27 +163,52 @@ namespace engine
 			}
 		}
 
+		// Texture 생성
 		D3D11_TEXTURE2D_DESC desc = {};
 		desc.Width = (UINT)pixel_width;
 		desc.Height = (UINT)pixel_height;
 		desc.MipLevels = 1;
 		desc.ArraySize = 1;
-		desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		desc.Format = DXGI_FORMAT_R8_UINT;
 		desc.SampleDesc.Count = 1;
 		desc.Usage = D3D11_USAGE_IMMUTABLE;
 		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 
-		D3D11_SUBRESOURCE_DATA init = {};
-		init.pSysMem = pixels.data();
-		init.SysMemPitch = (UINT)(pixel_width * 4);      // 바이트 단위
+		D3D11_SUBRESOURCE_DATA init_data = {};
+		init_data.pSysMem = WPE_idx.data();
+		init_data.SysMemPitch = (uint32)(sizeof(uint8)) * (uint32)pixel_width;      // 바이트 단위
 
-		map_texture_ = EntityManager::CreateEntity<Texture2D>();
-		map_texture_->CreateTexture2D(&desc, &init);
-		map_texture_->CreateSRV(nullptr);
+		u_ptr<SCMap> result_map = std::make_unique<SCMap>();
+		result_map->texture = EntityManager::CreateEntity<Texture2D>();
+		bool result = result_map->texture->CreateTexture2D(&desc, &init_data);
+		if (result == false) { return nullptr; }
 
-		return true;
+		result_map->megatile_width = map_data.megatile_width;
+		result_map->megatile_height = map_data.megatile_height;
+		result_map->terrain_type = map_data.terrain_type;
+		result_map->unit_data = std::move(map_data.unit_data);
+		result_map->wpe_color_palettes = sc_map_baker_->GetWPEColorPaletteBuffer(map_data.terrain_type);
+
+		return result_map;
 	}
-	bool SCMapLoader::LoadMapDataGPU(const stdfs::path& map_path)
+	u_ptr<SCMap> SCMapLoader::LoadMapDataGPU(const stdfs::path& map_path)
+	{
+		SCMapLoadingData map_data = LoadMapLoadingData(map_path);
+
+		u_ptr<SCMap> result_map = std::make_unique<SCMap>();
+		result_map->texture = sc_map_baker_->BakeMapTexture(map_data);
+		if(result_map->texture == nullptr) { return nullptr; }
+		
+		result_map->megatile_width = map_data.megatile_width;
+		result_map->megatile_height = map_data.megatile_height;
+		result_map->terrain_type = map_data.terrain_type;
+		result_map->unit_data = std::move(map_data.unit_data);
+		result_map->wpe_color_palettes = sc_map_baker_->GetWPEColorPaletteBuffer(map_data.terrain_type);
+
+		return result_map;
+	}
+
+	SCMapLoadingData SCMapLoader::LoadMapLoadingData(const stdfs::path& map_path)
 	{
 		MPQArchive mpq_archive;
 		bool result = mpq_archive.OpenMPQFile(map_path);
@@ -225,167 +216,43 @@ namespace engine
 		if (false == result)
 		{
 			ERROR_MESSAGE("Failed to open MPQ archive.");
-			return false;
+			return SCMapLoadingData{};
 		}
 
-		std::vector<uint8> map_data = mpq_archive.OpenInnerFile("staredit\\scenario.chk");
-		if (map_data.empty())
+		SCMapLoadingData map_data = {};
+
+		map_data.map_raw_bytes = mpq_archive.OpenInnerFile("staredit\\scenario.chk");
+		if (map_data.map_raw_bytes.empty())
 		{
 			ERROR_MESSAGE("Failed to open scenario.chk file.");
-			return false;
+			return SCMapLoadingData{};
 		}
 
-		StringHashTable<std::vector<uint8>> map_data_table = ParseMapData(map_data);
+		map_data.map_data_table = ParseMapData(map_data.map_raw_bytes);
 
-		// 맵 데이터 해석
-		auto mega_tile_count = GetMegaTileCount(map_data_table);
-		if (mega_tile_count[0] == 0 || mega_tile_count[1] == 0)
-		{
-			ERROR_MESSAGE("Invalid map size. Width and height must be between 1 and 256.");
-			return false;
-		}
+		// 맵 사이즈
+		auto megatile_count = GetMegaTileCount(map_data.map_data_table);
+		const uint32& megatile_width = megatile_count[0];
+		const uint32& megatile_height = megatile_count[1];
+		if (megatile_width == 0 || megatile_height == 0) { return SCMapLoadingData{}; }
+		map_data.megatile_width = megatile_width;
+		map_data.megatile_height = megatile_height;
 
-		auto terrain_type = GetTerrainType(map_data_table);
-		if (terrain_type == TileSetType::kEND)
-		{
-			ERROR_MESSAGE("Invalid terrain type.");
-			return false;
-		}
+		// 지형 타입
+		auto terrain_type = GetTerrainType(map_data.map_data_table);
+		if (terrain_type == TileSetType::kEND) { return SCMapLoadingData{}; }
+		map_data.terrain_type = terrain_type;
 
-		MapInfo map_info = {};
-		map_info.mtxm = GetMTXM(map_data_table, mega_tile_count[0], mega_tile_count[1]);
-		map_info.megatile_width = mega_tile_count[0];
-		map_info.megatile_height = mega_tile_count[1];
-		map_info.terrain_type = terrain_type;
+		// MTXM 데이터
+		map_data.mtxm = GetMTXM(map_data.map_data_table, megatile_width, megatile_height);
+		if (map_data.mtxm.empty()) { return SCMapLoadingData{}; }
 
-		map_texture_ = sc_map_baker_->BakeMapTexture(map_info);
+		// Unit Data (비어있어도 무관)
+		map_data.unit_data = GetUnitData(map_data.map_data_table);
 
-		return true;
+		return std::move(map_data);
 	}
-	bool SCMapLoader::TestMap(const stdfs::path& map_path)
-	{
-		MPQArchive mpq_archive;
-		bool result = mpq_archive.OpenMPQFile(map_path);
 
-		if (false == result)
-		{
-			ERROR_MESSAGE("Failed to open MPQ archive.");
-			return false;
-		}
-
-		std::vector<uint8> map_data = mpq_archive.OpenInnerFile("staredit\\scenario.chk");
-		if (map_data.empty())
-		{
-			ERROR_MESSAGE("Failed to open scenario.chk file.");
-			return false;
-		}
-
-		StringHashTable<std::vector<uint8>> map_data_table = ParseMapData(map_data);
-
-		// 맵 데이터 해석
-		auto mega_tile_count = GetMegaTileCount(map_data_table);
-		if (mega_tile_count[0] == 0 || mega_tile_count[1] == 0)
-		{
-			ERROR_MESSAGE("Invalid map size. Width and height must be between 1 and 256.");
-			return false;
-		}
-		const uint32& map_width = mega_tile_count[0];
-		const uint32& map_height = mega_tile_count[1];
-
-		auto terrain_type = GetTerrainType(map_data_table);
-		if (terrain_type == TileSetType::kEND)
-		{
-			ERROR_MESSAGE("Invalid terrain type.");
-			return false;
-		}
-
-		const TileSet& tileset = tileset_data_[(size_t)terrain_type];
-
-		auto mtxm = GetMTXM(map_data_table, map_width, map_height);
-
-		// unit_data는 비어있어도 에러는 아님
-		auto unit_data = GetUnitData(map_data_table);
-
-		// 픽셀 색 정보 컨테이너 할당
-		size_t pixel_width = (size_t)map_width * (size_t)32;
-		size_t pixel_height = (size_t)map_height * (size_t)32;
-		std::vector<RGBA> pixels(pixel_width * pixel_height);
-
-		//채워넣기
-		for (uint32 ty = 0; ty < map_height; ++ty)
-		{
-			for (uint32 tx = 0; tx < map_width; ++tx)
-			{
-				// 1. MTXM에서 타일 정보 가져오기
-				const uint16 v = mtxm[ty * map_width + tx];
-
-				// CV5 인덱스
-				const uint32 group = MTXMGroup(v);
-
-				// CV5 내 타일 인덱스 (0 ~ 15)
-				const uint32 tile = MTXMTile(v);
-
-				// 널 타일 → 검정
-				if (group >= tileset.cv5.size()) { continue; }
-
-				// CV5[group]의 CV5_megatiles[tile]
-				const uint16 mega = tileset.cv5[group].megatiles[tile];
-				if (mega >= tileset.vx4.size()) { continue; }
-
-				// 메가타일 안의 미니타일 4*4 참조
-				for (uint32 m = 0; m < 16; ++m)
-				{
-					// VX4에서 VR4 참조 및 반전 여부 확인
-					const uint16 ref = tileset.vx4[mega].minitiles[m];
-					const uint16 vr4_id = VX4Ref(ref);
-					const bool   flipped = VX4Flipped(ref);
-					if (vr4_id >= tileset.vr4.size()) { continue; }
-
-					const uint32 mx = (m % 4) * 8;
-					const uint32 my = (m / 4) * 8;
-
-					for (uint32 py = 0; py < 8; ++py)
-					{
-						for (uint32 px = 0; px < 8; ++px)
-						{
-							// VR4에서 WPE 색인 가져오기
-							const uint8 idx = tileset.vr4[vr4_id].pixels[py][flipped ? 7 - px : px];
-							const WPE& c = tileset.wpe[idx];
-
-							// 최종 픽셀 좌표 계산
-							const uint32 x = tx * 32 + mx + px;
-							const uint32 y = ty * 32 + my + py;
-
-							RGBA& pixel = pixels[y * pixel_width + x];
-							pixel.r = idx;
-							pixel.a = 0xFF;	 // 알파 채널은 항상 255로 설정(원래 없음)
-						}
-					}
-
-				}
-			}
-		}
-
-		D3D11_TEXTURE2D_DESC desc = {};
-		desc.Width = (UINT)pixel_width;
-		desc.Height = (UINT)pixel_height;
-		desc.MipLevels = 1;
-		desc.ArraySize = 1;
-		desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		desc.SampleDesc.Count = 1;
-		desc.Usage = D3D11_USAGE_IMMUTABLE;
-		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-
-		D3D11_SUBRESOURCE_DATA init = {};
-		init.pSysMem = pixels.data();
-		init.SysMemPitch = (UINT)(pixel_width * 4);      // 바이트 단위
-
-		map_texture_ = EntityManager::CreateEntity<Texture2D>();
-		map_texture_->CreateTexture2D(&desc, &init);
-		map_texture_->CreateSRV(nullptr);
-
-		return true;
-	}
 	StringHashTable<std::vector<uint8>> SCMapLoader::ParseMapData(const std::vector<uint8>& map_data)
 	{
 		// ERA, DIM, MTXM, UNIT 파일을 순차적으로 읽어와서 처리

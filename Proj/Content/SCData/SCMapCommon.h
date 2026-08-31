@@ -253,7 +253,7 @@ namespace engine
 	x - 알려지지 않음 / 사용되지 않음
 */
 
-	// MTXM : 좌상단으로부터 한 칸씩 메가타일의 인덱스가 적혀있음.
+// MTXM : 좌상단으로부터 한 칸씩 메가타일의 인덱스가 적혀있음.
 	using MTXM = uint16;
 
 	struct RGBA { uint8 r, g, b, a; };
@@ -261,11 +261,37 @@ namespace engine
 	constexpr uint32 MTXMGroup(uint16 v) { return (v & 0b0111'1111'1111'0000) >> 4; }
 	constexpr uint32 MTXMTile(uint16 v) { return  v & 0b0000'0000'0000'1111; }
 
-	struct MapInfo
+	class Texture2D;
+	class TypedBuffer;
+	struct TileSet;
+	struct TileSetGPU;
+
+	// 최종 결과물
+	struct SCMap
 	{
 		TileSetType terrain_type = TileSetType::kEND;
-		uint32 megatile_width;
-		uint32 megatile_height;
-		std::vector<MTXM> mtxm;
+		uint32 megatile_width = 0;
+		uint32 megatile_height = 0;
+		
+		std::vector<UnitData> unit_data = {};
+
+		// 결과물
+		s_ptr<Texture2D> texture = {};	// uint8 texture
+
+		// WPE 색상 팔레트
+		s_ptr<TypedBuffer> wpe_color_palettes = {};
+	};
+
+	struct SCMapLoadingData
+	{
+		TileSetType terrain_type = TileSetType::kEND;
+		uint32 megatile_width = 0;
+		uint32 megatile_height = 0;
+
+		std::vector<uint8> map_raw_bytes = {};
+		StringHashTable<std::vector<uint8>> map_data_table = {};
+
+		std::vector<MTXM> mtxm = {};
+		std::vector<UnitData> unit_data = {};
 	};
 }

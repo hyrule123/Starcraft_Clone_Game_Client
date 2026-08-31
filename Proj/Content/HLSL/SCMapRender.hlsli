@@ -3,14 +3,18 @@
 
 #include <Content/HLSL/SCMapCommon.hlsli>
 
-// Slot 0: Map Info (PerInstance)
-#define SLOT_T_MAP_TEXTURE REG_T(1)
-#define SLOT_T_WPE_INDICES REG_T(2)
+#define SLOT_T_MAP_TEXTURE REG_T(0)
+#define SLOT_T_WPE_INDICES REG_T(1)
 
 struct SCMapVSIn
 {
 	float3 position SEMANTIC(POSITION)
 	float2 uv SEMANTIC(TEXCOORD)
+	
+	#ifdef __HLSL
+	uint instance_id SEMANTIC(SV_InstanceID)
+	#endif//__HLSL
+	
 };
 
 #ifdef __HLSL
@@ -23,6 +27,9 @@ struct SCMapVSOut
 };
 
 // SBuffer
+Texture2D<uint> map_texture : register(SLOT_T_MAP_TEXTURE); // Slot 0
+Buffer<float4> wpe_indices : register(SLOT_T_WPE_INDICES); // Slot 1
+
 // Slot 32: Map Info
 StructuredBuffer<MapInfoCB> map_info : register(SLOT_T_PER_INSTANCE);
 
@@ -30,8 +37,7 @@ StructuredBuffer<MapInfoCB> map_info : register(SLOT_T_PER_INSTANCE);
 // Slot 0: Map Info
 // Slot 1: Camera Info
 
-Texture2D<uint> map_texture : register(SLOT_T_MAP_TEXTURE);
-Buffer<float4> wpe_indices : register(SLOT_T_WPE_INDICES);
+
 
 #endif
 

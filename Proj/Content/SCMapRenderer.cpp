@@ -50,8 +50,8 @@ namespace engine
 		map_mtrl->SetShaderSet(shader_set, RenderPassOrder::kForwardOpaque);
 		SetMaterial(map_mtrl);
 
-		per_obj_cb_ = ResourceManager::GetInst().Find<ConstantBuffer>("MapInfoCB"_hash);
-		ASSERT(per_obj_cb_ != nullptr);
+		//per_obj_cb_ = ResourceManager::GetInst().Find<ConstantBuffer>("MapInfoCB"_hash);
+		//ASSERT(per_obj_cb_ != nullptr);
 	}
 	void SCMapRenderer::LateUpdate()
 	{
@@ -73,20 +73,32 @@ namespace engine
 			opaque_pass->SubmitRenderItem(item);
 		}
 	}
-	void SCMapRenderer::WritePerObjData(void* ptr)
+	void SCMapRenderer::WritePerObjData(DataBlock data_block)
 	{
-		ASSERT(map_loader_ != nullptr);
+		if (sc_map_ == nullptr)
+		{
+			ASSERT(false);
+			return;
+		}
+		if(false == data_block.IsValid())
+		{
+			ASSERT(false);
+			return;
+		}
 
-		auto* baker = map_loader_->GetMapBaker();
-		ASSERT(baker != nullptr);
+		auto* context = GraphicsDevice::GetInst().GetContext();
 
-		const auto& map_info = baker->GetMapInfo();
-
-		const auto& tileset_data = baker->GetTileSetGPUData(map_info.terrain_type);
-		tileset_data.WPE_color_palettes->BindSRV(GraphicsDevice::GetInst().GetContext(), SLOT_T_WPE_INDICES, ShaderStage::kPS);
+		//TODO: 임시방편, Shader Set 단위로 묶는 함수가 필요할 듯
+		sc_map_->wpe_color_palettes->BindSRV(context, SLOT_T_WPE_INDICES, ShaderStage::kPS);
 
 		MapInfoCB map_info_cb = {};
-		map_info_cb.megatile_size = { map_info.megatile_width, map_info.megatile_height };
-		memcpy(ptr, &map_info_cb, sizeof(MapInfoCB));
+		map_info_cb.megatile_size = { sc_map_->megatile_width, sc_map_->megatile_height };
+
+		data_block.Write(map_info_cb);
+	}
+	void SCMapRenderer::SetSCMap(u_ptr<SCMap> sc_map)
+	{
+		sc_map_ = std::move(sc_map);
+		GetMaterial()->SetTexture(sc_map_->texture, SLOT_T_MAP_TEXTURE);
 	}
 }

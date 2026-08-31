@@ -61,10 +61,10 @@ namespace engine
 
 		auto marine = AddGameObject("TerranMarine"_hash);
 		
-		//for (size_t i = 0; i < 30; ++i)
-		//{
-		//	AddGameObject("TestGameObject"_hash);
-		//}
+		for (size_t i = 0; i < 30; ++i)
+		{
+			AddGameObject("TestGameObject"_hash);
+		}
 
 		GameObject* camobj = AddGameObject<GameObject>();
 		camobj->SetName("MainCamera");
@@ -84,38 +84,27 @@ namespace engine
 			map_path /= "SCMap";
 			map_path /= L"(4)   투혼1.4.scx";
 
-			u_ptr<SCMapLoader> map_loader = EntityManager::CreateEntity<SCMapLoader>();
+			SCMapLoader& map_loader = SCMapLoader::GetInst();
 
-			bool result = false;
+			bool result = true;
 			s_ptr<Texture2D> map_tex;
 
-			//result = map_loader->TestMap(map_path);
-			//ASSERT(result);
-			//map_tex = map_loader->GetMapTexture();
+			//CPU
+			auto sc_map = map_loader.LoadMapDataCPU(map_path);
+			ASSERT(result);
+
+			//GPU
+			//result = map_loader.LoadMapDataGPU(map_path);
+
+			//Save Map Texture to File
 			//map_path = ResourceManager::GetInst().GetResourceDir();
 			//map_path /= "MapTest.png";
 			//map_tex->SaveToFile(map_path);
 
-			result = map_loader->LoadMapDataGPU(map_path);
-			ASSERT(result);
-			map_tex = map_loader->GetMapTexture();
-
 			GameObject* map_obj = AddGameObject<GameObject>();
 			SCMapRenderer* renderer = map_obj->AddComponent<SCMapRenderer>();
-			auto mtrl = renderer->GetMaterial();
-			mtrl->SetTexture(map_tex, SLOT_T_MAP_TEXTURE);
 
-			auto* map_baker = map_loader->GetMapBaker();
-			ASSERT(map_baker != nullptr);
-
-			const MapInfo& map_info = map_baker->GetMapInfo();
-
-			const TileSetGPUData& tileset_gpu_data = map_baker->GetTileSetGPUData(map_info.terrain_type);
-
-			tileset_gpu_data.WPE_color_palettes->BindSRV(GraphicsDevice::GetInst().GetContext(), 1, ShaderStage::kPS);
-
-			renderer->SetMapLoader(std::move(map_loader));
-
+			renderer->SetSCMap(std::move(sc_map));
 		}
 	}
 	void MainGameScene::PrepareMapLoader()

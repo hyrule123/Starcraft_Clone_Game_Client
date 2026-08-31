@@ -3,6 +3,7 @@
 
 namespace engine
 {
+	struct SCMap;
 	class SCMapLoader;
 	class Texture2D;
 	class ConstantBuffer;
@@ -19,13 +20,12 @@ namespace engine
 
 		virtual void LateUpdate() override;
 
-		virtual void WritePerObjData(void* ptr) override;
+		virtual void WritePerObjData(DataBlock data_block) override;
 
-		void SetMapLoader(u_ptr<SCMapLoader> map_loader) { map_loader_ = std::move(map_loader); }
+		void SetSCMap(u_ptr<SCMap> sc_map);
 
 	private:
-		s_ptr<ConstantBuffer> per_obj_cb_ = {};
-		u_ptr<SCMapLoader> map_loader_ = {};
+		u_ptr<SCMap> sc_map_ = nullptr;
     };
 }
 

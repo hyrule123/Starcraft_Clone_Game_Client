@@ -1,8 +1,8 @@
 #pragma once
-#include <Engine/Core/Entity.h>
-
 #include <Engine/Core/CoreMinimal.h>
 #include <Engine/Core/Math.h>
+
+#include <Engine/Core/Singleton.h>
 
 #include <Content/SCData/SCMapCommon.h>
 
@@ -10,29 +10,23 @@
 
 namespace engine
 {
-
-
 	class Texture2D;
 	class SCMapBakeComputePass;
-	class SCMapLoader : public Entity
-	{
-		ENTITY_INFO(SCMapLoader, Entity)
-	public:
-		SCMapLoader();
-		~SCMapLoader();
 
+
+
+	class SCMapLoader
+	{
+		DECLARE_SINGLETON(SCMapLoader)
+	public:
 		bool LoadTilesetData();
 
-		bool LoadMapDataCPU(const stdfs::path& map_path);
-		bool LoadMapDataGPU(const stdfs::path& map_path);
-
-		bool TestMap(const stdfs::path& map_path);
-
-		s_ptr<Texture2D> GetMapTexture() const { return map_texture_; }
-
-		SCMapBakeComputePass* GetMapBaker() const { return sc_map_baker_.get(); }
+		u_ptr<SCMap> LoadMapDataCPU(const stdfs::path& map_path);
+		u_ptr<SCMap> LoadMapDataGPU(const stdfs::path& map_path);
 
 	private:
+		SCMapLoadingData LoadMapLoadingData(const stdfs::path& map_path);
+
 		StringHashTable<std::vector<uint8>> ParseMapData(const std::vector<uint8>& map_data);
 
 		// return {0, 0} if the map is invalid
@@ -46,12 +40,10 @@ namespace engine
 		std::vector<MTXM> GetMTXM(const StringHashTable<std::vector<uint8>>& map_data_table, uint32 megatile_width, uint32 megatile_height);
 
 		// Index = TileSet Type (Jungle, Desert, Ice, Twilight, etc.)
-		std::vector<TileSet> tileset_data_ = {};
+		std::array<TileSet, (size_t)TileSetType::kEND> tilesets_ = {};
 
 		// GPU
 		u_ptr<SCMapBakeComputePass> sc_map_baker_ = {};
-
-		s_ptr<Texture2D> map_texture_ = {};
 	};
 }
 
