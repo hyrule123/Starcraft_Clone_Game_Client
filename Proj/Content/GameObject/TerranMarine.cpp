@@ -3,10 +3,10 @@
 
 #include <Engine/Manager/ResourceManager.h>
 
-#include <Engine/Resource/Graphics/Buffer/Texture2DArray.h>
+#include <Engine/Resource/GPU/Buffer/Texture2DArray.h>
 #include <Engine/Resource/SpriteAnimClip.h>
 #include <Engine/Resource/SpriteAnimation.h>
-#include <Engine/Resource/Graphics/Material.h>
+#include <Engine/Resource/GPU/Material.h>
 
 #include <Engine/Game/Component/Transform.h>
 #include <Engine/Game/Component/HFSM.h>

@@ -8,9 +8,9 @@
 #include <Engine/Game/Component/CircleCollider2D.h>
 #include <Engine/Game/Component/AABBCollider2D.h>
 
-#include <Engine/Resource/Graphics/Mesh.h>
-#include <Engine/Resource/Graphics/Material.h>
-#include <Engine/Resource/Graphics/Buffer/Texture2D.h>
+#include <Engine/Resource/GPU/Mesh.h>
+#include <Engine/Resource/GPU/Material.h>
+#include <Engine/Resource/GPU/Buffer/Texture2D.h>
 
 #include <Engine/Manager/ResourceManager.h>
 

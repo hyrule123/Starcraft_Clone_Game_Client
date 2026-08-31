@@ -7,9 +7,9 @@
 
 #include <Engine/Util/file_system.h>
 
-#include <Engine/Resource/Graphics/Buffer/Texture2D.h>
-#include <Engine/Resource/Graphics/Buffer/StructuredBuffer.h>
-#include <Engine/Resource/Graphics/Buffer/TypedBuffer.h>
+#include <Engine/Resource/GPU/Buffer/Texture2D.h>
+#include <Engine/Resource/GPU/Buffer/StructuredBuffer.h>
+#include <Engine/Resource/GPU/Buffer/TypedBuffer.h>
 
 #include <Content/SCData/MPQArchive.h>
 #include <Content/SCData/SCMapBakeComputePass.h>

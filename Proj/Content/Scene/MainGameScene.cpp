@@ -6,15 +6,15 @@
 #include <Engine/Manager/RenderManager.h>
 
 
-#include <Engine/Resource/Graphics/RenderTargetGroup.h>
-#include <Engine/Resource/Graphics/Buffer/RenderTargetView.h>
-#include <Engine/Resource/Graphics/Buffer/DepthStencilView.h>
-#include <Engine/Resource/Graphics/Buffer/TypedBuffer.h>
+#include <Engine/Resource/GPU/RenderTargetGroup.h>
+#include <Engine/Resource/GPU/Buffer/RenderTargetView.h>
+#include <Engine/Resource/GPU/Buffer/DepthStencilView.h>
+#include <Engine/Resource/GPU/Buffer/TypedBuffer.h>
 
 
-#include <Engine/Resource/Graphics/Material.h>
-#include <Engine/Resource/Graphics/Mesh.h>
-#include <Engine/Resource/Graphics/GraphicsShaderSet.h>
+#include <Engine/Resource/GPU/Material.h>
+#include <Engine/Resource/GPU/Mesh.h>
+#include <Engine/Resource/GPU/GraphicsShaderSet.h>
 
 #include <Engine/Game/GameObject.h>
 #include <Engine/Game/Component/Camera.h>

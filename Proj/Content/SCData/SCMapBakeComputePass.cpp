@@ -4,10 +4,10 @@
 #include <Engine/Core/Debug.h>
 #include <Engine/Core/DX11.h>
 
-#include <Engine/Resource/ComputeShader.h>
-#include <Engine/Resource/Graphics/Buffer/Texture2D.h>
-#include <Engine/Resource/Graphics/Buffer/ConstantBuffer.h>
-#include <Engine/Resource/Graphics/Buffer/TypedBuffer.h>
+#include <Engine/Resource/GPU/Shader/ComputeShader.h>
+#include <Engine/Resource/GPU/Buffer/Texture2D.h>
+#include <Engine/Resource/GPU/Buffer/ConstantBuffer.h>
+#include <Engine/Resource/GPU/Buffer/TypedBuffer.h>
 
 #include <Engine/Manager/ResourceManager.h>
 #include <Engine/Manager/GraphicsDevice.h>

@@ -3,13 +3,13 @@
 
 #include <Engine/Core/Debug.h>
 
-#include <Engine/Resource/Graphics/Material.h>
-#include <Engine/Resource/Graphics/Mesh.h>
-#include <Engine/Resource/Graphics/RenderPass/ForwardOpaqueRenderPass.h>
-#include <Engine/Resource/Graphics/GraphicsShaderSet.h>
-#include <Engine/Resource/Graphics/Buffer/ConstantBuffer.h>
-#include <Engine/Resource/Graphics/Buffer/TypedBuffer.h>
-#include <Engine/Resource/Graphics/Shader/InputLayoutDesc.h>
+#include <Engine/Resource/GPU/Material.h>
+#include <Engine/Resource/GPU/Mesh.h>
+#include <Engine/Resource/GPU/RenderPass/ForwardOpaqueRenderPass.h>
+#include <Engine/Resource/GPU/GraphicsShaderSet.h>
+#include <Engine/Resource/GPU/Buffer/ConstantBuffer.h>
+#include <Engine/Resource/GPU/Buffer/TypedBuffer.h>
+#include <Engine/Resource/GPU/Shader/InputLayoutDesc.h>
 
 #include <Engine/Manager/RenderManager.h>
 #include <Engine/Manager/ResourceManager.h>

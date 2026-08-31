@@ -1,5 +1,5 @@
 #pragma once
-#include <Engine/Resource/ComputePass.h>
+#include <Engine/Resource/GPU/Shader/ComputePass.h>
 
 #include <Content/SCData/SCMapCommon.h>
 
