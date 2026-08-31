@@ -124,7 +124,8 @@ namespace engine
 		ASSERT_RELEASE(result);
 
 		//최종 렌더타겟에 이어붙일 때는 SRV가 필요
-		sc_rtv->CreateSRV(nullptr);
+		result = sc_rtv->CreateSRV(nullptr);
+		ASSERT_RELEASE(result);
 
 		s_ptr<DepthStencilView> dsv = std::move(EntityManager::CreateEntity<DepthStencilView>());
 		D3D11_TEXTURE2D_DESC depth_buffer_desc = {};
@@ -135,7 +136,7 @@ namespace engine
 
 		// Reversed-Z 사용 시 f32 포맷 사용
 		// 차후 Stencil 버퍼 필요 시 버퍼 공간을 확장
-		depth_buffer_desc.Format = DXGI_FORMAT_D32_FLOAT;
+		depth_buffer_desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 		// 멀티샘플링 설정 (RTV 생성할 때 넣은 Count, Quality 값과 무조건 일치해야 에러가 안 납니다)
 		depth_buffer_desc.SampleDesc.Count = 1;
 		depth_buffer_desc.SampleDesc.Quality = 0;
@@ -145,6 +146,8 @@ namespace engine
 		depth_buffer_desc.CPUAccessFlags = 0;
 		depth_buffer_desc.MiscFlags = 0;
 		result = dsv->CreateTexture2D(&depth_buffer_desc);
+		ASSERT_RELEASE(result);
+		result = dsv->CreateDSV(nullptr);
 		ASSERT_RELEASE(result);
 
 		sc_rendertarget_group->SetRenderTargets({sc_rtv, });

@@ -4,7 +4,7 @@ SCMapVSOut main(SCMapVSIn input)
 {
 	SCMapVSOut output;
 	output.pos = float4(input.position, 1.0f);
-	output.pos.z = 5.0f;
+	output.pos.z = 2.0f;
 	
 	// 왜인지 작동이 안됨...
 	if (any(map_info[0].megatile_size == int2(0, 0)))
