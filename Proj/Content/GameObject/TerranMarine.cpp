@@ -197,7 +197,7 @@ namespace engine
 
 			res_mgr.AddResource(mtrl_key, mtrl);
 		}
-		renderer->SetMaterial(mtrl);
+		renderer->SetMaterial(0, mtrl);
 
 		auto root_state = hfsm->AddState("UnitRoot"_hash, std::make_unique<UnitRoot>());
 		hfsm->SetRootState(root_state);

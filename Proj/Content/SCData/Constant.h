@@ -1,7 +1,7 @@
 #pragma once
-
 #include <Engine/Core/StdType.h>
 #include <Engine/Core/Math.h>
+#include <limits>
 
 namespace engine
 {
@@ -25,6 +25,7 @@ namespace engine
 		{
 			return (sc_degree_per_sec / kDegree) * kTwoPi * kFrameTime;
 		}
+
 	}
 
 }

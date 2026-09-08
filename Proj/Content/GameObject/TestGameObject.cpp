@@ -16,7 +16,7 @@
 
 #include <Engine/Core/Debug.h>
 
-#include <Engine/HLSL/CppShared/Register.hlsli>
+#include <Engine/HLSL/Core/Register.hlsli>
 
 #include <random>
 
@@ -62,7 +62,7 @@ namespace engine
 		//s_ptr<Material> material = resmgr.Find<Material>("Sprite_Material");
 		//
 		//s_ptr<Texture2D> tex = resmgr.LoadFromFile<Texture2D>("Texture2D/Magenta.png");
-		//material->SetTexture(tex, SLOT_T_BASE_COLOR);
+		//material->SetTexture(tex, REG_T_BASE_COLOR);
 
 		//ASSERT(mesh);
 		//ASSERT(material);

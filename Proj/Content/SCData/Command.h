@@ -1,5 +1,4 @@
 #pragma once
-
 #include <Engine/Core/Math.h>
 
 #include <variant>

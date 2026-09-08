@@ -84,7 +84,7 @@ namespace engine
 				return false;
 			}
 			tileset_gpu.VX4_minitiles = EntityManager::CreateEntity<TypedBuffer>();
-			result = tileset_gpu.VX4_minitiles->CreateImmutableBuffer(DXGI_FORMAT_R16_UINT, tileset.vx4.data(), (uint32)(tileset.vx4.size() * minitiles_per_VX4));
+			result = tileset_gpu.VX4_minitiles->CreateImmutableBuffer(DXGI_FORMAT_R16_UINT, sizeof(VX4::Elem), tileset.vx4.data(), (uint32)(tileset.vx4.size() * minitiles_per_VX4));
 			if (!result) { clear_tilesets(); return false; }
 #pragma endregion VX4 - Minitile
 
@@ -99,7 +99,7 @@ namespace engine
 			}
 			tileset_gpu.VR4_minitile_wpe_indices = EntityManager::CreateEntity<TypedBuffer>();
 
-			result = tileset_gpu.VR4_minitile_wpe_indices->CreateImmutableBuffer(DXGI_FORMAT_R8_UINT, tileset.vr4.data(), (uint32)(tileset.vr4.size() * minile_pixel_count));
+			result = tileset_gpu.VR4_minitile_wpe_indices->CreateImmutableBuffer(DXGI_FORMAT_R8_UINT, sizeof(VR4::Elem), tileset.vr4.data(), (uint32)(tileset.vr4.size() * minile_pixel_count));
 			if (!result) { clear_tilesets(); return false; }
 #pragma endregion VR4 - Minitile WPE index
 
@@ -166,7 +166,7 @@ namespace engine
 		map_info_buffer_->Upload(context, map_info_cb);
 
 		// CB bind
-		map_info_buffer_->Bind(context, ShaderStage::kCS, SLOT_B_PER_INSTANCE);
+		map_info_buffer_->Bind(context, ShaderStage::Flags::Compute, REG_B_MAP_INFO);
 
 		s_ptr<Texture2D> map_texture = EntityManager::CreateEntity<Texture2D>();
 		D3D11_TEXTURE2D_DESC desc = {};
@@ -183,9 +183,9 @@ namespace engine
 		if (!result) { return nullptr; }
 
 		// Tileset Bind
-		tileset_gpu.CV5_megatiles->BindSRV(context, SLOT_T_TILESET_CV5, ShaderStage::kCS);
-		tileset_gpu.VX4_minitiles->BindSRV(context, SLOT_T_TILESET_VX4, ShaderStage::kCS);
-		tileset_gpu.VR4_minitile_wpe_indices->BindSRV(context, SLOT_T_TILESET_VR4, ShaderStage::kCS);
+		tileset_gpu.CV5_megatiles->BindSRV(context, ShaderStage::Flags::Compute, REG_T_TILESET_CV5);
+		tileset_gpu.VX4_minitiles->BindSRV(context, ShaderStage::Flags::Compute, REG_T_TILESET_VX4);
+		tileset_gpu.VR4_minitile_wpe_indices->BindSRV(context, ShaderStage::Flags::Compute, REG_T_TILESET_VR4);
 
 		// scx 맵 데이터(mtxm) 생성 및 binding
 		u_ptr<TypedBuffer> mtxm_buffer = EntityManager::CreateEntity<TypedBuffer>();
@@ -193,16 +193,16 @@ namespace engine
 		result = mtxm_buffer->CreateImmutableBuffer(DXGI_FORMAT_R16_UINT, mtxm_span);
 		if (!result) { return nullptr; }
 
-		mtxm_buffer->BindSRV(context, SLOT_T_MAP_MTXM, ShaderStage::kCS);
+		mtxm_buffer->BindSRV(context, ShaderStage::Flags::Compute, REG_T_MAP_MTXM);
 
 		// Texture Bind
-		map_texture->BindUAV(context, SLOT_U_MAP_TEXTURE);
+		map_texture->BindUAV(context, REG_U_MAP_TEXTURE);
 
 		thread_count_ = { desc.Width, desc.Height, 1 };
 
 		Execute(context);
 
-		map_texture->UnbindUAV(context, SLOT_U_MAP_TEXTURE);
+		map_texture->UnbindUAV(context, REG_U_MAP_TEXTURE);
 
 		return map_texture;
 	}

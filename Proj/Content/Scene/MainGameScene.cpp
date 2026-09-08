@@ -14,7 +14,7 @@
 
 #include <Engine/Resource/GPU/Material.h>
 #include <Engine/Resource/GPU/Mesh.h>
-#include <Engine/Resource/GPU/GraphicsShaderSet.h>
+#include <Engine/Resource/GPU/PipelineState.h>
 
 #include <Engine/Game/GameObject.h>
 #include <Engine/Game/Component/Camera.h>
@@ -90,7 +90,7 @@ namespace engine
 			s_ptr<Texture2D> map_tex;
 
 			//CPU
-			auto sc_map = map_loader.LoadMapDataCPU(map_path);
+			auto sc_map = map_loader.LoadMapDataGPU(map_path);
 			ASSERT(result);
 
 			//GPU
