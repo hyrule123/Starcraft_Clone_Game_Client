@@ -60,11 +60,12 @@ namespace engine
 	constexpr size_t minitiles_per_VX4 = 16;
 	struct VX4
 	{
-		std::array<uint16, minitiles_per_VX4> minitiles;
+		using Elem = uint16;
+		std::array<Elem, minitiles_per_VX4> minitiles;
 	};
 	static_assert(sizeof(VX4) == 32, "VX4 must be 32 bytes");
-	constexpr uint16 VX4Ref(uint16 v) { return v >> 1; }
-	constexpr bool   VX4Flipped(uint16 v) { return (v & 0b0000'0000'0000'0001) != 0; }
+	constexpr uint16 VX4Ref(VX4::Elem v) { return v >> 1; }
+	constexpr bool   VX4Flipped(VX4::Elem v) { return (v & 0b0000'0000'0000'0001) != 0; }
 
 	// -------------------------------------------------------------------
 	// VF4 : 메가타일당 미니타일 "속성" (길찾기·시야). 렌더링에는 미사용.
@@ -72,7 +73,8 @@ namespace engine
 	// -------------------------------------------------------------------
 	struct VF4
 	{
-		std::array<uint16, 16> minitile_flags;
+		using Elem = uint16;
+		std::array<Elem, 16> minitile_flags;
 	};
 	static_assert(sizeof(VF4) == 32, "VF4 must be 32 bytes");
 
@@ -94,10 +96,10 @@ namespace engine
 	constexpr size_t minile_pixel_count = minile_pixel_nrow * minile_pixel_ncol;
 	struct VR4
 	{
-		std::array<std::array<uint8, minile_pixel_ncol>, minile_pixel_nrow> pixels;        // [y][x]
+		using Elem = uint8;
+		std::array<std::array<Elem, minile_pixel_ncol>, minile_pixel_nrow> pixels;        // [y][x]
 	};
 	static_assert(sizeof(VR4) == 64, "VR4 must be 64 bytes");
-
 
 	// -------------------------------------------------------------------
 	// WPE : 256색 팔레트. 파일 전체가 항상 1024바이트.
