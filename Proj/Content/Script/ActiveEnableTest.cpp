@@ -31,8 +31,7 @@ namespace engine
 		remain_time_ -= TimeManager::GetInst().GetDeltaTime();
 		if ((int)prev_time_ != (int)remain_time_)
 		{
-			std::string msg = "ActiveEnableTest::Update() - Remaining Time: " + std::to_string((int)remain_time_ + 1) + " seconds.";
-			DEBUG_LOG_A(msg.c_str());
+			DEBUG_LOG("ActiveEnableTest::Update() - Remaining Time: {} seconds.", (int)remain_time_ + 1);
 		}
 		prev_time_ = remain_time_;
 

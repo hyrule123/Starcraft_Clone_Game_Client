@@ -24,7 +24,7 @@
 
 namespace engine
 {
-	constexpr RenderPassOrder kMapRenderPass = RenderPassOrder::kForwardOpaque;
+	constexpr RenderPassOrder kMapRenderPass = RenderPassOrder::ForwardOpaque;
 
 
 	SCMapRenderer::SCMapRenderer()
@@ -41,7 +41,6 @@ namespace engine
 
 		constexpr HashedStringView material_name = "Material_SCMap"_hash;
 		s_ptr<Material> map_mtrl = ResourceManager::GetInst().Find<Material>(material_name);
-		s_ptr<PipelineState> pipeline_state = nullptr;
 
 		if (map_mtrl == nullptr)
 		{
@@ -62,7 +61,7 @@ namespace engine
 		ASSERT(map_mtrl);
 		SetMaterial(0, map_mtrl);
 
-		pipeline_state = map_mtrl->GetPipelineState(kMapRenderPass);
+		PipelineState* pipeline_state = map_mtrl->GetPipelineState(kMapRenderPass);
 		ASSERT(pipeline_state);
 
 		constexpr HashedStringView map_info_cb_name = "MapInfoCB"_hash;
@@ -103,15 +102,8 @@ namespace engine
 			needs_scale_matching_ = false;
 		}
 
-		if (GetMaterial(0)->IsReady(RenderPassOrder::kForwardOpaque))
+		if (GetMaterial(0)->IsReady(RenderPassOrder::ForwardOpaque))
 		{
-			auto* opaque_pass = RenderManager::GetInst().GetOpaquePass();
-			ForwardOpaqueRenderPass::RenderItem item;
-			item.key.material_id = GetMaterial(0)->GetInstanceID();
-			item.key.mesh_id = GetMesh()->GetInstanceID();
-			item.renderer = this;
-			opaque_pass->SubmitRenderItem(item);
-
 			MapInfoCB map_info_cb = {};
 			map_info_cb.megatile_size = { sc_map_->megatile_width, sc_map_->megatile_height };
 			map_info_cb_->Upload(GraphicsDevice::GetInst().GetContext(), map_info_cb);
@@ -155,11 +147,11 @@ namespace engine
 			wpe_color_palettes = nullptr;
 		}
 
-		s_ptr<Material> mtrl = GetMaterial(0);
+		Material* mtrl = GetMaterial(0);
 		ASSERT(mtrl);
 		
 		mtrl->SetTexture(REG_T_MAP_TEXTURE, map_texture);
-		s_ptr<PipelineState> pipeline_state = mtrl->GetPipelineState(kMapRenderPass);
+		PipelineState* pipeline_state = mtrl->GetPipelineState(kMapRenderPass);
 		ASSERT(pipeline_state);
 		pipeline_state->AddShaderResourceBinding(ShaderStage::Flags::Pixel, REG_T_WPE_INDICES, wpe_color_palettes);
 

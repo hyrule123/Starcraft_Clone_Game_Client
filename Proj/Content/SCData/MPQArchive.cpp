@@ -5,8 +5,8 @@
 #pragma comment (lib, "StormLib/x64/DebugUD/StormLibDUD.lib")
 #endif
 
-#if defined(_WIN64) && defined(_NDEBUG)
-#pragma comment (lib, "StormLib/x64/Release/StormLibRUD.lib")
+#if defined(_WIN64) && defined(NDEBUG)
+#pragma comment (lib, "StormLib/x64/ReleaseUD/StormLibRUD.lib")
 #endif
 
 #ifndef _WIN64
@@ -46,7 +46,7 @@ namespace engine
 	{
 		if(!mpq_handle_)
 		{
-			ERROR_MESSAGE("MPQ archive is not opened.");
+			ERR_MSG("MPQ archive is not opened.");
 			return {};
 		}
 
@@ -99,7 +99,6 @@ namespace engine
 	}
 	void MPQArchive::ErrMessage(std::string err_msg) const
 	{
-		err_msg += "\nErrCode: " + std::to_string(GetLastError());
-		ERROR_MESSAGE_A(err_msg.c_str());
+		ERR_MSG("{}\nErrCode: {}", err_msg, GetLastError());
 	}
 }

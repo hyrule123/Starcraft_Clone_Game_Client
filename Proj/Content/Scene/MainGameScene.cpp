@@ -121,11 +121,11 @@ namespace engine
 		s_ptr<RenderTargetView> sc_rtv = std::move(EntityManager::CreateEntity<RenderTargetView>());
 		
 		bool result = sc_rtv->CreateDefaultBuffer((UINT)SC::kResolutionWidth, (UINT)SC::kResolutionHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
-		ASSERT_RELEASE(result);
+		CHECK(result);
 
 		//최종 렌더타겟에 이어붙일 때는 SRV가 필요
 		result = sc_rtv->CreateSRV(nullptr);
-		ASSERT_RELEASE(result);
+		CHECK(result);
 
 		s_ptr<DepthStencilView> dsv = std::move(EntityManager::CreateEntity<DepthStencilView>());
 		D3D11_TEXTURE2D_DESC depth_buffer_desc = {};
@@ -146,9 +146,9 @@ namespace engine
 		depth_buffer_desc.CPUAccessFlags = 0;
 		depth_buffer_desc.MiscFlags = 0;
 		result = dsv->CreateTexture2D(&depth_buffer_desc);
-		ASSERT_RELEASE(result);
+		CHECK(result);
 		result = dsv->CreateDSV(nullptr);
-		ASSERT_RELEASE(result);
+		CHECK(result);
 
 		sc_rendertarget_group->SetRenderTargets({sc_rtv, });
 		sc_rendertarget_group->SetDepthStencilView(dsv);

@@ -40,7 +40,7 @@ namespace engine
 		auto iter = anim_clips_table_.cont.begin();
 		for (iter; iter != anim_clips_table_.cont.end(); ++iter)
 		{
-			ASSERT_MESSAGE(direction_count_ == iter->second.size(), "모든 애니메이션 클립의 방향 갯수는 같아야 합니다.");
+			ASSERT_F(direction_count_ == iter->second.size(), "모든 애니메이션 클립의 방향 갯수는 같아야 합니다.");
 		}
 #endif//NDEBUG
 	}
@@ -86,7 +86,7 @@ namespace engine
 			is_anim_changed = true;
 
 			auto iter = anim_clips_table_.find(*playing_animation_);
-			ASSERT_MESSAGE(iter != anim_clips_table_.end(), "그런 이름의 애니메이션은 없어요...");
+			ASSERT_F(iter != anim_clips_table_.end(), "그런 이름의 애니메이션은 없어요...");
 
 			current_anim_key_ = *playing_animation_;
 			current_anim_clip_ptr_ = &iter->second;

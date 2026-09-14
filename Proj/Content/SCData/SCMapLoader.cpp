@@ -66,7 +66,7 @@ namespace engine
 				false == fpVF4.is_open()
 				)
 			{
-				ERROR_MESSAGE("Failed to open Tilemap Data Files.");
+				ERR_MSG("Failed to open Tilemap Data Files.");
 				return false;
 			}
 
@@ -81,7 +81,7 @@ namespace engine
 		bool result = sc_map_baker_->CreateTileSetGPUData(tilesets_);
 		if (!result)
 		{
-			ERROR_MESSAGE("Failed to create TileSet GPU data.");
+			ERR_MSG("Failed to create TileSet GPU data.");
 			return false;
 		}
 
@@ -215,7 +215,7 @@ namespace engine
 
 		if (false == result)
 		{
-			ERROR_MESSAGE("Failed to open MPQ archive.");
+			ERR_MSG("Failed to open MPQ archive.");
 			return SCMapLoadingData{};
 		}
 
@@ -224,7 +224,7 @@ namespace engine
 		map_data.map_raw_bytes = mpq_archive.OpenInnerFile("staredit\\scenario.chk");
 		if (map_data.map_raw_bytes.empty())
 		{
-			ERROR_MESSAGE("Failed to open scenario.chk file.");
+			ERR_MSG("Failed to open scenario.chk file.");
 			return SCMapLoadingData{};
 		}
 
@@ -279,7 +279,7 @@ namespace engine
 			memcpy(&data_length, &map_data[cursor + ChunkIDByteStride], sizeof(data_length));
 			if (data_length < 0)
 			{
-				ERROR_MESSAGE("Invalid data length. Map may be protected. Please check.");
+				ERR_MSG("Invalid data length. Map may be protected. Please check.");
 				break;
 			}
 
@@ -292,7 +292,7 @@ namespace engine
 				{
 					// 이미 존재하는 type_name이면 에러 메시지 출력 
 					// 맵 데이터에 보호가 걸려있는 거라서 처리가 필요함
-					ERROR_MESSAGE("Already found type_name. Please check");
+					ERR_MSG("Already found type_name. Please check");
 				}
 
 				// 데이터 길이가 양수일 경우 데이터를 읽어준다
@@ -319,14 +319,14 @@ namespace engine
 		
 		if (it == map_data_table.end())
 		{
-			ERROR_MESSAGE("DIM chunk not found in map data.");
+			ERR_MSG("DIM chunk not found in map data.");
 			return {};
 		}
 
 		const std::vector<uint8>& dim_data = it->second;
 		if (dim_data.size() < 4)
 		{
-			ERROR_MESSAGE("DIM chunk data must exceed 4 bytes.");
+			ERR_MSG("DIM chunk data must exceed 4 bytes.");
 			return {};
 		}
 
@@ -338,7 +338,7 @@ namespace engine
 
 		if (!(1 <= width && width <= 256 && 1 <= height && height <= 256))
 		{
-			ERROR_MESSAGE("Invalid map size. Width and height must be between 1 and 256.");
+			ERR_MSG("Invalid map size. Width and height must be between 1 and 256.");
 			return {};
 		}
 
@@ -354,14 +354,14 @@ namespace engine
 
 		if (it == map_data_table.end())
 		{
-			ERROR_MESSAGE("ERA chunk not found in map data.");
+			ERR_MSG("ERA chunk not found in map data.");
 			return TileSetType::kEND;
 		}
 
 		const std::vector<uint8>& era_data = it->second;
 		if(era_data.size() < 2)
 		{
-			ERROR_MESSAGE("ERA chunk data must at least 2 bytes.");
+			ERR_MSG("ERA chunk data must at least 2 bytes.");
 			return TileSetType::kEND;
 		}
 
@@ -381,7 +381,7 @@ namespace engine
 
 		if (it == map_data_table.end())
 		{
-			ERROR_MESSAGE("UNIT chunk not found in map data.");
+			ERR_MSG("UNIT chunk not found in map data.");
 			return std::vector<UnitData>();
 		}
 
@@ -405,7 +405,7 @@ namespace engine
 		auto it = map_data_table.find(SCChunkTypeName[(uint32)SCChunkType::kTileMapAtlas]);
 		if (it == map_data_table.end())
 		{
-			ERROR_MESSAGE("MTXM chunk not found in map data.");
+			ERR_MSG("MTXM chunk not found in map data.");
 			return {};
 		}
 

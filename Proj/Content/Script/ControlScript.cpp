@@ -74,36 +74,24 @@ namespace engine
 		{
 			if (down_keys[i])
 			{
-				std::string msg;
-				msg += kKeyCodeNames[i];
-				msg += " Key Down!";
-				DEBUG_LOG_A(msg.c_str());
+				DEBUG_LOG("{} Key Down!", kKeyCodeNames[i]);
 			}
 
 			if (pressed_keys[i])
 			{
-				std::string msg;
-				msg += kKeyCodeNames[i];
-				msg += " Key Pressed!";
-				DEBUG_LOG_A(msg.c_str());
+				DEBUG_LOG("{} Key Pressed!", kKeyCodeNames[i]);
 			}
 
 			if (up_keys[i])
 			{
-				std::string msg;
-				msg += kKeyCodeNames[i];
-				msg += " Key Up!";
-				DEBUG_LOG_A(msg.c_str());
+				DEBUG_LOG("{} Key Up!", kKeyCodeNames[i]);
 			}
 		}
 	}
 	void ControlScript::MousePosDebug()
 	{
 		int32_2 mousepos = InputManager::GetInst().GetMousePos();
-		std::string msg = "Mouse Pos: x(";
-		msg += std::to_string(mousepos.x) + ") (";
-		msg += std::to_string(mousepos.y) + ")";
-		DEBUG_LOG_A(msg.c_str());
+		DEBUG_LOG("Mouse Pos: x({}) y({})", mousepos.x, mousepos.y);
 	}
 }
 

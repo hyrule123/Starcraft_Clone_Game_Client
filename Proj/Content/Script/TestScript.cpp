@@ -69,8 +69,7 @@ namespace engine
 			{
 				bool is_active = target_obj->IsActive();
 
-				std::string msg = "TestScript::Update() - Toggling target GameObject active state: " + std::string((!is_active) ? "Active" : "Inactive");
-				DEBUG_LOG_A(msg.c_str());
+				DEBUG_LOG("TestScript::Update() - Toggling target GameObject active state: {}", (!is_active) ? "Active" : "Inactive");
 
 				target_obj->SetActive(!is_active);
 			}
@@ -82,8 +81,7 @@ namespace engine
 				layer = (target_obj->GetLayer() + 1) % kMaxLayers;
 				target_obj->SetLayer(layer);
 
-				std::string msg = "TestScript::Update() - Changing target GameObject layer to: " + std::to_string(layer);
-				DEBUG_LOG_A(msg.c_str());
+				DEBUG_LOG("TestScript::Update() - Changing target GameObject layer to: {}", layer);
 			}
 		}
 

@@ -54,7 +54,7 @@ namespace engine
 			static_assert(offsetof(CV5, megatiles) == 20);
 			if (tileset.cv5.empty())
 			{
-				ERROR_MESSAGE("CV5 data is empty for current tileset index");
+				ERR_MSG("CV5 data is empty for current tileset index");
 				clear_tilesets();
 				return false;
 			}
@@ -79,7 +79,7 @@ namespace engine
 			static_assert(sizeof(VX4) == sizeof(uint16) * minitiles_per_VX4);
 			if (tileset.vx4.empty())
 			{
-				ERROR_MESSAGE("VX4 data is empty for tileset index");
+				ERR_MSG("VX4 data is empty for tileset index");
 				clear_tilesets();
 				return false;
 			}
@@ -93,7 +93,7 @@ namespace engine
 #pragma region VR4 - Minitile WPE index
 			if (tileset.vr4.empty())
 			{
-				ERROR_MESSAGE("VR4 data is empty for current tileset index");
+				ERR_MSG("VR4 data is empty for current tileset index");
 				clear_tilesets();
 				return false;
 			}
@@ -108,7 +108,7 @@ namespace engine
 #pragma region WPE - Color Palette
 			if (tileset.wpe.empty() || tileset.wpe.size() != 256)
 			{
-				ERROR_MESSAGE("WPE data is empty or invalid for current tileset index");
+				ERR_MSG("WPE data is empty or invalid for current tileset index");
 				clear_tilesets();
 				return false;
 			}
@@ -126,17 +126,17 @@ namespace engine
 
 		if (map_data.megatile_width == 0 || map_data.megatile_height == 0)
 		{
-			ERROR_MESSAGE("Invalid map size. Width and height must be greater than 0.");
+			ERR_MSG("Invalid map size. Width and height must be greater than 0.");
 			return nullptr;
 		}
 		if (map_data.mtxm.size() < (map_data.megatile_width * map_data.megatile_height))
 		{
-			ERROR_MESSAGE("MTXM data is invalid.");
+			ERR_MSG("MTXM data is invalid.");
 			return nullptr;
 		}
 		if ((size_t)map_data.terrain_type >= tileset_gpu_buffers_.size())
 		{
-			ERROR_MESSAGE("Invalid terrain type or TileSet GPU data is not created.");
+			ERR_MSG("Invalid terrain type or TileSet GPU data is not created.");
 			return nullptr;
 		}
 
@@ -146,7 +146,7 @@ namespace engine
 			tileset_gpu.VX4_minitiles == nullptr ||
 			tileset_gpu.VR4_minitile_wpe_indices == nullptr)
 		{
-			ERROR_MESSAGE("TileSet GPU data is not created for the specified terrain type.");
+			ERR_MSG("TileSet GPU data is not created for the specified terrain type.");
 			return nullptr;
 		}
 
