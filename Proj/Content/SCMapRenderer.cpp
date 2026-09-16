@@ -70,7 +70,7 @@ namespace engine
 		{
 			s_ptr<ConstantBuffer> map_info_cb = EntityManager::CreateEntity<ConstantBuffer>();
 			map_info_cb->Create<MapInfoCB>();
-			pipeline_state->AddConstantBufferBinding(ShaderStage::Flags::Vertex, REG_B_MAP_INFO, map_info_cb);
+			pipeline_state->AddConstantBufferBinding(ShaderStage::Vertex, REG_B_MAP_INFO, map_info_cb);
 			
 			map_info_cb_ = map_info_cb;
 
@@ -153,7 +153,7 @@ namespace engine
 		mtrl->SetTexture(REG_T_MAP_TEXTURE, map_texture);
 		PipelineState* pipeline_state = mtrl->GetPipelineState(kMapRenderPass);
 		ASSERT(pipeline_state);
-		pipeline_state->AddShaderResourceBinding(ShaderStage::Flags::Pixel, REG_T_WPE_INDICES, wpe_color_palettes);
+		pipeline_state->AddShaderResourceBinding(ShaderStage::Pixel, REG_T_WPE_INDICES, wpe_color_palettes);
 
 		needs_scale_matching_ = true;
 		SetEnable(true);

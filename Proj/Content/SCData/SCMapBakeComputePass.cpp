@@ -166,7 +166,7 @@ namespace engine
 		map_info_buffer_->Upload(context, map_info_cb);
 
 		// CB bind
-		map_info_buffer_->Bind(context, ShaderStage::Flags::Compute, REG_B_MAP_INFO);
+		map_info_buffer_->Bind(context, ShaderStage::Compute, REG_B_MAP_INFO);
 
 		s_ptr<Texture2D> map_texture = EntityManager::CreateEntity<Texture2D>();
 		D3D11_TEXTURE2D_DESC desc = {};
@@ -183,9 +183,9 @@ namespace engine
 		if (!result) { return nullptr; }
 
 		// Tileset Bind
-		tileset_gpu.CV5_megatiles->BindSRV(context, ShaderStage::Flags::Compute, REG_T_TILESET_CV5);
-		tileset_gpu.VX4_minitiles->BindSRV(context, ShaderStage::Flags::Compute, REG_T_TILESET_VX4);
-		tileset_gpu.VR4_minitile_wpe_indices->BindSRV(context, ShaderStage::Flags::Compute, REG_T_TILESET_VR4);
+		tileset_gpu.CV5_megatiles->BindSRV(context, ShaderStage::Compute, REG_T_TILESET_CV5);
+		tileset_gpu.VX4_minitiles->BindSRV(context, ShaderStage::Compute, REG_T_TILESET_VX4);
+		tileset_gpu.VR4_minitile_wpe_indices->BindSRV(context, ShaderStage::Compute, REG_T_TILESET_VR4);
 
 		// scx 맵 데이터(mtxm) 생성 및 binding
 		u_ptr<TypedBuffer> mtxm_buffer = EntityManager::CreateEntity<TypedBuffer>();
@@ -193,7 +193,7 @@ namespace engine
 		result = mtxm_buffer->CreateImmutableBuffer(DXGI_FORMAT_R16_UINT, mtxm_span);
 		if (!result) { return nullptr; }
 
-		mtxm_buffer->BindSRV(context, ShaderStage::Flags::Compute, REG_T_MAP_MTXM);
+		mtxm_buffer->BindSRV(context, ShaderStage::Compute, REG_T_MAP_MTXM);
 
 		// Texture Bind
 		map_texture->BindUAV(context, REG_U_MAP_TEXTURE);

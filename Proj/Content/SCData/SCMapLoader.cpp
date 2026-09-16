@@ -250,7 +250,7 @@ namespace engine
 		// Unit Data (비어있어도 무관)
 		map_data.unit_data = GetUnitData(map_data.map_data_table);
 
-		return std::move(map_data);
+		return map_data;
 	}
 
 	StringHashTable<std::vector<uint8>> SCMapLoader::ParseMapData(const std::vector<uint8>& map_data)
