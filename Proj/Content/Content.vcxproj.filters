@@ -72,7 +72,7 @@
     <ClInclude Include="HFSMState\Turn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCData\Constant.h">
+    <ClInclude Include="SCData\Constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Script\DestroyTestScript.h">

@@ -26,7 +26,7 @@
 #include <Content/GameObject/TerranMarine.h>
 #include <Content/GameObject/TerranMedic.h>
 
-#include <Content/SCData/Constant.h>
+#include <Content/SCData/Constants.h>
 
 #include <Content/Script/DestroyTestScript.h>
 #include <Content/Script/ActiveEnableTest.h>
