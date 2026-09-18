@@ -11,5 +11,6 @@
 #include "framework.h"
 
 #pragma comment(lib, "Engine.lib")
+#pragma comment(lib, "SCSimulator.lib")
 
 #endif //PCH_CONTENT

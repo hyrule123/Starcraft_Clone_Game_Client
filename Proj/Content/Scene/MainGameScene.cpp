@@ -82,7 +82,7 @@ namespace engine
 			// Test Area
 			stdfs::path map_path = ResourceManager::GetInst().GetResourceDir();
 			map_path /= "SCMap";
-			map_path /= L"(4)   투혼1.4.scx";
+			map_path /= L"(4)Fighting Spirit 1.4.scx";
 
 			SCMapLoader& map_loader = SCMapLoader::GetInst();
 

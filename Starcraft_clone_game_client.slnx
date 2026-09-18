@@ -5,6 +5,8 @@
   </Configurations>
   <Project Path="Proj/Content/Content.vcxproj" Id="faa8dfdf-b295-46be-9c76-f0a5c8067fa5">
     <BuildDependency Project="Proj/Engine/Engine.vcxproj" />
+    <BuildDependency Project="Proj/SCSimulator/SCSimulator.vcxproj" />
   </Project>
   <Project Path="Proj/Engine/Engine.vcxproj" Id="246c883e-3b3e-4a05-806b-9ebabd4e38f9" />
+  <Project Path="Proj/SCSimulator/SCSimulator.vcxproj" Id="e315c13d-21da-48c7-9e62-b028d38d4577" />
 </Solution>
