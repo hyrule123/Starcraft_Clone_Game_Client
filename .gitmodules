@@ -1,3 +1,6 @@
 [submodule "proj/Engine"]
 	path = proj/Engine
 	url = git@github.com:hyrule123/DX11_Engine.git
+[submodule "Proj/SCSimulator/openbw"]
+	path = Proj/SCSimulator/openbw
+	url = https://github.com/OpenBW/openbw.git
