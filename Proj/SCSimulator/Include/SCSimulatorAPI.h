@@ -10,6 +10,15 @@
 
 constexpr uint32_t SCSIM_INVALID_UNIT_ID = 0;
 
+struct SCSimUnit {
+	uint32_t id;
+	int32_t  x;          // 시뮬레이션 위치(u->position)
+	int32_t  y;
+	int32_t  sprite_x;   // 렌더링 위치(u->sprite->position)
+	int32_t  sprite_y;
+};
+static_assert(sizeof(SCSimUnit) == 20, "SCSimUnit layout changed");
+
 extern "C" {
 	typedef struct SCSimContext SCSimContext;
 
@@ -28,4 +37,12 @@ extern "C" {
 
 	SCSIM_API bool SCSim_NextFrame(SCSimContext* ctx);
 	SCSIM_API int32_t SCSim_GetCurrentFrame(const SCSimContext* ctx);
+
+	// 부대 선택, 최대 12, 아무것도 선택되지 않았을 경우 0, 실패 시 -1. nullptr은 무시됨
+	SCSIM_API int32_t SCSim_Select(SCSimContext* ctx, int owner, const uint32_t* unit_ids, int count);
+
+	SCSIM_API bool SCSim_Order(SCSimContext* ctx, int owner, int order_type, int x, int y,
+		uint32_t target_id, int target_unit_type, bool queue);
+
+	SCSIM_API  int32_t SCSim_GetUnits(SCSimContext* ctx, const SCSimUnit** out_units);
 }
