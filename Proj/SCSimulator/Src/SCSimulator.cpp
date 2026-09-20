@@ -19,6 +19,7 @@ struct SCSimContext {
     bwgame::game_player player;
     bwgame::action_state action_st;
     bool map_loaded = false;
+    bool broken = false;
 };
 
 namespace {
@@ -39,6 +40,23 @@ namespace {
 
     constexpr int kUnitTypeCount = 228;  // bwgame::get_unit_type의 상한
     constexpr int kMaxPlayers = 12;
+
+    // ctx가 쓸 수 있는 상태인지 검사. 실패 시 에러 메시지를 남기고 false
+    bool CheckContext(const SCSimContext* ctx, const char* func_name) {
+        if (!ctx) {
+            SetError(std::string(func_name) + ": ctx is null");
+            return false;
+        }
+        if (ctx->broken) {
+            SetError(std::string(func_name) + ": context is broken by a previous failure");
+            return false;
+        }
+        if (!ctx->map_loaded) {
+            SetError(std::string(func_name) + ": map not loaded");
+            return false;
+        }
+        return true;
+    }
 
 }  // namespace
 
@@ -98,14 +116,10 @@ extern "C" {
 
     uint32_t SCSim_CreateUnit(SCSimContext* ctx, int unit_type, int owner,
         int x, int y) {
-        if (!ctx) {
-            SetError("SCSim_CreateUnit: ctx is null");
-            return SCSIM_INVALID_UNIT_ID;
-        }
-        if (!ctx->map_loaded) {
-            SetError("SCSim_CreateUnit: map not loaded");
-            return SCSIM_INVALID_UNIT_ID;
-        }
+		if (!CheckContext(ctx, "SCSim_CreateUnit")) {
+			return SCSIM_INVALID_UNIT_ID;
+		}
+
         if (unit_type < 0 || unit_type >= kUnitTypeCount) {
             SetError("SCSim_CreateUnit: invalid unit_type");
             return SCSIM_INVALID_UNIT_ID;
@@ -140,4 +154,32 @@ extern "C" {
         return SCSIM_INVALID_UNIT_ID;
     }
 
-}  // extern "C"
+    bool SCSim_NextFrame(SCSimContext* ctx) {
+		if (!CheckContext(ctx, "SCSim_NextFrame")) {
+			return false;
+		}
+
+        try {
+            ctx->player.next_frame();
+            return true;
+        }
+        catch (const std::exception& e) {
+            SetError(e.what());
+        }
+        catch (...) {
+            SetError("SCSim_NextFrame: unknown exception");
+        }
+        ctx->broken = true;
+        return false;
+    }
+
+	int32_t SCSim_GetCurrentFrame(const SCSimContext* ctx)
+    {
+        if (!ctx || !ctx->map_loaded) {
+            SetError("SCSim_GetCurrentFrame: ctx is null or map not loaded");
+            return -1;
+        }
+        return static_cast<int32_t>(ctx->player.st().current_frame);
+    }
+        
+	}  // extern "C"

@@ -45,5 +45,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	uint32_t unit_id = SCSim_CreateUnit(ctx, 0, 0, 100, 100);
 
+    for (int i = 0; i < 10; ++i)
+    {
+        SCSim_NextFrame(ctx);
+    }
+
+	int32_t cur_frame = SCSim_GetCurrentFrame(ctx);
+
     return EngineMain::GetInst().Run();
 }

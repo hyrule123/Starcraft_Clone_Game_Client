@@ -25,4 +25,7 @@ extern "C" {
 	SCSIM_API const char* SCSim_GetLastError();
 
 	SCSIM_API bool SCSim_LoadMap(SCSimContext* ctx, const char* map_path, bool create_map_units);
+
+	SCSIM_API bool SCSim_NextFrame(SCSimContext* ctx);
+	SCSIM_API int32_t SCSim_GetCurrentFrame(const SCSimContext* ctx);
 }
