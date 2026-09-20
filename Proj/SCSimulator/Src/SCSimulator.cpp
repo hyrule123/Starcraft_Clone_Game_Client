@@ -12,8 +12,6 @@
 namespace // Constants
 {
     constexpr size_t kMaxUnits = 1700;
-    constexpr int kUnitTypeCount = 228;  // bwgame::get_unit_type의 상한
-    constexpr int kMaxPlayers = 12;        // 플레이어 수 상한, 0 ~ 7은 사용자, 나머지는 중립 건물 또는 AI, ...
     constexpr int kMaxActionPlayers = 8;  // action_state::selection 크기
     constexpr int kMaxSelection = 12;     // 선택 가능한 최대값(부대지정)
 }
@@ -31,7 +29,7 @@ struct SCSimContext
     std::array<SCSimUnit, kMaxUnits> units{};  // GetUnits 결과 버퍼
 };
 
-namespace 
+namespace // Error
 {
     thread_local std::string last_error;
 
@@ -62,6 +60,33 @@ namespace
             return false;
         }
         return true;
+    }
+
+	bool CheckOwnerRange(SCSimPlayer owner, const char* func_name) {
+		if ((int32_t)owner < 0 || (int32_t)SCSimPlayer::kCount <= (int32_t)owner) {
+			SetError(std::string(func_name) + ": invalid owner");
+			return false;
+		}
+		return true;
+	}
+
+}  // namespace
+
+namespace { // API related
+
+    void FillUnit(const bwgame::action_functions& funcs, const bwgame::unit_t* u,
+        SCSimUnit& out) {
+        out.id = funcs.get_unit_id_32(u).raw_value;
+        out.x = u->position.x;
+        out.y = u->position.y;
+        if (u->sprite) {
+            out.sprite_x = u->sprite->position.x;
+            out.sprite_y = u->sprite->position.y;
+        }
+        else {
+            out.sprite_x = out.x;
+            out.sprite_y = out.y;
+        }
     }
 
 }  // namespace
@@ -120,17 +145,16 @@ extern "C" {
         return false;
     }
 
-    uint32_t SCSim_CreateUnit(SCSimContext* ctx, int unit_type, int owner,
-        int x, int y) {
+    uint32_t SCSim_CreateUnit(SCSimContext* ctx, SCSimUnitType unit_type, SCSimPlayer owner, int x, int y) {
 		if (!CheckContext(ctx, "SCSim_CreateUnit")) {
 			return SCSIM_INVALID_UNIT_ID;
 		}
 
-        if (unit_type < 0 || unit_type >= kUnitTypeCount) {
+        if ((int32_t)unit_type < 0 || (int32_t)SCSimUnitType::kCount <= (int32_t)unit_type) {
             SetError("SCSim_CreateUnit: invalid unit_type");
             return SCSIM_INVALID_UNIT_ID;
         }
-        if (owner < 0 || owner >= kMaxPlayers) {
+        if ((int32_t)owner < 0 || (int32_t)SCSimPlayer::kCount <= (int32_t)owner) {
             SetError("SCSim_CreateUnit: invalid owner");
             return SCSIM_INVALID_UNIT_ID;
         }
@@ -141,7 +165,7 @@ extern "C" {
                 static_cast<bwgame::UnitTypes>(unit_type));
             
             st.last_error = 0;  // 이전 실패의 흔적 제거
-            bwgame::unit_t* u = funcs.trigger_create_unit(type, { x, y }, owner);
+            bwgame::unit_t* u = funcs.trigger_create_unit(type, { x, y }, (int)owner);
             return funcs.get_unit_id_32(u).raw_value;
 
             if (!u) {
@@ -157,6 +181,7 @@ extern "C" {
         catch (...) {
             SetError("SCSim_CreateUnit: unknown exception");
         }
+        ctx->broken = true;
         return SCSIM_INVALID_UNIT_ID;
     }
 
@@ -189,13 +214,11 @@ extern "C" {
         return static_cast<int32_t>(ctx->player.st().current_frame);
     }
 
-    int32_t SCSim_Select(SCSimContext* ctx, int owner, const uint32_t* unit_ids,
+    int32_t SCSim_Select(SCSimContext* ctx, SCSimPlayer owner, const uint32_t* unit_ids,
         int count) {
         if (!CheckContext(ctx, "SCSim_Select")) { return -1; } 
-        if (owner < 0 || owner >= kMaxActionPlayers) {
-            SetError("SCSim_Select: invalid owner");
-            return -1;
-        }
+        if (!CheckOwnerRange(owner, "SCSim_Select")) { return -1; }
+
         if (count < 0 || count > kMaxSelection) {
             SetError("SCSim_Select: count must be 0~12");
             return -1;
@@ -210,8 +233,8 @@ extern "C" {
             for (int i = 0; i < count; ++i) {
                 units[i] = funcs.get_unit(bwgame::unit_id_32(unit_ids[i]));  // 무효면 nullptr
             }
-            funcs.action_select(owner, units);  // nullptr은 OpenBW가 건너뜀
-            return static_cast<int32_t>(ctx->action_st.selection[owner].size());
+            funcs.action_select((int)owner, units);  // nullptr은 OpenBW가 건너뜀
+            return static_cast<int32_t>(ctx->action_st.selection[(int)owner].size());
         }
         catch (const std::exception& e) {
             SetError(e.what());
@@ -222,15 +245,10 @@ extern "C" {
         return -1;  // 선택 목록만 건드리므로 broken 처리 안 함
     }
 
-    bool SCSim_Order(SCSimContext* ctx, int owner, int order_type, int x, int y,
-        uint32_t target_id, int target_unit_type, bool queue) {
+    bool SCSim_Order(SCSimContext* ctx, SCSimPlayer owner, SCSimOrder order_type, int x, int y,
+        uint32_t target_unit_id, int target_unit_type, bool queue) {
         if (!CheckContext(ctx, "SCSim_Order")) { return false; }
-
-        if (owner < 0 || owner >= kMaxActionPlayers) 
-        {
-            SetError("SCSim_Order: invalid owner");
-            return false;
-        }
+		if (!CheckOwnerRange(owner, "SCSim_Order")) { return false; }
 
         bwgame::action_functions funcs(ctx->player.st(), ctx->action_st);
         const bwgame::order_type_t* order = nullptr;
@@ -240,8 +258,8 @@ extern "C" {
         // 1단계: 인자 해석. 상태를 건드리지 않으므로 실패해도 broken 아님
         try {
             order = funcs.get_order_type(static_cast<bwgame::Orders>(order_type));
-            if (target_id != SCSIM_INVALID_UNIT_ID) {
-                target = funcs.get_unit(bwgame::unit_id_32(target_id));
+            if (target_unit_id != SCSIM_INVALID_UNIT_ID) {
+                target = funcs.get_unit(bwgame::unit_id_32(target_unit_id));
                 if (!target) {
                     SetError("SCSim_Order: target unit not found");
                     return false;
@@ -263,7 +281,7 @@ extern "C" {
 
         // 2단계: 실제 명령. 도중 실패 시 일부 유닛만 명령을 받았을 수 있음
         try {
-            if (!funcs.action_order(owner, order, { x, y }, target, target_type, queue)) {
+            if (!funcs.action_order((int)owner, order, { x, y }, target, target_type, queue)) {
                 SetError("SCSim_Order: order rejected by simulation");
                 return false;
             }
@@ -294,22 +312,7 @@ extern "C" {
             bwgame::action_functions funcs(st, ctx->action_st);
             size_t count = 0;
             for (bwgame::unit_t* u : bwgame::ptr(st.visible_units)) {
-                if (count == kMaxUnits) {  // 이론상 불가능, 방어용
-                    SetError("SCSim_GetUnits: unit buffer overflow");
-                    return -1;
-                }
-                SCSimUnit& out = ctx->units[count++];
-                out.id = funcs.get_unit_id_32(u).raw_value;
-                out.x = u->position.x;
-                out.y = u->position.y;
-                if (u->sprite) {
-                    out.sprite_x = u->sprite->position.x;
-                    out.sprite_y = u->sprite->position.y;
-                }
-                else {
-                    out.sprite_x = out.x;
-                    out.sprite_y = out.y;
-                }
+                FillUnit(funcs, u, ctx->units[count++]);
             }
             *out_units = ctx->units.data();
             return static_cast<int32_t>(count);
@@ -321,6 +324,31 @@ extern "C" {
             SetError("SCSim_GetUnits: unknown exception");
         }
         return -1;
+    }
+
+    bool SCSim_GetUnit(SCSimContext* ctx, uint32_t unit_id, SCSimUnit* out_unit) {
+        if (!out_unit) {
+            SetError("SCSim_GetUnit: out_unit is null");
+            return false;
+        }
+        if (!CheckContext(ctx, "SCSim_GetUnit")) return false;
+        try {
+            bwgame::action_functions funcs(ctx->player.st(), ctx->action_st);
+            const bwgame::unit_t* u = funcs.get_unit(bwgame::unit_id_32(unit_id));
+            if (!u) {
+                SetError("SCSim_GetUnit: unit not found");
+                return false;
+            }
+            FillUnit(funcs, u, *out_unit);
+            return true;
+        }
+        catch (const std::exception& e) {
+            SetError(e.what());
+        }
+        catch (...) {
+            SetError("SCSim_GetUnit: unknown exception");
+        }
+        return false;
     }
         
 	}  // extern "C"

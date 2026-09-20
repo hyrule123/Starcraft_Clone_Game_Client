@@ -83,5 +83,8 @@
     <ClInclude Include="openbw\util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Include\SCSimulatorTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

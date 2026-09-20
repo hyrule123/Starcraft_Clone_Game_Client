@@ -4,7 +4,7 @@
 #include <Engine/Manager/GraphicsDevice.h>
 #include <Engine/Manager/ResourceManager.h>
 #include <Engine/Manager/RenderManager.h>
-
+#include <Engine/Manager/TimeManager.h>
 
 #include <Engine/Resource/GPU/RenderTargetGroup.h>
 #include <Engine/Resource/GPU/Buffer/RenderTargetView.h>
@@ -39,6 +39,8 @@
 
 #include <Content/HLSL/SCMapRender.hlsli>
 
+#include <SCSimulator/Include/SCSimulatorAPI.h>
+
 namespace engine
 {
 	MainGameScene::MainGameScene()
@@ -48,6 +50,11 @@ namespace engine
 
 	MainGameScene::~MainGameScene()
 	{
+		if (sc_sim_ctx_)
+		{
+			SCSim_Destroy(sc_sim_ctx_);
+			sc_sim_ctx_ = nullptr;
+		}
 	}
 
 	void MainGameScene::Init()
@@ -58,6 +65,59 @@ namespace engine
 		SetCollisionMask(0, 0, true);
 
 		LoadResources();
+
+		const auto& res_dir = ResourceManager::GetInst().GetResourceDir();
+		stdfs::path  mpq_dir = res_dir / "SCSim" / "mpq";
+
+		sc_sim_ctx_ = SCSim_Create(mpq_dir.string().c_str());
+		CHECK_F(sc_sim_ctx_ != nullptr, "Failed to create SCSimContext: {}", SCSim_GetLastError());
+
+		stdfs::path map_dir = res_dir / "SCMap" / "(4)Fighting Spirit 1.4.scx";
+		bool result = SCSim_LoadMap(sc_sim_ctx_, map_dir.string().c_str(), true);
+		if (!result)
+		{
+			const char* err = SCSim_GetLastError();
+			ENSURE_F(false, "Failed to load map: {}", err ? err : "Unknown error");
+
+			return;
+		}
+
+		uint32_t unit_id = SCSim_CreateUnit(sc_sim_ctx_, SCSimUnitType::TerranMarine, SCSimPlayer::Player1, 1000, 1000);
+		int32_t selected = SCSim_Select(sc_sim_ctx_, SCSimPlayer::Player1, &unit_id, 1);
+		CHECK(selected != 0);
+		{
+			const SCSimUnit* units = nullptr;
+			int32_t n = SCSim_GetUnits(sc_sim_ctx_, &units);
+			// units[0..n)의 id, x, y, sprite_x, sprite_y 출력
+		}
+
+
+		SCSim_Order(sc_sim_ctx_, SCSimPlayer::Player1, SCSimOrder::Move, 3000, 3000, SCSIM_INVALID_UNIT_ID, -1, false);
+		for (int i = 0; i < 2000; ++i)
+		{
+			SCSim_NextFrame(sc_sim_ctx_);
+
+			if (i % 24 == 0) {
+				
+				SCSimUnit unit;
+				bool found = SCSim_GetUnit(sc_sim_ctx_, unit_id, &unit);
+				CHECK(found);
+				LOG("Frame {}: Unit ID {} position ({}, {})", SCSim_GetCurrentFrame(sc_sim_ctx_), unit_id, unit.x, unit.y);
+
+				//const SCSimUnit* units = nullptr;
+				//int32_t n = SCSim_GetUnits(sc_sim_ctx_, &units);
+				//for (int32_t i = 0; i < n; ++i)
+				//{
+				//	if (units[i].id == unit_id)
+				//	{
+				//		LOG("Frame {}: Unit ID {} position ({}, {})", SCSim_GetCurrentFrame(sc_sim_ctx_), unit_id, units[i].x, units[i].y);
+				//		break;
+				//	}
+				//}
+			}
+		}
+
+		int32_t cur_frame = SCSim_GetCurrentFrame(sc_sim_ctx_);
 
 		auto marine = AddGameObject("TerranMarine"_hash);
 		
@@ -85,7 +145,7 @@ namespace engine
 			map_path /= L"(4)Fighting Spirit 1.4.scx";
 
 			SCMapLoader& map_loader = SCMapLoader::GetInst();
-
+			
 			bool result = true;
 			s_ptr<Texture2D> map_tex;
 
@@ -106,6 +166,21 @@ namespace engine
 
 			renderer->SetSCMap(std::move(sc_map));
 		}
+	}
+	void MainGameScene::FrameStart()
+	{
+		ASSERT(sc_sim_ctx_ != nullptr);
+		acc_delta_time_ += TimeManager::GetInst().GetDeltaTime();
+		while (acc_delta_time_ >= SC::kFrameTime)
+		{
+			acc_delta_time_ -= SC::kFrameTime;
+			bool result = SCSim_NextFrame(sc_sim_ctx_);
+			CHECK_F(result, "Failed to advance simulation to the next frame: {}", SCSim_GetLastError());
+		}
+		//TODO: SyncUnits();
+
+		// SC 업데이트 이후 FrameStart 해줘야 정상적으로 신규 생성한 유닛들의 업데이트가 반영됨
+		Super::FrameStart();
 	}
 	void MainGameScene::PrepareMapLoader()
 	{}
