@@ -92,7 +92,7 @@ namespace engine
 		}
 
 
-		SCSim_Order(sc_sim_ctx_, SCSimPlayer::Player1, SCSimOrder::Move, 3000, 3000, SCSIM_INVALID_UNIT_ID, -1, false);
+		SCSim_Order(sc_sim_ctx_, SCSimPlayer::Player1, SCSimOrder::Move, 3000, 3000, kInvalidUnitId, -1, false);
 		for (int i = 0; i < 2000; ++i)
 		{
 			SCSim_NextFrame(sc_sim_ctx_);
@@ -177,7 +177,7 @@ namespace engine
 			bool result = SCSim_NextFrame(sc_sim_ctx_);
 			CHECK_F(result, "Failed to advance simulation to the next frame: {}", SCSim_GetLastError());
 		}
-		//TODO: SyncUnits();
+		SyncUnits();
 
 		// SC 업데이트 이후 FrameStart 해줘야 정상적으로 신규 생성한 유닛들의 업데이트가 반영됨
 		Super::FrameStart();
@@ -249,6 +249,10 @@ namespace engine
 		map_obj->GetTransform()->SetLocalPosition({ 0.0f, 0.0f, 100.0f });
 		map_obj->GetTransform()->SetLocalScale({(float)map_tex->GetWidth(), (float)map_tex->GetHeight(), 1.0f});
 		*/
+	}
+	void MainGameScene::SyncUnits()
+	{
+
 	}
 }
 

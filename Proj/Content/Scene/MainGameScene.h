@@ -1,6 +1,7 @@
 #pragma once
-
 #include <Engine/Game/Scene.h>
+
+#include <SCSimulator/Include/SCSimulatorAPI.h>
 
 struct SCSimContext;
 
@@ -19,10 +20,13 @@ namespace engine
     private:
         void PrepareMapLoader();
 		void LoadResources();
+        void SyncUnits();
 
     private:
         SCSimContext* sc_sim_ctx_ = nullptr;
 		float acc_delta_time_ = 0.0f; // for SCSimContext update
+
+        
     };
 }
 

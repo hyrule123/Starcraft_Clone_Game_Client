@@ -9,24 +9,17 @@
 #include <string>
 #include <array>
 
-namespace // Constants
-{
-    constexpr size_t kMaxUnits = 1700;
-    constexpr int kMaxActionPlayers = 8;  // action_state::selection 크기
-    constexpr int kMaxSelection = 12;     // 선택 가능한 최대값(부대지정)
-}
-
 // 헤더에서 전역으로 선언했으므로 정의도 전역
-struct SCSimContext 
+struct SCSim::Context 
 {
-    explicit SCSimContext(const char* mpq_dir) : player(mpq_dir) {}
+    explicit SCSim::Context(const char* mpq_dir) : player(mpq_dir) {}
 
     bwgame::game_player player;
     bwgame::action_state action_st;
     bool map_loaded = false;
     bool broken = false;
 
-    std::array<SCSimUnit, kMaxUnits> units{};  // GetUnits 결과 버퍼
+    std::array<UnitData, kMaxUnits> units{};  // GetUnits 결과 버퍼
 };
 
 namespace // Error
@@ -46,7 +39,7 @@ namespace // Error
     void SetError(std::string msg) { last_error = std::move(msg); }
 
     // ctx가 쓸 수 있는 상태인지 검사. 실패 시 에러 메시지를 남기고 false
-    bool CheckContext(const SCSimContext* ctx, const char* func_name) {
+    bool CheckContext(const SCSim::Context* ctx, const char* func_name) {
         if (!ctx) {
             SetError(std::string(func_name) + ": ctx is null");
             return false;
@@ -62,8 +55,8 @@ namespace // Error
         return true;
     }
 
-	bool CheckOwnerRange(SCSimPlayer owner, const char* func_name) {
-		if ((int32_t)owner < 0 || (int32_t)SCSimPlayer::kCount <= (int32_t)owner) {
+	bool CheckOwnerRange(SCSim::Player owner, const char* func_name) {
+		if ((int32_t)owner < 0 || (int32_t)SCSim::Player::kCount <= (int32_t)owner) {
 			SetError(std::string(func_name) + ": invalid owner");
 			return false;
 		}
@@ -75,7 +68,7 @@ namespace // Error
 namespace { // API related
 
     void FillUnit(const bwgame::action_functions& funcs, const bwgame::unit_t* u,
-        SCSimUnit& out) {
+        SCSim::UnitData& out) {
         out.id = funcs.get_unit_id_32(u).raw_value;
         out.x = u->position.x;
         out.y = u->position.y;
@@ -87,19 +80,20 @@ namespace { // API related
             out.sprite_x = out.x;
             out.sprite_y = out.y;
         }
+        if (funcs.us_hidden(u)) { out.flags |= SCSim::UnitFlags::Hidden; }
     }
 
 }  // namespace
 
 extern "C" {
 
-    SCSimContext* SCSim_Create(const char* mpq_dir) {
+    SCSim::Context* SCSim_Create(const char* mpq_dir) {
         if (!mpq_dir) {
             SetError("SCSim_Create: mpq_dir is null");
             return nullptr;
         }
         try {
-            return new SCSimContext(mpq_dir);
+            return new SCSim::Context(mpq_dir);
         }
         catch (const std::exception& e) {
             SetError(e.what());
@@ -110,7 +104,7 @@ extern "C" {
         return nullptr;
     }
 
-    void SCSim_Destroy(SCSimContext* ctx) {
+    void SCSim_Destroy(SCSim::Context* ctx) {
         delete ctx;  // nullptr이면 아무것도 하지 않음
     }
 
@@ -118,7 +112,7 @@ extern "C" {
         return last_error.c_str();
     }
 
-    bool SCSim_LoadMap(SCSimContext* ctx, const char* map_path,
+    bool SCSim_LoadMap(SCSim::Context* ctx, const char* map_path,
         bool create_map_units) {
         if (!ctx || !map_path) {
             SetError("SCSim_LoadMap: ctx or map_path is null");
@@ -145,18 +139,18 @@ extern "C" {
         return false;
     }
 
-    uint32_t SCSim_CreateUnit(SCSimContext* ctx, SCSimUnitType unit_type, SCSimPlayer owner, int x, int y) {
+    uint32_t SCSim_CreateUnit(SCSim::Context* ctx, SCSim::UnitType unit_type, SCSim::Player owner, int x, int y) {
 		if (!CheckContext(ctx, "SCSim_CreateUnit")) {
-			return SCSIM_INVALID_UNIT_ID;
+			return SCSim::kInvalidUnitId;
 		}
 
-        if ((int32_t)unit_type < 0 || (int32_t)SCSimUnitType::kCount <= (int32_t)unit_type) {
+        if ((int32_t)unit_type < 0 || (int32_t)SCSim::UnitType::kCount <= (int32_t)unit_type) {
             SetError("SCSim_CreateUnit: invalid unit_type");
-            return SCSIM_INVALID_UNIT_ID;
+            return SCSim::kInvalidUnitId;
         }
-        if ((int32_t)owner < 0 || (int32_t)SCSimPlayer::kCount <= (int32_t)owner) {
+        if ((int32_t)owner < 0 || (int32_t)SCSim::Player::kCount <= (int32_t)owner) {
             SetError("SCSim_CreateUnit: invalid owner");
-            return SCSIM_INVALID_UNIT_ID;
+            return SCSim::kInvalidUnitId;
         }
         try {
             auto& st = ctx->player.st();
@@ -172,7 +166,7 @@ extern "C" {
                 const char* reason = DescribeBWError(st.last_error);
                 SetError(std::string("SCSim_CreateUnit: ") +
                     (reason ? reason : "creation rejected by simulation"));
-                return SCSIM_INVALID_UNIT_ID;
+                return SCSim::kInvalidUnitId;
             }
         }
         catch (const std::exception& e) {
@@ -182,10 +176,10 @@ extern "C" {
             SetError("SCSim_CreateUnit: unknown exception");
         }
         ctx->broken = true;
-        return SCSIM_INVALID_UNIT_ID;
+        return SCSim::kInvalidUnitId;
     }
 
-    bool SCSim_NextFrame(SCSimContext* ctx) {
+    bool SCSim_NextFrame(SCSim::Context* ctx) {
 		if (!CheckContext(ctx, "SCSim_NextFrame")) {
 			return false;
 		}
@@ -205,7 +199,7 @@ extern "C" {
         return false;
     }
 
-	int32_t SCSim_GetCurrentFrame(const SCSimContext* ctx)
+	int32_t SCSim_GetCurrentFrame(const SCSim::Context* ctx)
     {
         if (!ctx || !ctx->map_loaded) {
             SetError("SCSim_GetCurrentFrame: ctx is null or map not loaded");
@@ -214,12 +208,12 @@ extern "C" {
         return static_cast<int32_t>(ctx->player.st().current_frame);
     }
 
-    int32_t SCSim_Select(SCSimContext* ctx, SCSimPlayer owner, const uint32_t* unit_ids,
+    int32_t SCSim_Select(SCSim::Context* ctx, SCSim::Player owner, const uint32_t* unit_ids,
         int count) {
         if (!CheckContext(ctx, "SCSim_Select")) { return -1; } 
         if (!CheckOwnerRange(owner, "SCSim_Select")) { return -1; }
 
-        if (count < 0 || count > kMaxSelection) {
+        if (count < 0 || count > SCSim::kMaxSelection) {
             SetError("SCSim_Select: count must be 0~12");
             return -1;
         }
@@ -229,7 +223,7 @@ extern "C" {
         }
         try {
             bwgame::action_functions funcs(ctx->player.st(), ctx->action_st);
-            std::array<bwgame::unit_t*, kMaxSelection> units{};  // 남는 칸은 nullptr
+            std::array<bwgame::unit_t*, SCSim::kMaxSelection> units{};  // 남는 칸은 nullptr
             for (int i = 0; i < count; ++i) {
                 units[i] = funcs.get_unit(bwgame::unit_id_32(unit_ids[i]));  // 무효면 nullptr
             }
@@ -245,7 +239,7 @@ extern "C" {
         return -1;  // 선택 목록만 건드리므로 broken 처리 안 함
     }
 
-    bool SCSim_Order(SCSimContext* ctx, SCSimPlayer owner, SCSimOrder order_type, int x, int y,
+    bool SCSim_Order(SCSim::Context* ctx, SCSim::Player owner, SCSim::OrderType order_type, int x, int y,
         uint32_t target_unit_id, int target_unit_type, bool queue) {
         if (!CheckContext(ctx, "SCSim_Order")) { return false; }
 		if (!CheckOwnerRange(owner, "SCSim_Order")) { return false; }
@@ -258,7 +252,7 @@ extern "C" {
         // 1단계: 인자 해석. 상태를 건드리지 않으므로 실패해도 broken 아님
         try {
             order = funcs.get_order_type(static_cast<bwgame::Orders>(order_type));
-            if (target_unit_id != SCSIM_INVALID_UNIT_ID) {
+            if (target_unit_id != SCSim::kInvalidUnitId) {
                 target = funcs.get_unit(bwgame::unit_id_32(target_unit_id));
                 if (!target) {
                     SetError("SCSim_Order: target unit not found");
@@ -299,7 +293,7 @@ extern "C" {
         return false;
     }
 
-    int32_t SCSim_GetUnits(SCSimContext* ctx, const SCSimUnit** out_units) {
+    int32_t SCSim_GetUnits(SCSim::Context* ctx, const SCSim::UnitData** out_units) {
         if (!out_units) {
             SetError("SCSim_GetUnits: out_units is null");
             return -1;
@@ -310,10 +304,14 @@ extern "C" {
         try {
             auto& st = ctx->player.st();
             bwgame::action_functions funcs(st, ctx->action_st);
+
             size_t count = 0;
-            for (bwgame::unit_t* u : bwgame::ptr(st.visible_units)) {
+            auto append = [&](bwgame::unit_t* u) {
                 FillUnit(funcs, u, ctx->units[count++]);
-            }
+                };
+            for (bwgame::unit_t* u : bwgame::ptr(st.visible_units)) { append(u); }
+            for (bwgame::unit_t* u : bwgame::ptr(st.hidden_units)) { append(u); }
+
             *out_units = ctx->units.data();
             return static_cast<int32_t>(count);
         }
@@ -326,7 +324,7 @@ extern "C" {
         return -1;
     }
 
-    bool SCSim_GetUnit(SCSimContext* ctx, uint32_t unit_id, SCSimUnit* out_unit) {
+    bool SCSim_GetUnit(SCSim::Context* ctx, uint32_t unit_id, SCSim::UnitData* out_unit) {
         if (!out_unit) {
             SetError("SCSim_GetUnit: out_unit is null");
             return false;
