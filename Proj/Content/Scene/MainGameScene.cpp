@@ -38,6 +38,9 @@
 #include <Content/HLSL/SCMapRender.hlsli>
 
 #include <Content/SCData/Constants.h>
+#include <Content/SCData/SCImageLibrary.h>
+#include <Content/SCData/MPQFileSystem.h>
+#include <Content/SCData/MPQArchive.h>
 
 #include <Engine/Core/Debug.h>
 #include <SCSimulator/Include/SCSimulatorAPI.h>
@@ -62,19 +65,27 @@ namespace engine
 	{
 		Super::Init();
 
+		const stdfs::path mpq_dir = ResourceManager::GetInst().GetResourceDir() / "SCSim" / "mpq";
+		
+		mpq_file_system_.AddArchive(mpq_dir / "patch_rt.mpq", true);
+		mpq_file_system_.AddArchive(mpq_dir / "BrooDat.mpq", true);
+		mpq_file_system_.AddArchive(mpq_dir / "stardat.mpq", true);
+
+		sc_image_library_ = std::make_unique<sc::SCImageLibrary>();
+		bool result = sc_image_library_->Init(mpq_file_system_);
+
 		GetCollisionSystem2D()->SetCellSize(SC::kCellSize);
 		SetCollisionMask(0, 0, true);
 
 		LoadResources();
 
 		const auto& res_dir = ResourceManager::GetInst().GetResourceDir();
-		stdfs::path  mpq_dir = res_dir / "SCSim" / "mpq";
 
 		sc_sim_ctx_ = SCSim_Create(mpq_dir.string().c_str());
 		CHECK_F(sc_sim_ctx_ != nullptr, "Failed to create SCSimContext: {}", SCSim_GetLastError());
 
 		stdfs::path map_dir = res_dir / "SCMap" / "(4)Fighting Spirit 1.4.scx";
-		bool result = SCSim_LoadMap(sc_sim_ctx_, map_dir.string().c_str(), true);
+		result = SCSim_LoadMap(sc_sim_ctx_, map_dir.string().c_str(), true);
 		if (!result)
 		{
 			const char* err = SCSim_GetLastError();

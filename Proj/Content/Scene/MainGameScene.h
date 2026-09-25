@@ -1,14 +1,22 @@
 #pragma once
 #include <Engine/Game/Scene.h>
 
+#include <Engine/ThirdParty/ankerl/unordered_dense.h>
+
+#include <Content/SCData/MPQFileSystem.h>
+
 #include <SCSimulator/Include/SCSimulatorAPI.h>
 
-#include <Engine/ThirdParty/ankerl/unordered_dense.h>
 #include <array>
 
 namespace engine
 {
     class SCUnitObj;
+
+    namespace sc
+    {
+        class SCImageLibrary;
+    }
 
     struct UnitEntry {
         wh_ptr<SCUnitObj> object;
@@ -40,7 +48,8 @@ namespace engine
         // Unit ID - UnitEntry pair
 		ankerl::unordered_dense::map<uint32_t, UnitEntry> unit_objects_;
 		uint32_t sync_serial_ = 0;
+
+		u_ptr<sc::SCImageLibrary> sc_image_library_ = {};
+		MPQFileSystem mpq_file_system_ = {};
     };
 }
-
-

@@ -42,6 +42,10 @@ namespace engine
 		}
 		return true;
 	}
+	bool MPQArchive::HasInnerFile(const stdfs::path& mpq_inner_file_path) const
+	{
+		return SFileHasFile(mpq_handle_, mpq_inner_file_path.string().c_str());
+	}
 	std::vector<uint8> MPQArchive::OpenInnerFile(const stdfs::path& mpq_inner_file_path)
 	{
 		if(!mpq_handle_)

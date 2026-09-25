@@ -215,12 +215,16 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="SCData\GrpFile.h" />
     <ClInclude Include="HFSMState\SCBBCommon.h" />
     <ClInclude Include="MarineTestScript.h" />
+    <ClInclude Include="SCData\MPQFileSystem.h" />
     <ClInclude Include="SCData\MPQArchive.h" />
     <ClInclude Include="SCData\SCMapCommon.h" />
     <ClInclude Include="SCData\SCMapLoader.h" />
     <ClInclude Include="SCData\SCMapBakeComputePass.h" />
+    <ClInclude Include="SCData\SCImageData.h" />
+    <ClInclude Include="SCData\SCImageLibrary.h" />
     <ClInclude Include="SCMapRenderer.h" />
     <ClInclude Include="Script\ActiveEnableTest.h" />
     <ClInclude Include="Commands.h" />
@@ -250,11 +254,15 @@
     <ClInclude Include="Script\TestScript.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="SCData\GrpFile.cpp" />
     <ClCompile Include="HFSMState\SCBBCommon.cpp" />
     <ClCompile Include="MarineTestScript.cpp" />
+    <ClCompile Include="SCData\MPQFileSystem.cpp" />
     <ClCompile Include="SCData\MPQArchive.cpp" />
     <ClCompile Include="SCData\SCMapLoader.cpp" />
     <ClCompile Include="SCData\SCMapBakeComputePass.cpp" />
+    <ClCompile Include="SCData\SCImageData.cpp" />
+    <ClCompile Include="SCData\SCImageLibrary.cpp" />
     <ClCompile Include="SCMapRenderer.cpp" />
     <ClCompile Include="Script\ActiveEnableTest.cpp" />
     <ClCompile Include="Script\DestroyTestScript.cpp" />
