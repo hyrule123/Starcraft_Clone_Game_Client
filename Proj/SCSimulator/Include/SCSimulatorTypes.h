@@ -4,18 +4,21 @@
 
 namespace SCSim
 {
+	constexpr uint32_t kInvalidUnitId = 0;
+	constexpr size_t kMaxUnits = 1700;
+
 	enum class Player : int32_t {
-		Player1 = 0,
-		Player2 = 1,
-		Player3 = 2,
-		Player4 = 3,
-		Player5 = 4,
-		Player6 = 5,
-		Player7 = 6,
-		Player8 = 7,
-		Player9 = 8,
-		Player10 = 9,
-		Player11 = 10,
+		_1 = 0,
+		_2 = 1,
+		_3 = 2,
+		_4 = 3,
+		_5 = 4,
+		_6 = 5,
+		_7 = 6,
+		_8 = 7,
+		_9 = 8,
+		_10 = 9,
+		_11 = 10,
 		Neutral = 11,
 		kCount
 	};

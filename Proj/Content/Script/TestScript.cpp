@@ -17,11 +17,11 @@ namespace engine
 	TestScript::~TestScript()
 	{}
 
-	void TestScript::BeginPlay()
+	void TestScript::Awake()
 	{
-		Super::BeginPlay();
+		Super::Awake();
 
-		DEBUG_LOG("TestScript BeginPlay() called.");
+		DEBUG_LOG("TestScript Awake() called.");
 
 		auto animator = GetComponent<SpriteAnimator>();
 		if (animator)

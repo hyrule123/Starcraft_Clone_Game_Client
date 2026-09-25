@@ -21,16 +21,14 @@
 #include <Engine/Game/Component/SpriteRenderer.h>
 #include <Engine/Game/Component/Transform.h>
 
-#include <Engine/Core/Debug.h>
-
 #include <Content/GameObject/TerranMarine.h>
 #include <Content/GameObject/TerranMedic.h>
-
-#include <Content/SCData/Constants.h>
+#include <Content/GameObject/SCUnitObj.h>
 
 #include <Content/Script/DestroyTestScript.h>
 #include <Content/Script/ActiveEnableTest.h>
 #include <Content/Script/TestScript.h>
+#include <Content/Script/SCUnit.h>
 
 #include <Content/SCData/SCMapLoader.h>
 #include <Content/SCData/SCMapBakeComputePass.h>
@@ -39,6 +37,9 @@
 
 #include <Content/HLSL/SCMapRender.hlsli>
 
+#include <Content/SCData/Constants.h>
+
+#include <Engine/Core/Debug.h>
 #include <SCSimulator/Include/SCSimulatorAPI.h>
 
 namespace engine
@@ -82,24 +83,24 @@ namespace engine
 			return;
 		}
 
-		uint32_t unit_id = SCSim_CreateUnit(sc_sim_ctx_, SCSimUnitType::TerranMarine, SCSimPlayer::Player1, 1000, 1000);
-		int32_t selected = SCSim_Select(sc_sim_ctx_, SCSimPlayer::Player1, &unit_id, 1);
+		uint32_t unit_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranMarine, SCSim::Player::_1, 1000, 1000);
+		int32_t selected = SCSim_Select(sc_sim_ctx_, SCSim::Player::_1, &unit_id, 1);
 		CHECK(selected != 0);
 		{
-			const SCSimUnit* units = nullptr;
+			const SCSim::UnitData* units = nullptr;
 			int32_t n = SCSim_GetUnits(sc_sim_ctx_, &units);
 			// units[0..n)의 id, x, y, sprite_x, sprite_y 출력
 		}
 
 
-		SCSim_Order(sc_sim_ctx_, SCSimPlayer::Player1, SCSimOrder::Move, 3000, 3000, kInvalidUnitId, -1, false);
+		SCSim_Order(sc_sim_ctx_, SCSim::Player::_1, SCSim::OrderType::Move, 3000, 3000, SCSim::kInvalidUnitId, -1, false);
 		for (int i = 0; i < 2000; ++i)
 		{
 			SCSim_NextFrame(sc_sim_ctx_);
 
 			if (i % 24 == 0) {
 				
-				SCSimUnit unit;
+				SCSim::UnitData unit;
 				bool found = SCSim_GetUnit(sc_sim_ctx_, unit_id, &unit);
 				CHECK(found);
 				LOG("Frame {}: Unit ID {} position ({}, {})", SCSim_GetCurrentFrame(sc_sim_ctx_), unit_id, unit.x, unit.y);
@@ -163,6 +164,7 @@ namespace engine
 
 			GameObject* map_obj = AddGameObject<GameObject>();
 			SCMapRenderer* renderer = map_obj->AddComponent<SCMapRenderer>();
+			SCMapRenderer* renderer2test = map_obj->GetComponent<SCMapRenderer>();
 
 			renderer->SetSCMap(std::move(sc_map));
 		}
@@ -177,7 +179,9 @@ namespace engine
 			bool result = SCSim_NextFrame(sc_sim_ctx_);
 			CHECK_F(result, "Failed to advance simulation to the next frame: {}", SCSim_GetLastError());
 		}
-		SyncUnits();
+
+		// 유닛 Sync는 매 프레임 진행
+		//SyncUnits();
 
 		// SC 업데이트 이후 FrameStart 해줘야 정상적으로 신규 생성한 유닛들의 업데이트가 반영됨
 		Super::FrameStart();
@@ -252,7 +256,50 @@ namespace engine
 	}
 	void MainGameScene::SyncUnits()
 	{
+		const SCSim::UnitData* units = nullptr;
+		int32_t count = SCSim_GetUnits(sc_sim_ctx_, &units);
+		CHECK_F(count >= 0, "SCSim_GetUnits failed: {}", SCSim_GetLastError());
 
+		++sync_serial_;
+
+		for (int32_t i = 0; i < count; ++i) 
+		{
+			const SCSim::UnitData& snapshot = units[i];
+			UnitEntry& entry = unit_objects_[snapshot.id];
+
+			SCUnitObj* obj = entry.object.get();
+			if (obj == nullptr) 
+			{          
+				// 새 유닛이거나, 오브젝트가 사라진 경우
+				obj = AddGameObject<SCUnitObj>();
+				obj->SetUnitID(snapshot.id);
+				entry.object = obj;
+			}
+
+			// Serial Update
+			entry.serial = sync_serial_;
+
+			obj->GetComponent<SCUnit>()->SetSnapshot(snapshot);
+
+			const bool hidden = (snapshot.flags & SCSim::UnitFlags::Hidden) != 0;
+			obj->SetActive(!hidden);
+		}
+
+		// 이번에 못 본 유닛 = 죽었거나 사라짐
+		for (auto it = unit_objects_.begin(); it != unit_objects_.end(); ) 
+		{
+			if (it->second.serial != sync_serial_) {
+				if (SCUnitObj* obj = it->second.object.get()) 
+				{
+					obj->Destroy();
+				}
+				it = unit_objects_.erase(it);
+			}
+			else 
+			{
+				++it;
+			}
+		}
 	}
 }
 

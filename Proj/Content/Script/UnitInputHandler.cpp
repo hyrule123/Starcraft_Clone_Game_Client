@@ -15,6 +15,8 @@
 
 #include <Content/SCData/Constants.h>
 
+#include <Content/HFSMState/SCBBCommon.h>
+
 namespace engine
 {
 	UnitInputHandler::UnitInputHandler()
@@ -30,9 +32,10 @@ namespace engine
 		blackboard_ = GetOwnerGameObject()->GetComponent<BlackBoard>();
 		ASSERT(blackboard_);
 
-		command_input_ = blackboard_->GetValue<HashedStringView>("CommandInput"_hash);
-		destination_ = blackboard_->GetValue<float2>("Destination"_hash);
+		SC::black_board::EnsureBlackBoardData(blackboard_);
 
+		command_input_ = blackboard_->GetValue<HashedStringView>(SC::black_board::kCommandInput);
+		destination_ = blackboard_->GetValue<float2>(SC::black_board::kDestination);
 		ASSERT(command_input_);
 		ASSERT(destination_);
 	}

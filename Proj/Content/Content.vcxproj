@@ -215,6 +215,7 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="HFSMState\SCBBCommon.h" />
     <ClInclude Include="MarineTestScript.h" />
     <ClInclude Include="SCData\MPQArchive.h" />
     <ClInclude Include="SCData\SCMapCommon.h" />
@@ -233,6 +234,9 @@
     <ClInclude Include="HFSMState\Idle.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="GameObject\SCUnitObj.h" />
+    <ClInclude Include="Script\SCUnit.h" />
+    <ClInclude Include="Script\SCUnitBehavior.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="GameObject\TerranMarine.h" />
     <ClInclude Include="GameObject\TerranMedic.h" />
@@ -246,6 +250,7 @@
     <ClInclude Include="Script\TestScript.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="HFSMState\SCBBCommon.cpp" />
     <ClCompile Include="MarineTestScript.cpp" />
     <ClCompile Include="SCData\MPQArchive.cpp" />
     <ClCompile Include="SCData\SCMapLoader.cpp" />
@@ -274,6 +279,9 @@
     <ClCompile Include="HFSMState\UnitRoot.cpp" />
     <ClCompile Include="HFSMState\Turn.cpp" />
     <ClCompile Include="Script\TestScript.cpp" />
+    <ClCompile Include="GameObject\SCUnitObj.cpp" />
+    <ClCompile Include="Script\SCUnit.cpp" />
+    <ClCompile Include="Script\SCUnitBehavior.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Content.rc" />

@@ -11,7 +11,7 @@ namespace engine
 		TestScript();
 		virtual ~TestScript() override;
 
-		virtual void BeginPlay() override;
+		virtual void Awake() override;
 
 		virtual void OnEnable() override;
 		virtual void Update() override;

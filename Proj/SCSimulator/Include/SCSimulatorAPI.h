@@ -13,9 +13,7 @@
 // TODO: 이후 변수 선별하여 SCSimulatorTypes.h 로 올릴것
 namespace SCSim
 {
-	struct Context;
-
-	constexpr uint32_t kInvalidUnitId = 0;
+	struct Context;	// Forward
 
 	struct UnitData {
 		uint32_t id;
@@ -34,7 +32,6 @@ namespace SCSim
 		};
 	}  // namespace UnitFlags
 
-	constexpr size_t kMaxUnits = 1700;
 	constexpr int kMaxActionPlayers = 8;  // action_state::selection 크기
 	constexpr int kMaxSelection = 12;     // 선택 가능한 최대값(부대지정)
 
