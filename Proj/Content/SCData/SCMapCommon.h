@@ -115,6 +115,7 @@ namespace engine
 
 #pragma pack(pop)
 
+	class sc::SCTileSetPcxLUT;
 	struct TileSet
 	{
 		std::vector<CV5> cv5;
@@ -122,6 +123,7 @@ namespace engine
 		std::vector<VF4> vf4;
 		std::vector<VR4> vr4;
 		std::vector<WPE> wpe;
+		u_ptr<sc::SCTileSetPcxLUT> pcx_lut = nullptr;
 	};
 
 	//스타크래프트 맵 데이터 속 "ERA" 안에 들어있는 정보 

@@ -215,6 +215,7 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="SCData\PCXFile.h" />
     <ClInclude Include="SCData\GrpFile.h" />
     <ClInclude Include="HFSMState\SCBBCommon.h" />
     <ClInclude Include="MarineTestScript.h" />
@@ -241,6 +242,7 @@
     <ClInclude Include="GameObject\SCUnitObj.h" />
     <ClInclude Include="Script\SCUnit.h" />
     <ClInclude Include="Script\SCUnitBehavior.h" />
+    <ClInclude Include="SCData\SCTileSetPcxLUT.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="GameObject\TerranMarine.h" />
     <ClInclude Include="GameObject\TerranMedic.h" />
@@ -254,6 +256,7 @@
     <ClInclude Include="Script\TestScript.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="SCData\PCXFile.cpp" />
     <ClCompile Include="SCData\GrpFile.cpp" />
     <ClCompile Include="HFSMState\SCBBCommon.cpp" />
     <ClCompile Include="MarineTestScript.cpp" />
@@ -290,6 +293,7 @@
     <ClCompile Include="GameObject\SCUnitObj.cpp" />
     <ClCompile Include="Script\SCUnit.cpp" />
     <ClCompile Include="Script\SCUnitBehavior.cpp" />
+    <ClCompile Include="SCData\SCTileSetPcxLUT.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Content.rc" />

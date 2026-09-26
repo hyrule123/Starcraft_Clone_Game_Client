@@ -1,0 +1,104 @@
+#include "Content/pch.h"
+#include "SCTileSetPcxLUT.h"
+
+#include <Content/SCData/PCXFile.h>
+
+#include <Engine/Core/Debug.h>
+
+#include <format>
+
+namespace engine
+{
+    namespace sc
+    {
+        namespace
+        {
+            // PcxLUT 순서와 반드시 일치
+            constexpr std::array<std::string_view, SCTileSetPcxLUT::kTableCount> kTableFileNames =
+            {
+                "dark",
+                "ofire",
+                "gfire",
+                "bfire",
+                "bexpl",
+                "trans50",
+                "red",
+                "green",
+            };
+
+            constexpr uint32 kDarkRows = 32;
+            constexpr uint32 kDarkIdentityRow = 31;  // OpenBW가 로드 후 항등 테이블로 덮어쓰는 행
+        }
+
+        bool SCTileSetPcxLUT::Init(const MPQFileSystem& fs, std::string_view tileset_name)
+        {
+            std::vector<uint8> data;
+            std::array<TableRange, kTableCount> ranges{};
+
+            for (uint32 i = 0; i < kTableCount; ++i)
+            {
+                const std::string path = std::format("tileset\\{}\\{}.pcx", tileset_name, kTableFileNames[i]);
+
+                const std::vector<uint8> bytes = fs.ReadFile(path);
+                if (bytes.empty())
+                {
+                    return false;  // ReadFile이 이미 알림
+                }
+
+                PcxFile pcx;
+                if (!pcx.Load(bytes))
+                {
+                    LOG("SCTileSetPcxLUT: PCX 로드 실패 {}", path);
+                    return false;
+                }
+
+                if (pcx.width() != kTableWidth)
+                {
+                    ERR_MSG("SCTileSetPcxLUT: 테이블 너비가 256이 아님 {} ({}x{})", path, pcx.width(), pcx.height());
+                    return false;
+                }
+
+                const bool is_dark = (i == static_cast<uint32>(PcxLUT::kDark));
+                if (is_dark && pcx.height() != kDarkRows)
+                {
+                    ERR_MSG("SCTileSetPcxLUT: dark.pcx는 256x32여야 함 {} ({}x{})", path, pcx.width(), pcx.height());
+                    return false;
+                }
+
+                const uint32 offset = static_cast<uint32>(data.size());
+                ranges[i].offset = offset;
+                ranges[i].rows = pcx.height();
+
+                const std::span<const uint8> pixels = pcx.pixels();
+                data.insert(data.end(), pixels.begin(), pixels.end());
+
+                // OpenBW와 동일: dark 31번 행을 항등 테이블(x → x)로 덮어씀
+                if (is_dark)
+                {
+                    uint8* row = data.data() + offset + kDarkIdentityRow * kTableWidth;
+                    for (uint32 x = 0; x < kTableWidth; ++x)
+                    {
+                        row[x] = static_cast<uint8>(x);
+                    }
+                }
+            }
+
+            DEBUG_LOG("SCTileSetPcxLUT [{}]: dark {} / ofire {} / gfire {} / bfire {} / bexpl {} / trans50 {} / red {} / green {} rows, total {} bytes",
+                tileset_name,
+                ranges[0].rows, ranges[1].rows, ranges[2].rows, ranges[3].rows,
+                ranges[4].rows, ranges[5].rows, ranges[6].rows, ranges[7].rows,
+                data.size());
+
+            data_ = std::move(data);
+            ranges_ = ranges;
+            return true;
+        }
+
+        const SCTileSetPcxLUT::TableRange& SCTileSetPcxLUT::range(PcxLUT table) const
+        {
+            const uint32 index = static_cast<uint32>(table);
+            ASSERT(index < kTableCount);
+            return ranges_[index];
+        }
+    }
+}

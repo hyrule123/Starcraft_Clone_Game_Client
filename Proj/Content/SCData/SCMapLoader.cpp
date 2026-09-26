@@ -18,7 +18,6 @@
 #include <iterator>
 #include <algorithm>
 
-
 namespace engine
 {
 	SCMapLoader::SCMapLoader()
@@ -36,7 +35,7 @@ namespace engine
 
 		for (size_t TileSetIdx = 0; TileSetIdx < (size_t)TileSetType::kEND; ++TileSetIdx)
 		{
-			tilesets_[TileSetIdx] = TileSet();
+			tilesets_[TileSetIdx];
 			TileSet& tileset = tilesets_[TileSetIdx];
 
 			stdfs::path each_tileset_path = tileset_path / kTileSetTypeNames[TileSetIdx];

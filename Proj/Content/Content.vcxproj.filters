@@ -126,6 +126,12 @@
     <ClInclude Include="SCData\SCImageLibrary.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SCData\PCXFile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SCData\SCTileSetPcxLUT.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -219,6 +225,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SCData\SCImageLibrary.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SCData\PCXFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SCData\SCTileSetPcxLUT.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

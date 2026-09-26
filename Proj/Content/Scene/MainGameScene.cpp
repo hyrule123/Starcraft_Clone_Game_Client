@@ -41,6 +41,7 @@
 #include <Content/SCData/SCImageLibrary.h>
 #include <Content/SCData/MPQFileSystem.h>
 #include <Content/SCData/MPQArchive.h>
+#include <Content/SCData/SCTileSetPcxLUT.h>
 
 #include <Engine/Core/Debug.h>
 #include <SCSimulator/Include/SCSimulatorAPI.h>
@@ -73,6 +74,11 @@ namespace engine
 
 		sc_image_library_ = std::make_unique<sc::SCImageLibrary>();
 		bool result = sc_image_library_->Init(mpq_file_system_);
+
+		sc::SCTileSetPcxLUT tile_set_lut;
+		result = tile_set_lut.Init(mpq_file_system_, "badlands");
+		CHECK(result);
+
 
 		GetCollisionSystem2D()->SetCellSize(SC::kCellSize);
 		SetCollisionMask(0, 0, true);
