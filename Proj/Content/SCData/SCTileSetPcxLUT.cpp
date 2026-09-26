@@ -30,6 +30,12 @@ namespace engine
             constexpr uint32 kDarkIdentityRow = 31;  // OpenBW가 로드 후 항등 테이블로 덮어쓰는 행
         }
 
+        SCTileSetPcxLUT::SCTileSetPcxLUT()
+        {}
+
+        SCTileSetPcxLUT::~SCTileSetPcxLUT()
+        {}
+
         bool SCTileSetPcxLUT::Init(const MPQFileSystem& fs, std::string_view tileset_name)
         {
             std::vector<uint8> data;
@@ -39,22 +45,23 @@ namespace engine
             {
                 const std::string path = std::format("tileset\\{}\\{}.pcx", tileset_name, kTableFileNames[i]);
 
-                const std::vector<uint8> bytes = fs.ReadFile(path);
-                if (bytes.empty())
+				MPQFile file = fs.OpenFile(path);
+                const std::optional<std::vector<uint8>> bytes = fs.ReadFile(path);
+                if (!bytes.has_value())
                 {
                     return false;  // ReadFile이 이미 알림
                 }
 
                 PcxFile pcx;
-                if (!pcx.Load(bytes))
+                if (!pcx.Load(*bytes))
                 {
-                    LOG("SCTileSetPcxLUT: PCX 로드 실패 {}", path);
+                    LOG("SCTileSetPcxLUT: Failed to load PCX {}", path);
                     return false;
                 }
 
                 if (pcx.width() != kTableWidth)
                 {
-                    ERR_MSG("SCTileSetPcxLUT: 테이블 너비가 256이 아님 {} ({}x{})", path, pcx.width(), pcx.height());
+                    ERR_MSG("SCTileSetPcxLUT: Table width is not 256 {} ({}x{})", path, pcx.width(), pcx.height());
                     return false;
                 }
 

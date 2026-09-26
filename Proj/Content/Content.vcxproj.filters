@@ -90,7 +90,7 @@
     <ClInclude Include="SCData\SCMapLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCData\MPQArchive.h">
+    <ClInclude Include="SCData\MPQ\MPQArchive.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SCData\SCMapBakeComputePass.h">
@@ -120,7 +120,7 @@
     <ClInclude Include="SCData\GrpFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCData\MPQFileSystem.h">
+    <ClInclude Include="SCData\MPQ\MPQFileSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SCData\SCImageLibrary.h">
@@ -130,6 +130,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SCData\SCTileSetPcxLUT.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SCData\MPQ\MPQFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -194,7 +197,7 @@
     <ClCompile Include="SCData\SCMapLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SCData\MPQArchive.cpp">
+    <ClCompile Include="SCData\MPQ\MPQArchive.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SCData\SCMapBakeComputePass.cpp">
@@ -221,7 +224,7 @@
     <ClCompile Include="SCData\GrpFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SCData\MPQFileSystem.cpp">
+    <ClCompile Include="SCData\MPQ\MPQFileSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SCData\SCImageLibrary.cpp">
@@ -231,6 +234,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SCData\SCTileSetPcxLUT.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SCData\MPQ\MPQFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

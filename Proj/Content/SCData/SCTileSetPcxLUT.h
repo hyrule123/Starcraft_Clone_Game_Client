@@ -1,5 +1,5 @@
 #pragma once
-#include <Content/SCData/MPQFileSystem.h>
+#include <Content/SCData/MPQ/MPQFileSystem.h>
 
 #include <Engine/Core/CoreMinimal.h>
 
@@ -42,7 +42,8 @@ namespace engine
                 uint32 rows = 0;    // 행 수 (light 계열은 소스 값 - 1이 행 번호)
             };
 
-            SCTileSetPcxLUT() = default;
+            SCTileSetPcxLUT();
+            ~SCTileSetPcxLUT();
 
             // tileset_name: "badlands", "platform", ... (맵 로더와 같은 이름 목록 사용)
             // 첫 실패에서 중단, 전체 성공 시에만 내부 상태 반영

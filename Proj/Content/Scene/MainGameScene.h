@@ -3,7 +3,7 @@
 
 #include <Engine/ThirdParty/ankerl/unordered_dense.h>
 
-#include <Content/SCData/MPQFileSystem.h>
+#include <Content/SCData/MPQ/MPQFileSystem.h>
 
 #include <SCSimulator/Include/SCSimulatorAPI.h>
 

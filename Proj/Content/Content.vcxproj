@@ -215,12 +215,13 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="SCData\MPQ\MPQFile.h" />
     <ClInclude Include="SCData\PCXFile.h" />
     <ClInclude Include="SCData\GrpFile.h" />
     <ClInclude Include="HFSMState\SCBBCommon.h" />
     <ClInclude Include="MarineTestScript.h" />
-    <ClInclude Include="SCData\MPQFileSystem.h" />
-    <ClInclude Include="SCData\MPQArchive.h" />
+    <ClInclude Include="SCData\MPQ\MPQFileSystem.h" />
+    <ClInclude Include="SCData\MPQ\MPQArchive.h" />
     <ClInclude Include="SCData\SCMapCommon.h" />
     <ClInclude Include="SCData\SCMapLoader.h" />
     <ClInclude Include="SCData\SCMapBakeComputePass.h" />
@@ -256,12 +257,13 @@
     <ClInclude Include="Script\TestScript.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="SCData\MPQ\MPQFile.cpp" />
     <ClCompile Include="SCData\PCXFile.cpp" />
     <ClCompile Include="SCData\GrpFile.cpp" />
     <ClCompile Include="HFSMState\SCBBCommon.cpp" />
     <ClCompile Include="MarineTestScript.cpp" />
-    <ClCompile Include="SCData\MPQFileSystem.cpp" />
-    <ClCompile Include="SCData\MPQArchive.cpp" />
+    <ClCompile Include="SCData\MPQ\MPQFileSystem.cpp" />
+    <ClCompile Include="SCData\MPQ\MPQArchive.cpp" />
     <ClCompile Include="SCData\SCMapLoader.cpp" />
     <ClCompile Include="SCData\SCMapBakeComputePass.cpp" />
     <ClCompile Include="SCData\SCImageData.cpp" />

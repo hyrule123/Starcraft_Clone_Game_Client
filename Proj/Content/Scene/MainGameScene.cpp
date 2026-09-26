@@ -39,8 +39,8 @@
 
 #include <Content/SCData/Constants.h>
 #include <Content/SCData/SCImageLibrary.h>
-#include <Content/SCData/MPQFileSystem.h>
-#include <Content/SCData/MPQArchive.h>
+#include <Content/SCData/MPQ/MPQFileSystem.h>
+#include <Content/SCData/MPQ/MPQArchive.h>
 #include <Content/SCData/SCTileSetPcxLUT.h>
 
 #include <Engine/Core/Debug.h>
@@ -74,11 +74,6 @@ namespace engine
 
 		sc_image_library_ = std::make_unique<sc::SCImageLibrary>();
 		bool result = sc_image_library_->Init(mpq_file_system_);
-
-		sc::SCTileSetPcxLUT tile_set_lut;
-		result = tile_set_lut.Init(mpq_file_system_, "badlands");
-		CHECK(result);
-
 
 		GetCollisionSystem2D()->SetCellSize(SC::kCellSize);
 		SetCollisionMask(0, 0, true);
@@ -163,6 +158,7 @@ namespace engine
 			map_path /= L"(4)Fighting Spirit 1.4.scx";
 
 			SCMapLoader& map_loader = SCMapLoader::GetInst();
+			map_loader.LoadTilesetData(mpq_file_system_);
 			
 			bool result = true;
 			s_ptr<Texture2D> map_tex;

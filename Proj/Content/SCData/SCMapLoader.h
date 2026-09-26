@@ -12,14 +12,13 @@ namespace engine
 {
 	class Texture2D;
 	class SCMapBakeComputePass;
-
-
+	class MPQFileSystem;
 
 	class SCMapLoader
 	{
 		DECLARE_SINGLETON(SCMapLoader)
 	public:
-		bool LoadTilesetData();
+		bool LoadTilesetData(const MPQFileSystem& mpq_file_system);
 
 		u_ptr<SCMap> LoadMapDataCPU(const stdfs::path& map_path);
 		u_ptr<SCMap> LoadMapDataGPU(const stdfs::path& map_path);

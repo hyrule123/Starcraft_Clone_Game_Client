@@ -11,8 +11,10 @@
 #include <Engine/Resource/GPU/Buffer/StructuredBuffer.h>
 #include <Engine/Resource/GPU/Buffer/TypedBuffer.h>
 
-#include <Content/SCData/MPQArchive.h>
+#include <Content/SCData/MPQ/MPQArchive.h>
+#include <Content/SCData/MPQ/MPQFileSystem.h>
 #include <Content/SCData/SCMapBakeComputePass.h>
+#include <Content/SCData/SCTileSetPcxLUT.h>
 
 #include <fstream>
 #include <iterator>
@@ -22,58 +24,64 @@ namespace engine
 {
 	SCMapLoader::SCMapLoader()
 	{
-		LoadTilesetData();
 	}
 
 	SCMapLoader::~SCMapLoader()
 	{}
-	bool SCMapLoader::LoadTilesetData()
+	bool SCMapLoader::LoadTilesetData(const MPQFileSystem& mpq_file_system)
 	{
-		stdfs::path tileset_path = ResourceManager::GetInst().GetResourceDir();
-		tileset_path /= "SCMap";
-		tileset_path /= "TileSet";
+		const stdfs::path tileset_dir = "tileset";
 
-		for (size_t TileSetIdx = 0; TileSetIdx < (size_t)TileSetType::kEND; ++TileSetIdx)
+		// 파일 하나를 읽어 대상 vector로 이동. 실패 시 false (원인은 ReadFile이 이미 알림)
+		auto read_into = [&mpq_file_system]<typename T>(stdfs::path & path, std::string_view extension, std::vector<T>&out) -> bool
 		{
-			tilesets_[TileSetIdx];
-			TileSet& tileset = tilesets_[TileSetIdx];
-
-			stdfs::path each_tileset_path = tileset_path / kTileSetTypeNames[TileSetIdx];
-
-			// CV5, VX4, VF4, VR4, WPE 파일을 순차적으로 읽어와서 tileset_data_에 저장
-			each_tileset_path.replace_extension(".CV5");
-			std::ios::openmode mode = std::ios::binary | std::ios::in;
-			std::ifstream fpCV5(each_tileset_path, mode);
-
-			each_tileset_path.replace_extension(".VX4");
-			std::ifstream fpVX4(each_tileset_path, mode);
-
-			each_tileset_path.replace_extension(".VR4");
-			std::ifstream fpVR4(each_tileset_path, mode);
-
-			each_tileset_path.replace_extension(".WPE");
-			std::ifstream fpWPE(each_tileset_path, mode);
-
-			each_tileset_path.replace_extension(".VF4");
-			std::ifstream fpVF4(each_tileset_path, mode);
-
-			if (
-				false == fpCV5.is_open() ||
-				false == fpVX4.is_open() ||
-				false == fpVR4.is_open() ||
-				false == fpWPE.is_open() ||
-				false == fpVF4.is_open()
-				)
+			path.replace_extension(extension);
+			auto data = mpq_file_system.ReadFile<T>(path);
+			if (!data)
 			{
-				ERR_MSG("Failed to open Tilemap Data Files.");
+				return false;
+			}
+			out = std::move(*data);
+			return true;
+		};
+
+		for (size_t tileset_idx = 0; tileset_idx < static_cast<size_t>(TileSetType::kEND); ++tileset_idx)
+		{
+			tilesets_[tileset_idx] = {};
+			TileSet& tileset = tilesets_[tileset_idx];
+			const std::string_view tileset_name = kTileSetTypeNames[tileset_idx];
+
+			stdfs::path each_tileset_path = tileset_dir / tileset_name;
+
+			// CV5, VX4, VR4, WPE, VF4 순서로 읽음. || 는 첫 실패에서 뒤를 평가하지 않음
+			if (!read_into(each_tileset_path, ".CV5", tileset.cv5) ||
+				!read_into(each_tileset_path, ".VX4", tileset.vx4) ||
+				!read_into(each_tileset_path, ".VR4", tileset.vr4) ||
+				!read_into(each_tileset_path, ".WPE", tileset.wpe) ||
+				!read_into(each_tileset_path, ".VF4", tileset.vf4))
+			{
+				LOG("TileSet: 파일 로드 실패 [{}]", tileset_name);
 				return false;
 			}
 
-			tileset.cv5 = file_system::ReadAll<CV5>(fpCV5);
-			tileset.vf4 = file_system::ReadAll<VF4>(fpVF4);
-			tileset.vr4 = file_system::ReadAll<VR4>(fpVR4);
-			tileset.vx4 = file_system::ReadAll<VX4>(fpVX4);
-			tileset.wpe = file_system::ReadAll<WPE>(fpWPE);
+			// 개수 관계 검증 (배수 검사만으로는 잡히지 않는 형식 오류)
+			if (tileset.wpe.size() != 256)
+			{
+				ERR_MSG("TileSet [{}]: WPE 색 수가 256이 아님 ({})", tileset_name, tileset.wpe.size());
+				return false;
+			}
+			if (tileset.vf4.size() != tileset.vx4.size())
+			{
+				ERR_MSG("TileSet [{}]: VF4({})와 VX4({}) 개수 불일치", tileset_name, tileset.vf4.size(), tileset.vx4.size());
+				return false;
+			}
+
+			tileset.pcx_lut = std::make_unique<sc::SCTileSetPcxLUT>();
+			if (!tileset.pcx_lut->Init(mpq_file_system, tileset_name))
+			{
+				LOG("TileSet: LUT 초기화 실패 [{}]", tileset_name);
+				return false;
+			}
 		}
 		
 		sc_map_baker_ = EntityManager::CreateEntity<SCMapBakeComputePass>();
@@ -220,10 +228,10 @@ namespace engine
 
 		SCMapLoadingData map_data = {};
 
-		map_data.map_raw_bytes = mpq_archive.OpenInnerFile("staredit\\scenario.chk");
-		if (map_data.map_raw_bytes.empty())
+		MPQFile map_file = mpq_archive.OpenInnerFile("staredit\\scenario.chk");
+		if (map_file.ReadAll(map_data.map_raw_bytes) == false)
 		{
-			ERR_MSG("Failed to open scenario.chk file.");
+			ERR_MSG("Failed to read scenario.chk file.");
 			return SCMapLoadingData{};
 		}
 

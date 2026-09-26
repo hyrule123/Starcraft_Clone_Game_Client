@@ -1,7 +1,7 @@
 #include "Content/pch.h"
 #include "MPQFileSystem.h"
 
-#include <Content/SCData/MPQArchive.h>
+#include <Content/SCData/MPQ/MPQArchive.h>
 
 #include <Engine/Core/Debug.h>
 #include <Engine/Core/Constants.h>
@@ -38,18 +38,20 @@ namespace engine
         return false;
     }
 
-    std::vector<uint8> MPQFileSystem::ReadFile(const stdfs::path& inner_path) const
+    MPQFile MPQFileSystem::OpenFile(const stdfs::path& inner_path) const
     {
-        for(const auto& archive : archives_)
-        {
-            if (archive->HasInnerFile(inner_path))
-            {
-                return archive->OpenInnerFile(inner_path);
-            }
-        }
+		for (const auto& archive : archives_)
+		{
+            ASSERT(archive);
+			if (archive->HasInnerFile(inner_path))
+			{
+				return archive->OpenInnerFile(inner_path);
+			}
+		}
 
-        return {};
+        return MPQFile();
     }
+
 }
 
 

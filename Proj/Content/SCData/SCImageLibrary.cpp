@@ -2,7 +2,7 @@
 #include "SCImageLibrary.h"
 
 #include <Content/SCData/GrpFile.h>
-#include <Content/SCData/MPQFileSystem.h>
+#include <Content/SCData/MPQ/MPQFileSystem.h>
 
 #include <Engine/Resource/GPU/Buffer/Texture2DArray.h>
 
@@ -21,14 +21,16 @@ namespace engine
             u_ptr<Texture2DArray> BakeGrp(const MPQFileSystem& fs, const std::string& mpq_path,
                 std::vector<uint8>& pixels, size_t& total_frames, size_t& total_bytes)
             {
-                std::vector<uint8> bytes = fs.ReadFile(mpq_path);
-                if (bytes.empty())
+
+                MPQFile file = fs.OpenFile(mpq_path);
+                const std::optional<std::vector<uint8>> bytes = file.ReadAll();
+                if (!bytes.has_value())
                 {
-                    return nullptr;  // ReadFile이 이미 알림
+                    return nullptr;  // ReadAll이 이미 알림
                 }
 
                 GrpFile grp;
-                if (!grp.Load(std::move(bytes)))
+                if (!grp.Load(std::move(*bytes)))
                 {
                     return nullptr;
                 }
@@ -75,27 +77,27 @@ namespace engine
         bool SCImageLibrary::Init(const MPQFileSystem& fs)
         {
             // 1. images.dat
-            std::vector<uint8> dat_bytes = fs.ReadFile("arr\\images.dat");
-            if (dat_bytes.empty())
+            const std::optional<std::vector<uint8>> dat_bytes = fs.ReadFile("arr\\images.dat");
+            if (!dat_bytes.has_value())
             {
                 return false;
             }
 
             ImageDefTable defs;
-            if (defs.Load(dat_bytes) == false)
+            if (defs.Load(dat_bytes.value()) == false)
             {
                 return false;
             }
 
             // 2. images.tbl (매니페스트 생성에만 쓰고 버림, 경로는 매니페스트에 복사됨)
-            std::vector<uint8> tbl_bytes = fs.ReadFile("arr\\images.tbl");
-            if (tbl_bytes.empty())
+            const std::optional<std::vector<uint8>> tbl_bytes = fs.ReadFile("arr\\images.tbl");
+            if (!tbl_bytes.has_value())
             {
                 return false;
             }
 
             StringTable images_table;
-            if (!images_table.Load(std::move(tbl_bytes)))
+            if (!images_table.Load(*tbl_bytes))
             {
                 return false;
             }

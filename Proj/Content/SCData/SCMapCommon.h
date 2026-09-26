@@ -115,7 +115,10 @@ namespace engine
 
 #pragma pack(pop)
 
-	class sc::SCTileSetPcxLUT;
+	namespace sc
+	{
+		class SCTileSetPcxLUT;
+	}
 	struct TileSet
 	{
 		std::vector<CV5> cv5;
