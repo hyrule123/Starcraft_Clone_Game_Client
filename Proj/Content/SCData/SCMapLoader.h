@@ -23,6 +23,11 @@ namespace engine
 		u_ptr<SCMap> LoadMapDataCPU(const stdfs::path& map_path);
 		u_ptr<SCMap> LoadMapDataGPU(const stdfs::path& map_path);
 
+		const TileSet* GetTileSet(TileSetType terrain_type) const {
+			if ((size_t)terrain_type >= tilesets_.size()) { return nullptr; }
+			return &tilesets_[(size_t)terrain_type];
+		}
+
 	private:
 		SCMapLoadingData LoadMapLoadingData(const stdfs::path& map_path);
 

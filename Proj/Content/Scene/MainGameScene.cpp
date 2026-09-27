@@ -141,12 +141,14 @@ namespace engine
 
 		GameObject* camobj = AddGameObject<GameObject>();
 		camobj->SetName("MainCamera");
+		camobj->GetTransform()->SetLocalPosition(float3(0.0f, 0.0f, -10.0f));
 		auto cam = camobj->AddComponent<Camera>();
 		Camera::ProjectionMatrixDesc proj_desc = cam->GetProjectionMatrixDesc();
 		proj_desc.proj_mode = Camera::ProjectionMode::Orthographic;
 		proj_desc.viewport_width = (float)SC::kResolutionWidth;
 		proj_desc.viewport_height = (float)SC::kResolutionHeight;
 		cam->CreateProjMatrix(proj_desc);
+		
 
 		auto test_script = camobj->AddComponent<TestScript>();
 		test_script->SetTargetEnableObject(marine);
@@ -176,11 +178,15 @@ namespace engine
 			//map_tex->SaveToFile(map_path);
 
 			GameObject* map_obj = AddGameObject<GameObject>();
+			map_obj->GetTransform()->SetLocalPosition(float3(0.0f, 0.0f, 100.0f));
 			SCMapRenderer* renderer = map_obj->AddComponent<SCMapRenderer>();
 			SCMapRenderer* renderer2test = map_obj->GetComponent<SCMapRenderer>();
 
 			renderer->SetSCMap(std::move(sc_map));
 		}
+
+		auto* g = AddGameObject("SCUnitDebug"_hash);
+		CHECK(g);
 	}
 	void MainGameScene::FrameStart()
 	{

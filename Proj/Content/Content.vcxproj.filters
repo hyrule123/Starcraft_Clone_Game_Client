@@ -135,6 +135,12 @@
     <ClInclude Include="SCData\MPQ\MPQFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GameObject\SCUnitDebug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SCSpriteDebugRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -239,6 +245,12 @@
     <ClCompile Include="SCData\MPQ\MPQFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GameObject\SCUnitDebug.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SCSpriteDebugRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Content.rc">
@@ -257,10 +269,13 @@
     <FxCompile Include="HLSL\SCMapBaker_CS.hlsl" />
     <FxCompile Include="HLSL\SCMapRender_PS.hlsl" />
     <FxCompile Include="HLSL\SCMapRender_VS.hlsl" />
+    <FxCompile Include="HLSL\SCSpriteDebug_VS.hlsl" />
+    <FxCompile Include="HLSL\SCSpriteDebug_PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="HLSL\SCMapRender.hlsli" />
     <None Include="HLSL\SCMapCommon.hlsli" />
     <None Include="HLSL\SCMapTileSet.hlsli" />
+    <None Include="HLSL\SCSpriteDebug.hlsli" />
   </ItemGroup>
 </Project>
