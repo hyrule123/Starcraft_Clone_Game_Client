@@ -4,6 +4,7 @@
 #include <Engine/HLSL/Core/CoreMinimal.hlsli>
 
 #define REG_B_MAP_INFO REG_B_PER_PIPELINE_0
+#define REG_T_WPE_INDICES REG_T_PER_FRAME_5
 
 #define MEGATILE_PIXEL_SIZE 32
 

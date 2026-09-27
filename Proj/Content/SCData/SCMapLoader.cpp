@@ -2,6 +2,7 @@
 #include "SCMapLoader.h"
 
 #include <Engine/Manager/ResourceManager.h>
+#include <Engine/Manager/RenderManager.h>
 
 #include <Engine/Core/Debug.h>
 
@@ -20,6 +21,8 @@
 #include <iterator>
 #include <algorithm>
 
+#include <Content/HLSL/SCMapRender.hlsli>
+
 namespace engine
 {
 	SCMapLoader::SCMapLoader()
@@ -36,13 +39,7 @@ namespace engine
 		auto read_into = [&mpq_file_system]<typename T>(stdfs::path & path, std::string_view extension, std::vector<T>&out) -> bool
 		{
 			path.replace_extension(extension);
-			auto data = mpq_file_system.ReadFile<T>(path);
-			if (!data)
-			{
-				return false;
-			}
-			out = std::move(*data);
-			return true;
+			return mpq_file_system.ReadFile(path, out);;
 		};
 
 		for (size_t tileset_idx = 0; tileset_idx < static_cast<size_t>(TileSetType::kEND); ++tileset_idx)
@@ -60,7 +57,7 @@ namespace engine
 				!read_into(each_tileset_path, ".WPE", tileset.wpe) ||
 				!read_into(each_tileset_path, ".VF4", tileset.vf4))
 			{
-				LOG("TileSet: 파일 로드 실패 [{}]", tileset_name);
+				ERR_MSG("TileSet: 파일 로드 실패 [{}]", tileset_name);
 				return false;
 			}
 
@@ -79,7 +76,7 @@ namespace engine
 			tileset.pcx_lut = std::make_unique<sc::SCTileSetPcxLUT>();
 			if (!tileset.pcx_lut->Init(mpq_file_system, tileset_name))
 			{
-				LOG("TileSet: LUT 초기화 실패 [{}]", tileset_name);
+				ERR_MSG("TileSet: LUT 초기화 실패 [{}]", tileset_name);
 				return false;
 			}
 		}

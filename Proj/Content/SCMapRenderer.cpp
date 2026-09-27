@@ -151,9 +151,14 @@ namespace engine
 		ASSERT(mtrl);
 		
 		mtrl->SetTexture(REG_T_MAP_TEXTURE, map_texture);
-		PipelineState* pipeline_state = mtrl->GetPipelineState(kMapRenderPass);
-		ASSERT(pipeline_state);
-		pipeline_state->AddShaderResourceBinding(ShaderStage::Pixel, REG_T_WPE_INDICES, wpe_color_palettes);
+
+		auto& per_pass_table = RenderManager::GetInst().GetPerFrameBindingTable();
+		per_pass_table.RemoveShaderResource(REG_T_WPE_INDICES);
+		per_pass_table.AddShaderResource(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_WPE_INDICES, wpe_color_palettes);
+
+		//PipelineState* pipeline_state = mtrl->GetPipelineState(kMapRenderPass);
+		//ASSERT(pipeline_state);
+		//pipeline_state->AddShaderResourceBinding(ShaderStage::Pixel, REG_T_WPE_INDICES, wpe_color_palettes);
 
 		needs_scale_matching_ = true;
 		SetEnable(true);

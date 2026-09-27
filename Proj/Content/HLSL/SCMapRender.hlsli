@@ -6,7 +6,6 @@
 #include <Engine/HLSL/ForwardOpaquePass.hlsli>
 
 #define REG_T_MAP_TEXTURE REG_T_PER_MATERIAL_0
-#define REG_T_WPE_INDICES REG_T_PER_PIPELINE_0
 
 struct SCMapVSIn
 {
