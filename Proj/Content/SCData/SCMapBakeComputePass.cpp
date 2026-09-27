@@ -14,6 +14,8 @@
 
 #include <Content/HLSL/SCMapTileSet.hlsli>
 
+#include <Content/SCData/SCTileSetPcxLUT.h>
+
 #include <span>
 
 namespace engine
@@ -117,6 +119,19 @@ namespace engine
 			result = tileset_gpu.WPE_color_palettes->CreateImmutableBuffer(DXGI_FORMAT_R8G8B8A8_UNORM, wpe_span);
 			if (!result) { clear_tilesets(); return false; }
 #pragma endregion WPE - Color Palette
+
+#pragma region PCX - Tileset LUT
+			{
+				auto& pcx_lut = tileset.pcx_lut;
+				auto& pcx_lut_gpu = tileset_gpu.PCX_tileset_LUT;
+				pcx_lut_gpu = EntityManager::CreateEntity<TypedBuffer>();
+				
+				std::span<const sc::SCTileSetPcxLUT::ElemType> pcx_lut_span = pcx_lut->data();
+				result = pcx_lut_gpu->CreateImmutableBuffer(DXGI_FORMAT_R8_UINT, pcx_lut_span);
+				CHECK(result);
+			}
+#pragma endregion PCX - Tileset LUT
+
 		}
 
 		return true;

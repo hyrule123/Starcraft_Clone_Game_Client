@@ -33,6 +33,7 @@ namespace engine
         class SCTileSetPcxLUT
         {
         public:
+			using ElemType = uint8;
             static constexpr uint32 kTableWidth = 256;
             static constexpr uint32 kTableCount = static_cast<uint32>(PcxLUT::kCount);
 
@@ -49,11 +50,11 @@ namespace engine
             // 첫 실패에서 중단, 전체 성공 시에만 내부 상태 반영
             bool Init(const MPQFileSystem& fs, std::string_view tileset_name);
 
-            std::span<const uint8> data() const { return data_; }
+            std::span<const ElemType> data() const { return data_; }
             const TableRange& range(PcxLUT table) const;
 
         private:
-            std::vector<uint8> data_ = {};
+            std::vector<ElemType> data_ = {};
             std::array<TableRange, kTableCount> ranges_ = {};
         };
     }

@@ -287,6 +287,7 @@ namespace engine
 
 		// WPE 색상 팔레트
 		s_ptr<TypedBuffer> wpe_color_palettes = {};
+		s_ptr<TypedBuffer> pcx_tileset_LUT = {};
 	};
 
 	struct SCMapLoadingData

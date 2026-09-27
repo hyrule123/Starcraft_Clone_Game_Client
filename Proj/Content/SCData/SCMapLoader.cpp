@@ -192,6 +192,7 @@ namespace engine
 		result_map->terrain_type = map_data.terrain_type;
 		result_map->unit_data = std::move(map_data.unit_data);
 		result_map->wpe_color_palettes = sc_map_baker_->GetWPEColorPaletteBuffer(map_data.terrain_type);
+		result_map->pcx_tileset_LUT = sc_map_baker_->GetPCXTilesetLUTBuffer(map_data.terrain_type);
 
 		return result_map;
 	}
@@ -208,6 +209,7 @@ namespace engine
 		result_map->terrain_type = map_data.terrain_type;
 		result_map->unit_data = std::move(map_data.unit_data);
 		result_map->wpe_color_palettes = sc_map_baker_->GetWPEColorPaletteBuffer(map_data.terrain_type);
+		result_map->pcx_tileset_LUT = sc_map_baker_->GetPCXTilesetLUTBuffer(map_data.terrain_type);
 
 		return result_map;
 	}

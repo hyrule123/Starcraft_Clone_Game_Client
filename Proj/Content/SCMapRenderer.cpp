@@ -136,15 +136,12 @@ namespace engine
 	{
 		s_ptr<Texture2D> map_texture = nullptr;
 		s_ptr<ShaderResource> wpe_color_palettes = nullptr;
+		s_ptr<ShaderResource> pcx_tileset_LUT = nullptr;
 		if (sc_map)
 		{
 			map_texture = sc_map->texture;
 			wpe_color_palettes = sc_map->wpe_color_palettes;
-		}
-		else
-		{
-			map_texture = nullptr;
-			wpe_color_palettes = nullptr;
+			pcx_tileset_LUT = sc_map->pcx_tileset_LUT;
 		}
 
 		Material* mtrl = GetMaterial(0);
@@ -156,9 +153,9 @@ namespace engine
 		per_pass_table.RemoveShaderResource(REG_T_WPE_INDICES);
 		per_pass_table.AddShaderResource(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_WPE_INDICES, wpe_color_palettes);
 
-		//PipelineState* pipeline_state = mtrl->GetPipelineState(kMapRenderPass);
-		//ASSERT(pipeline_state);
-		//pipeline_state->AddShaderResourceBinding(ShaderStage::Pixel, REG_T_WPE_INDICES, wpe_color_palettes);
+		per_pass_table.RemoveShaderResource(REG_T_PCX_TILESET_LUT);
+		per_pass_table.AddShaderResource(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_PCX_TILESET_LUT, pcx_tileset_LUT);
+
 
 		needs_scale_matching_ = true;
 		SetEnable(true);

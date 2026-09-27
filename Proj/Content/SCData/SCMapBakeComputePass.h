@@ -17,6 +17,8 @@ namespace engine
 		u_ptr<TypedBuffer> VX4_minitiles = {};	// from VX4
 		u_ptr<TypedBuffer> VR4_minitile_wpe_indices = {}; // from VR4
 		s_ptr<TypedBuffer> WPE_color_palettes = {}; // from WPE, s_ptr - 렌더링할 때 필요하므로 공유 자원이여야 함
+		s_ptr<TypedBuffer> PCX_tileset_LUT = {}; // from SCTileSetPcxLUT, s_ptr - 렌더링할 때 필요하므로 공유 자원이여야 함
+		s_ptr<ConstantBuffer> PCX_tileset_LUT_offsets = {}; // from SCTileSetPcxLUT, s_ptr - 렌더링할 때 필요하므로 공유 자원이여야 함
 	};
 
     class SCMapBakeComputePass :
@@ -35,6 +37,11 @@ namespace engine
 		s_ptr<TypedBuffer> GetWPEColorPaletteBuffer(TileSetType terrain_type) const {
 			if ((size_t)terrain_type >= tileset_gpu_buffers_.size()) { return nullptr; }
 			return tileset_gpu_buffers_[(size_t)terrain_type].WPE_color_palettes;
+		}
+
+		s_ptr<TypedBuffer> GetPCXTilesetLUTBuffer(TileSetType terrain_type) const {
+			if ((size_t)terrain_type >= tileset_gpu_buffers_.size()) { return nullptr; }
+			return tileset_gpu_buffers_[(size_t)terrain_type].PCX_tileset_LUT;
 		}
 
 	protected:

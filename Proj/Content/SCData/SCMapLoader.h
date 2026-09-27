@@ -48,6 +48,10 @@ namespace engine
 
 		// GPU
 		u_ptr<SCMapBakeComputePass> sc_map_baker_ = {};
+
+		// Common
+		u_ptr<TypedBuffer> tunit_buffer_ = {};
+		
 	};
 }
 
