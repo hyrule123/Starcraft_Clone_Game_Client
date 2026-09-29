@@ -215,6 +215,7 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Script\CameraMoveScript.h" />
     <ClInclude Include="SCData\MPQ\MPQFile.h" />
     <ClInclude Include="SCData\PCXFile.h" />
     <ClInclude Include="SCData\GrpFile.h" />
@@ -227,6 +228,7 @@
     <ClInclude Include="SCData\SCMapBakeComputePass.h" />
     <ClInclude Include="SCData\SCImageData.h" />
     <ClInclude Include="SCData\SCImageLibrary.h" />
+    <ClInclude Include="SCData\SCSpriteCommon.h" />
     <ClInclude Include="SCMapRenderer.h" />
     <ClInclude Include="Script\ActiveEnableTest.h" />
     <ClInclude Include="Commands.h" />
@@ -259,6 +261,7 @@
     <ClInclude Include="Script\TestScript.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Script\CameraMoveScript.cpp" />
     <ClCompile Include="SCData\MPQ\MPQFile.cpp" />
     <ClCompile Include="SCData\PCXFile.cpp" />
     <ClCompile Include="SCData\GrpFile.cpp" />

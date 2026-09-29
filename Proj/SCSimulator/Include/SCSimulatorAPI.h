@@ -35,6 +35,20 @@ namespace SCSim
 	constexpr int kMaxActionPlayers = 8;  // action_state::selection 크기
 	constexpr int kMaxSelection = 12;     // 선택 가능한 최대값(부대지정)
 
+	
+	// 이미지 하나의 렌더링 정보. 나중에 렌더링 스냅샷의 원소로 확장 예정
+	struct ImageInfo
+	{
+		uint16_t image_type;    // images.dat 번호 (ImageTypes)
+		uint16_t frame;         // 최종 frame_index (base + 방향 offset)
+		int32_t  x;             // sprite->position + image->offset
+		int32_t  y;
+		uint8_t  flipped;       // 좌우 반전
+		uint8_t  player_color;  // st.players[owner].color (0~15, tunit 행)
+		uint8_t  hidden;        // 스프라이트 또는 이미지가 숨김 상태
+		uint8_t  reserved;
+	};
+	static_assert(sizeof(ImageInfo) == 16, "ImageInfo layout changed. Must update FillImageInfo()");
 }; // namespace SCSim
 
 extern "C" {
@@ -68,4 +82,8 @@ extern "C" {
 	// '숨겨진' 유닛도 조회 가능
 	SCSIM_API bool SCSim_GetUnit(SCSim::Context* ctx, uint32_t unit_id,
 		SCSim::UnitData* out_unit);
+
+	// 디버그용 단일 조회. 렌더링 경로는 추후 스냅샷 API 사용
+	// 실패(무효·사망 유닛, broken 컨텍스트) 시 false, 원인은 SCSim_GetLastError()
+	SCSIM_API bool SCSim_GetUnitMainImage(SCSim::Context* ctx, uint32_t unit_id, SCSim::ImageInfo* out_info);
 }

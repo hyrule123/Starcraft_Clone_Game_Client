@@ -138,7 +138,6 @@ namespace engine
 	}
 	s_ptr<Texture2D> SCMapBakeComputePass::BakeMapTexture(const SCMapLoadingData& map_data)
 	{
-
 		if (map_data.megatile_width == 0 || map_data.megatile_height == 0)
 		{
 			ERR_MSG("Invalid map size. Width and height must be greater than 0.");

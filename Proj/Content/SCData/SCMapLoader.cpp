@@ -16,6 +16,7 @@
 #include <Content/SCData/MPQ/MPQFileSystem.h>
 #include <Content/SCData/SCMapBakeComputePass.h>
 #include <Content/SCData/SCTileSetPcxLUT.h>
+#include <Content/SCData/PCXFile.h>
 
 #include <fstream>
 #include <iterator>
@@ -88,6 +89,23 @@ namespace engine
 			ERR_MSG("Failed to create TileSet GPU data.");
 			return false;
 		}
+
+		// TUnit
+		auto tunit_data = mpq_file_system.ReadFile("game\\tunit.pcx");
+		CHECK(tunit_data.has_value());
+
+		sc::PcxFile tunit_pcx;
+		result = tunit_pcx.Load(*tunit_data);
+		CHECK(result);
+
+		const auto& pixels = tunit_pcx.pixels();
+
+		tunit_buffer_ = EntityManager::CreateEntity<TypedBuffer>();
+		result = tunit_buffer_->CreateImmutableBuffer(DXGI_FORMAT_R8_UINT, tunit_pcx.pixels());
+		CHECK(result);
+
+		auto& per_frame_table = RenderManager::GetInst().GetPerFrameBindingTable();
+		per_frame_table.AddShaderResource(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_SC_TUNIT, tunit_buffer_);
 
 		return true;
 	}

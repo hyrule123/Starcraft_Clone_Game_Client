@@ -17,6 +17,7 @@ struct SCMapVSIn
 	#endif//__HLSL	
 };
 
+
 #ifdef __HLSL
 
 struct SCMapVSOut
@@ -27,14 +28,8 @@ struct SCMapVSOut
 
 // SBuffer
 Texture2D<uint> map_texture : register(REG_T_MAP_TEXTURE);
-Buffer<float4> wpe_indices : register(REG_T_WPE_INDICES);
-
-// CBuffer
-// Slot 0: Map Info
-cbuffer MapInfo : register(REG_B_MAP_INFO)
-{
-	MapInfoCB g_map_info;
-};
+Buffer<float4> wpe_indices : register(REG_T_SC_WPE_PALETTE);
+StructuredBuffer<MapInfoCB> g_map_info : register(REG_T_INSTANCE_BUFFER);
 
 // Slot 1: Camera Info
 

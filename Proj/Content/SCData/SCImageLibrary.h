@@ -33,12 +33,12 @@ namespace engine
 
             // GRP가 없는 이미지 타입이면 nullptr
             // 반환 포인터는 이 라이브러리가 살아있는 동안 유효 (비소유)
-            const Texture2DArray* GetTexture(uint32 image_type) const;
+            s_ptr<Texture2DArray> GetTexture(uint32 image_type) const;
 
         private:
             ImageDefTable defs_ = {};
             GrpManifest manifest_ = {};
-            std::vector<u_ptr<Texture2DArray>> textures_ = {};  // manifest_.sources와 같은 순서
+            std::vector<s_ptr<Texture2DArray>> textures_ = {};  // manifest_.sources와 같은 순서
         };
     }
 }

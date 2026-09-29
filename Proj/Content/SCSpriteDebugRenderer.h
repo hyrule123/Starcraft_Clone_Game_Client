@@ -13,7 +13,13 @@ namespace engine
 		virtual ~SCSpriteDebugRenderer() override;
 
 		virtual void Init() override;
+        virtual void Awake() override;
+        virtual void LateUpdate() override;
+
 		virtual void WritePerObjectData(DataBlock data_block) override;
+
+    private:
+        uint16 bound_image_type_ = {};
     };
 }
 

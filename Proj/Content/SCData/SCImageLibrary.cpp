@@ -18,12 +18,12 @@ namespace engine
 
             // GRP 하나를 디코딩해 Texture2DArray로 만들어 등록
             // pixels는 GRP 간 재사용되는 작업 버퍼 (용량 재사용 목적)
-            u_ptr<Texture2DArray> BakeGrp(const MPQFileSystem& fs, const std::string& mpq_path,
+            s_ptr<Texture2DArray> BakeGrp(const MPQFileSystem& fs, const std::string& mpq_path,
                 std::vector<uint8>& pixels, size_t& total_frames, size_t& total_bytes)
             {
 
                 MPQFile file = fs.OpenFile(mpq_path);
-                const std::optional<std::vector<uint8>> bytes = file.ReadAll();
+                std::optional<std::vector<uint8>> bytes = file.ReadAll();
                 if (!bytes.has_value())
                 {
                     return nullptr;  // ReadAll이 이미 알림
@@ -51,7 +51,7 @@ namespace engine
                     }
                 }
 
-                u_ptr<Texture2DArray> texture = std::make_unique<Texture2DArray>();
+                s_ptr<Texture2DArray> texture = EntityManager::CreateEntity<Texture2DArray>();
                 const bool created = texture->CreateImmutableFromMemory(
                     uint32_2{ grp.Width(), grp.Height() }, frame_count, kGrpTextureFormat,
                     std::span<const uint8>(pixels),
@@ -60,7 +60,6 @@ namespace engine
                 {
                     return nullptr;
                 }
-
 
                 total_frames += frame_count;
                 total_bytes += pixels.size();
@@ -114,12 +113,12 @@ namespace engine
             size_t total_frames = 0;
             size_t total_bytes = 0;
 
-            std::vector<u_ptr<Texture2DArray>> textures;
+            std::vector<s_ptr<Texture2DArray>> textures;
             textures.reserve(manifest->sources.size());
 
             for (const GrpSource& source : manifest->sources)
             {
-                u_ptr<Texture2DArray> texture = BakeGrp(fs, source.mpq_path, pixels, total_frames, total_bytes);
+                s_ptr<Texture2DArray> texture = BakeGrp(fs, source.mpq_path, pixels, total_frames, total_bytes);
                 if (texture == nullptr)
                 {
                     LOG("SCImageLibrary: GRP 굽기 실패 {}", source.mpq_path);
@@ -142,7 +141,7 @@ namespace engine
             return defs_.Get(image_type);  // 범위 검사는 ImageDefTable::Get의 ASSERT
         }
 
-        const Texture2DArray* SCImageLibrary::GetTexture(uint32 image_type) const
+        s_ptr<Texture2DArray> SCImageLibrary::GetTexture(uint32 image_type) const
         {
             ASSERT(image_type < kImageTypeCount);
 
@@ -152,7 +151,7 @@ namespace engine
                 return nullptr;
             }
 
-            return textures_[source_index].get();
+            return textures_[source_index];
         }
     }
 }

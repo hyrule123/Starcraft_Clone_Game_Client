@@ -20,13 +20,14 @@ namespace engine
 
 		virtual void LateUpdate() override;
 
+		virtual void OnDestroy() override;
+
 		virtual void WritePerObjectData(DataBlock data_block) override;
 
 		void SetSCMap(u_ptr<SCMap> sc_map);
 
 	private:
 		u_ptr<SCMap> sc_map_ = nullptr;
-		s_ptr<ConstantBuffer> map_info_cb_ = nullptr;
 
 		bool needs_scale_matching_ = false;
     };

@@ -193,7 +193,7 @@ namespace engine
 			mtrl = res_mgr.Find<Material>("Material_Sprite"_hash);
 			ASSERT((bool)mtrl);
 			mtrl = mtrl->Clone();
-			mtrl->SetTextures({ anim_->GetSprite(), });
+			mtrl->SetTexture(ShaderStage::Pixel, REG_T_PER_MATERIAL_0, anim_->GetSprite());
 
 			res_mgr.AddResource(mtrl_key, mtrl);
 		}

@@ -24,6 +24,7 @@
 #include <Content/GameObject/TerranMarine.h>
 #include <Content/GameObject/TerranMedic.h>
 #include <Content/GameObject/SCUnitObj.h>
+#include <Content/GameObject/SCUnitDebug.h>
 
 #include <Content/Script/DestroyTestScript.h>
 #include <Content/Script/ActiveEnableTest.h>
@@ -95,7 +96,7 @@ namespace engine
 			return;
 		}
 
-		uint32_t unit_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranMarine, SCSim::Player::_1, 1000, 1000);
+		uint32_t unit_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranMarine, SCSim::Player::_1, 2048, 2048);
 		int32_t selected = SCSim_Select(sc_sim_ctx_, SCSim::Player::_1, &unit_id, 1);
 		CHECK(selected != 0);
 		{
@@ -104,40 +105,39 @@ namespace engine
 			// units[0..n)의 id, x, y, sprite_x, sprite_y 출력
 		}
 
+		SCUnitDebug* u = AddGameObject<SCUnitDebug>();
+		CHECK(u);
 
-		SCSim_Order(sc_sim_ctx_, SCSim::Player::_1, SCSim::OrderType::Move, 3000, 3000, SCSim::kInvalidUnitId, -1, false);
-		for (int i = 0; i < 2000; ++i)
-		{
-			SCSim_NextFrame(sc_sim_ctx_);
+		u->SetUnitId(unit_id);
 
-			if (i % 24 == 0) {
-				
-				SCSim::UnitData unit;
-				bool found = SCSim_GetUnit(sc_sim_ctx_, unit_id, &unit);
-				CHECK(found);
-				LOG("Frame {}: Unit ID {} position ({}, {})", SCSim_GetCurrentFrame(sc_sim_ctx_), unit_id, unit.x, unit.y);
 
-				//const SCSimUnit* units = nullptr;
-				//int32_t n = SCSim_GetUnits(sc_sim_ctx_, &units);
-				//for (int32_t i = 0; i < n; ++i)
-				//{
-				//	if (units[i].id == unit_id)
-				//	{
-				//		LOG("Frame {}: Unit ID {} position ({}, {})", SCSim_GetCurrentFrame(sc_sim_ctx_), unit_id, units[i].x, units[i].y);
-				//		break;
-				//	}
-				//}
-			}
-		}
+		//SCSim_Order(sc_sim_ctx_, SCSim::Player::_1, SCSim::OrderType::Move, 2048, 2048, SCSim::kInvalidUnitId, -1, false);
+
+		//for (int i = 0; i < 2000; ++i)
+		//{
+		//	SCSim_NextFrame(sc_sim_ctx_);
+
+		//	if (i % 24 == 0) {
+		//		
+		//		SCSim::UnitData unit;
+		//		bool found = SCSim_GetUnit(sc_sim_ctx_, unit_id, &unit);
+		//		CHECK(found);
+		//		LOG("Frame {}: Unit ID {} position ({}, {})", SCSim_GetCurrentFrame(sc_sim_ctx_), unit_id, unit.x, unit.y);
+
+		//		//const SCSimUnit* units = nullptr;
+		//		//int32_t n = SCSim_GetUnits(sc_sim_ctx_, &units);
+		//		//for (int32_t i = 0; i < n; ++i)
+		//		//{
+		//		//	if (units[i].id == unit_id)
+		//		//	{
+		//		//		LOG("Frame {}: Unit ID {} position ({}, {})", SCSim_GetCurrentFrame(sc_sim_ctx_), unit_id, units[i].x, units[i].y);
+		//		//		break;
+		//		//	}
+		//		//}
+		//	}
+		//}
 
 		int32_t cur_frame = SCSim_GetCurrentFrame(sc_sim_ctx_);
-
-		auto marine = AddGameObject("TerranMarine"_hash);
-		
-		for (size_t i = 0; i < 30; ++i)
-		{
-			AddGameObject("TestGameObject"_hash);
-		}
 
 		GameObject* camobj = AddGameObject<GameObject>();
 		camobj->SetName("MainCamera");
@@ -148,10 +148,19 @@ namespace engine
 		proj_desc.viewport_width = (float)SC::kResolutionWidth;
 		proj_desc.viewport_height = (float)SC::kResolutionHeight;
 		cam->CreateProjMatrix(proj_desc);
-		
+		camobj->AddComponent("CameraMoveScript"_hash);
 
-		auto test_script = camobj->AddComponent<TestScript>();
-		test_script->SetTargetEnableObject(marine);
+		//auto marine = AddGameObject("TerranMarine"_hash);
+		//
+		//for (size_t i = 0; i < 30; ++i)
+		//{
+		//	AddGameObject("TestGameObject"_hash);
+		//}
+
+
+
+		//auto test_script = camobj->AddComponent<TestScript>();
+		//test_script->SetTargetEnableObject(marine);
 
 		{
 			// Test Area
@@ -166,11 +175,11 @@ namespace engine
 			s_ptr<Texture2D> map_tex;
 
 			//CPU
-			auto sc_map = map_loader.LoadMapDataGPU(map_path);
-			ASSERT(result);
+			//auto sc_map = map_loader.LoadMapDataGPU(map_path);
+			//ASSERT(result);
 
 			//GPU
-			//result = map_loader.LoadMapDataGPU(map_path);
+			auto sc_map = map_loader.LoadMapDataGPU(map_path);
 
 			//Save Map Texture to File
 			//map_path = ResourceManager::GetInst().GetResourceDir();
@@ -178,15 +187,11 @@ namespace engine
 			//map_tex->SaveToFile(map_path);
 
 			GameObject* map_obj = AddGameObject<GameObject>();
-			map_obj->GetTransform()->SetLocalPosition(float3(0.0f, 0.0f, 100.0f));
 			SCMapRenderer* renderer = map_obj->AddComponent<SCMapRenderer>();
 			SCMapRenderer* renderer2test = map_obj->GetComponent<SCMapRenderer>();
 
 			renderer->SetSCMap(std::move(sc_map));
 		}
-
-		auto* g = AddGameObject("SCUnitDebug"_hash);
-		CHECK(g);
 	}
 	void MainGameScene::FrameStart()
 	{

@@ -33,6 +33,10 @@ namespace engine
 
         virtual void Init() override;
         virtual void FrameStart() override;
+
+		SCSim::Context* GetSCSimContext() const { return sc_sim_ctx_; }
+		sc::SCImageLibrary* GetSCImageLibrary() const { return sc_image_library_.get(); }
+
     private:
         void PrepareMapLoader();
 		void LoadResources();

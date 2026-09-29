@@ -16,6 +16,7 @@
 #include <Engine/Manager/GraphicsDevice.h>
 
 #include <Engine/Game/Component/Transform.h>
+#include <Engine/Game/Component/Camera.h>
 
 #include <Content/SCData/SCMapLoader.h>
 #include <Content/SCData/SCMapBakeComputePass.h>
@@ -64,19 +65,6 @@ namespace engine
 		PipelineState* pipeline_state = map_mtrl->GetPipelineState(kMapRenderPass);
 		ASSERT(pipeline_state);
 
-		constexpr HashedStringView map_info_cb_name = "MapInfoCB"_hash;
-		s_ptr<ConstantBuffer> map_info_cb = ResourceManager::GetInst().Find<ConstantBuffer>(map_info_cb_name);
-		if (map_info_cb == nullptr)
-		{
-			s_ptr<ConstantBuffer> map_info_cb = EntityManager::CreateEntity<ConstantBuffer>();
-			map_info_cb->Create<MapInfoCB>();
-			pipeline_state->AddConstantBufferBinding(ShaderStage::Vertex, REG_B_MAP_INFO, map_info_cb);
-			
-			map_info_cb_ = map_info_cb;
-
-			ResourceManager::GetInst().AddResource(map_info_cb_name, map_info_cb);
-		}
-
 		SetEnable(false);
 	}
 	void SCMapRenderer::LateUpdate()
@@ -97,20 +85,48 @@ namespace engine
 
 		if (needs_scale_matching_)
 		{
+			// SC 좌표계: 왼쪽 위가 (0,0), 오른쪽 아래가 (width, height) -> +x right, +y down
+			// 원점을 기준으로 2사분면을 사용한다.
 			Transform* tr = GetTransform();
-			tr->SetLocalScale(float3((float)sc_map_->megatile_width * MEGATILE_PIXEL_SIZE, (float)sc_map_->megatile_height * MEGATILE_PIXEL_SIZE, 1.0f));
+			const float width = (float)sc_map_->megatile_width * MEGATILE_PIXEL_SIZE;
+			const float height = (float)sc_map_->megatile_height * MEGATILE_PIXEL_SIZE;
+			const float2 center = float2(width * 0.5f, - (height * 0.5f));
+
+			Camera* cam = RenderManager::GetInst().GetMainCamera().get();
+			CHECK(cam);
+
+			const auto& desc = cam->GetProjectionMatrixDesc();
+			float3 cam_pos = cam->GetComponent<Transform>()->GetLocalPosition();
+
+			// 카메라를 맵의 중앙으로 이동
+			cam_pos.x = center.x;
+			cam_pos.y = center.y;
+			cam->GetComponent<Transform>()->SetLocalPosition(cam_pos);
+
+			// 맵을 카메라로부터 제일 멀리 떨어뜨려서 배치
+			const float farthest_z = desc.far_z + cam_pos.z - 0.01f;
+			tr->SetLocalPosition(float3(width * 0.5f, - (height * 0.5f), farthest_z));
+			tr->SetLocalScale(float3(width, height, 1.0f));
+			
 			needs_scale_matching_ = false;
 		}
+	}
+	void SCMapRenderer::OnDestroy()
+	{
+		Super::OnDestroy();
+		auto& per_pass_table = RenderManager::GetInst().GetPerFrameBindingTable();
 
-		if (GetMaterial(0)->IsReady(RenderPassOrder::ForwardOpaque))
-		{
-			MapInfoCB map_info_cb = {};
-			map_info_cb.megatile_size = { sc_map_->megatile_width, sc_map_->megatile_height };
-			map_info_cb_->Upload(GraphicsDevice::GetInst().GetContext(), map_info_cb);
-		}
+		per_pass_table.RemoveShaderResource(REG_T_SC_WPE_PALETTE);
+		per_pass_table.RemoveShaderResource(REG_T_SC_PCX_TILESET_LUT);	
 	}
 	void SCMapRenderer::WritePerObjectData(DataBlock data_block)
 	{
+		MapInfoCB map_info_cb = {};
+		map_info_cb.megatile_size = { sc_map_->megatile_width, sc_map_->megatile_height };
+		map_info_cb.world_mat = GetTransform()->GetWorldMatrix();
+
+		data_block.Write(map_info_cb);
+
 		//if (sc_map_ == nullptr)
 		//{
 		//	ASSERT(false);
@@ -125,7 +141,7 @@ namespace engine
 		//auto* context = GraphicsDevice::GetInst().GetContext();
 
 		////TODO: 임시방편, Shader Set 단위로 묶는 함수가 필요할 듯
-		//sc_map_->wpe_color_palettes->BindSRV(context, REG_T_WPE_INDICES, ShaderStage::kPS);
+		//sc_map_->wpe_color_palettes->BindSRV(context, REG_T_SC_WPE_PALETTE, ShaderStage::kPS);
 
 		//MapInfoCB map_info_cb = {};
 		//map_info_cb.megatile_size = { sc_map_->megatile_width, sc_map_->megatile_height };
@@ -134,32 +150,27 @@ namespace engine
 	}
 	void SCMapRenderer::SetSCMap(u_ptr<SCMap> sc_map)
 	{
-		s_ptr<Texture2D> map_texture = nullptr;
-		s_ptr<ShaderResource> wpe_color_palettes = nullptr;
-		s_ptr<ShaderResource> pcx_tileset_LUT = nullptr;
-		if (sc_map)
+		if (sc_map == nullptr)
 		{
-			map_texture = sc_map->texture;
-			wpe_color_palettes = sc_map->wpe_color_palettes;
-			pcx_tileset_LUT = sc_map->pcx_tileset_LUT;
+			SetEnable(false);
+			return;
 		}
+
+		sc_map_ = std::move(sc_map);
 
 		Material* mtrl = GetMaterial(0);
 		ASSERT(mtrl);
 		
-		mtrl->SetTexture(REG_T_MAP_TEXTURE, map_texture);
+		mtrl->SetTexture(ShaderStage::Pixel, REG_T_MAP_TEXTURE, sc_map_->texture);
 
 		auto& per_pass_table = RenderManager::GetInst().GetPerFrameBindingTable();
-		per_pass_table.RemoveShaderResource(REG_T_WPE_INDICES);
-		per_pass_table.AddShaderResource(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_WPE_INDICES, wpe_color_palettes);
+		per_pass_table.RemoveShaderResource(REG_T_SC_WPE_PALETTE);
+		per_pass_table.AddShaderResource(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_SC_WPE_PALETTE, sc_map_->wpe_color_palettes);
 
-		per_pass_table.RemoveShaderResource(REG_T_PCX_TILESET_LUT);
-		per_pass_table.AddShaderResource(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_PCX_TILESET_LUT, pcx_tileset_LUT);
-
+		per_pass_table.RemoveShaderResource(REG_T_SC_PCX_TILESET_LUT);
+		per_pass_table.AddShaderResource(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_SC_PCX_TILESET_LUT, sc_map_->pcx_tileset_LUT);
 
 		needs_scale_matching_ = true;
 		SetEnable(true);
-
-		sc_map_ = std::move(sc_map);
 	}
 }

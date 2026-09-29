@@ -1,11 +1,27 @@
 
 #include <Content/HLSL/SCSpriteDebug.hlsli>
 
-float4 main(SpritePSInput input) : SV_TARGET
+Buffer<float4> g_wpe : register(REG_T_SC_WPE_PALETTE); // R8G8B8A8_UNORM, 256개
+Buffer<uint> g_tunit : register(REG_T_SC_TUNIT); // R8_UINT, 128개
+
+float4 main(SpritePSInput input) : SV_Target
 {
-	return float4(1.0f, 0.0f, 0.0f, 1.0f);
+	//return float4(1.f, 0.f, 1.f, 1.f);
 	
-	float4 color = g_grp_sprite.Sample(g_point_clamp_sampler, float3(input.local, input.frame));
-	
-	return color;
+	const int2 texel = int2(floor(input.local));
+	const uint2 sampled = g_grp_sprite.Load(int4(texel, input.frame, 0));
+
+	if (sampled.y == 0)
+	{
+		discard; // 커버리지 0 = 투명
+	}
+
+	uint index = sampled.x;
+	if (index >= 8 && index < 16)
+	{
+		index = g_tunit[input.color * 8 + (index - 8)];
+	}
+
+    // WPE 네 번째 바이트는 패딩이라 알파로 쓰지 않음
+	return float4(g_wpe[index].rgb, 1.0);
 }
