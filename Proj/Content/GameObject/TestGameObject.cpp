@@ -1,7 +1,7 @@
 #include "Content/pch.h"
 #include "TestGameObject.h"
 
-#include <Content/Script/ControlScript.h>
+#include <Content/Legacy/Script/ControlScript.h>
 
 #include <Engine/Game/Component/Transform.h>
 #include <Engine/Game/Component/SpriteRenderer.h>

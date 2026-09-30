@@ -33,37 +33,37 @@
     <ClInclude Include="GameObject\TestGameObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Script\ControlScript.h">
+    <ClInclude Include="Legacy\Script\ControlScript.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GameObject\TerranMarine.h">
+    <ClInclude Include="Legacy\GameObject\TerranMarine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GameObject\TerranMedic.h">
+    <ClInclude Include="Legacy\GameObject\TerranMedic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HFSMState\Idle.h">
+    <ClInclude Include="Legacy\HFSMState\Idle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Script\AnimationHandler.h">
+    <ClInclude Include="Legacy\Script\AnimationHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Script\UnitInputHandler.h">
+    <ClInclude Include="Legacy\Script\UnitInputHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HFSMState\Move.h">
+    <ClInclude Include="Legacy\HFSMState\Move.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HFSMState\Locomotion.h">
+    <ClInclude Include="Legacy\HFSMState\Locomotion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCData\Command.h">
+    <ClInclude Include="Legacy\Command.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HFSMState\UnitRoot.h">
+    <ClInclude Include="Legacy\HFSMState\UnitRoot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HFSMState\Turn.h">
+    <ClInclude Include="Legacy\HFSMState\Turn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SCData\Constants.h">
@@ -72,13 +72,13 @@
     <ClInclude Include="Script\DestroyTestScript.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Script\ActiveEnableTest.h">
+    <ClInclude Include="Legacy\Script\ActiveEnableTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Script\TestScript.h">
+    <ClInclude Include="Legacy\Script\TestScript.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Script\MarineTestScript.h">
+    <ClInclude Include="Legacy\Script\MarineTestScript.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SCData\SCMapLoader.h">
@@ -102,10 +102,10 @@
     <ClInclude Include="Script\SCUnit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Script\SCUnitBehavior.h">
+    <ClInclude Include="Legacy\Script\SCUnitBehavior.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HFSMState\SCBBCommon.h">
+    <ClInclude Include="Legacy\HFSMState\SCBBCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SCData\SCImageData.h">
@@ -155,46 +155,46 @@
     <ClCompile Include="GameObject\TestGameObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Script\ControlScript.cpp">
+    <ClCompile Include="Legacy\Script\ControlScript.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GameObject\TerranMarine.cpp">
+    <ClCompile Include="Legacy\GameObject\TerranMarine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GameObject\TerranMedic.cpp">
+    <ClCompile Include="Legacy\GameObject\TerranMedic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HFSMState\Idle.cpp">
+    <ClCompile Include="Legacy\HFSMState\Idle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Script\AnimationHandler.cpp">
+    <ClCompile Include="Legacy\Script\AnimationHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Script\UnitInputHandler.cpp">
+    <ClCompile Include="Legacy\Script\UnitInputHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HFSMState\Move.cpp">
+    <ClCompile Include="Legacy\HFSMState\Move.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HFSMState\Locomotion.cpp">
+    <ClCompile Include="Legacy\HFSMState\Locomotion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HFSMState\UnitRoot.cpp">
+    <ClCompile Include="Legacy\HFSMState\UnitRoot.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HFSMState\Turn.cpp">
+    <ClCompile Include="Legacy\HFSMState\Turn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Script\DestroyTestScript.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Script\ActiveEnableTest.cpp">
+    <ClCompile Include="Legacy\Script\ActiveEnableTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Script\TestScript.cpp">
+    <ClCompile Include="Legacy\Script\TestScript.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Script\MarineTestScript.cpp">
+    <ClCompile Include="Legacy\Script\MarineTestScript.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SCData\SCMapLoader.cpp">
@@ -215,10 +215,10 @@
     <ClCompile Include="Script\SCUnit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Script\SCUnitBehavior.cpp">
+    <ClCompile Include="Legacy\Script\SCUnitBehavior.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HFSMState\SCBBCommon.cpp">
+    <ClCompile Include="Legacy\HFSMState\SCBBCommon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SCData\SCImageData.cpp">

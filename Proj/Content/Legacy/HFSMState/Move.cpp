@@ -9,7 +9,7 @@
 #include <Engine/Game/Component/Transform.h>
 
 
-#include <Content/Script/AnimationHandler.h>
+#include <Content/Legacy/Script/AnimationHandler.h>
 
 namespace sc
 {

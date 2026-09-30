@@ -15,7 +15,7 @@
 
 #include <Content/SCData/Constants.h>
 
-#include <Content/HFSMState/SCBBCommon.h>
+#include <Content/Legacy/HFSMState/SCBBCommon.h>
 
 namespace sc
 {

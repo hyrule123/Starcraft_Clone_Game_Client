@@ -17,14 +17,14 @@
 
 #include <Engine/Core/Debug.h>
 
-#include <Content/Script/AnimationHandler.h>
+#include <Content/Legacy/Script/AnimationHandler.h>
 
-#include <Content/HFSMState/UnitRoot.h>
-#include <Content/HFSMState/Idle.h>
-#include <Content/HFSMState/Locomotion.h>
-#include <Content/HFSMState/Move.h>
+#include <Content/Legacy/HFSMState/UnitRoot.h>
+#include <Content/Legacy/HFSMState/Idle.h>
+#include <Content/Legacy/HFSMState/Locomotion.h>
+#include <Content/Legacy/HFSMState/Move.h>
 
-#include <Content/Script/UnitInputHandler.h>
+#include <Content/Legacy/Script/UnitInputHandler.h>
 
 namespace sc
 {

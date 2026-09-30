@@ -21,15 +21,16 @@
 #include <Engine/Game/Component/SpriteRenderer.h>
 #include <Engine/Game/Component/Transform.h>
 
-#include <Content/GameObject/TerranMarine.h>
-#include <Content/GameObject/TerranMedic.h>
+#include <Content/Legacy/GameObject/TerranMarine.h>
+#include <Content/Legacy/GameObject/TerranMedic.h>
 #include <Content/GameObject/SCUnitObj.h>
 #include <Content/GameObject/SCUnitDebug.h>
 #include <Content/Script/SCUnit.h>
 
+#include <Content/Legacy/Script/ActiveEnableTest.h>
+#include <Content/Legacy/Script/TestScript.h>
+
 #include <Content/Script/DestroyTestScript.h>
-#include <Content/Script/ActiveEnableTest.h>
-#include <Content/Script/TestScript.h>
 #include <Content/Script/SCUnit.h>
 
 #include <Content/SCData/SCMapLoader.h>

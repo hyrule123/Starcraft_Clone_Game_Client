@@ -11,4 +11,3 @@ namespace sc
 	};
 
 	using Command = std::variant<std::monostate, MoveCommand>;
-}
