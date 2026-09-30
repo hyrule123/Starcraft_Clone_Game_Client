@@ -12,14 +12,18 @@ namespace engine
 	class SpriteRenderer;
 	class SpriteAnimClip;
 	class BlackBoard;
+}
+
+namespace sc
+{
 
 	//방향에 따른 Animation Clip을 출력하기 위한 중간 클래스
 	//애니메이션 재생에 필요한 것: '어떤 애니메이션'을 '어떤 방향'으로 출력할 것인가
 	//그거 외의 정보는 참조하지 않음
     class AnimationHandler :
-        public Script
+        public engine::Script
     {
-        ENTITY_INFO(AnimationHandler, Script)
+        ENTITY_INFO(AnimationHandler, engine::Script)
 	public:
 		AnimationHandler();
 		virtual ~AnimationHandler() override;
@@ -29,19 +33,19 @@ namespace engine
 
 		void SetDestination(const float2& destination);
 
-		void SetMoveClips(const HashedStringView& key, const std::vector<SpriteAnimClip*>& move_clips) { 
+		void SetMoveClips(const engine::HashedStringView& key, const std::vector<engine::SpriteAnimClip*>& move_clips) { 
 			anim_clips_table_.insert(key, move_clips);
 			direction_count_ = move_clips.size();
 		}
 
 		//현재 재생중인 Animation과 다를 경우에만
-		void PlayAnimation(const HashedStringView& key);
+		void PlayAnimation(const engine::HashedStringView& key);
 
     private:
-		Transform* transform_ = {};
-		SpriteAnimator* animator_ = {};
-		SpriteRenderer* renderer_ = {};
-		BlackBoard* blackboard_ = {};
+		engine::Transform* transform_ = {};
+		engine::SpriteAnimator* animator_ = {};
+		engine::SpriteRenderer* renderer_ = {};
+		engine::BlackBoard* blackboard_ = {};
 
 		size_t direction_count_ = {};
 		
@@ -50,11 +54,11 @@ namespace engine
 		size_t direction_idx_ = {};
 		bool needs_flip_lr_ = {};
 
-		HashedStringView* playing_animation_ = {};
-		HashedStringView current_anim_key_;
-		std::vector<SpriteAnimClip*>* current_anim_clip_ptr_ = {};
+		engine::HashedStringView* playing_animation_ = {};
+		engine::HashedStringView current_anim_key_;
+		std::vector<engine::SpriteAnimClip*>* current_anim_clip_ptr_ = {};
 
-		StringHashTable<std::vector<SpriteAnimClip*>> anim_clips_table_ = {};
+		engine::StringHashTable<std::vector<engine::SpriteAnimClip*>> anim_clips_table_ = {};
 
 		float2 destination_ = {};
 		

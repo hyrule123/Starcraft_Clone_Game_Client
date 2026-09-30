@@ -17,30 +17,34 @@
 
 #include <Content/HFSMState/SCBBCommon.h>
 
-namespace engine
+namespace sc
 {
 	UnitInputHandler::UnitInputHandler()
 		: Super(UnitInputHandler::kClassConcreteName)
-		, input_mgr_(InputManager::GetInst())
+		, input_mgr_(engine::InputManager::GetInst())
 	{}
 	UnitInputHandler::~UnitInputHandler()
 	{}
 	void UnitInputHandler::Awake()
 	{
+		using namespace engine;
+
 		Super::Awake();
 
 		blackboard_ = GetOwnerGameObject()->GetComponent<BlackBoard>();
 		ASSERT(blackboard_);
 
-		SC::black_board::EnsureBlackBoardData(blackboard_);
+		black_board::EnsureBlackBoardData(blackboard_);
 
-		command_input_ = blackboard_->GetValue<HashedStringView>(SC::black_board::kCommandInput);
-		destination_ = blackboard_->GetValue<float2>(SC::black_board::kDestination);
+		command_input_ = blackboard_->GetValue<HashedStringView>(sc::black_board::kCommandInput);
+		destination_ = blackboard_->GetValue<float2>(sc::black_board::kDestination);
 		ASSERT(command_input_);
 		ASSERT(destination_);
 	}
 	void UnitInputHandler::Update()
 	{
+		using namespace engine;
+
 		Super::Update();
 
 		//이동명령
@@ -53,8 +57,8 @@ namespace engine
 			ASSERT(cam);
 
 			//게임 해상도와 현재 윈도우 해상도가 다를 수 있으므로 비율을 구해서 곱해주어야 함
-			float width_ratio = (float)SC::kResolutionWidth / (float)EngineMain::GetInst().GetScreenWidth();
-			float height_ratio = (float)SC::kResolutionHeight / (float)EngineMain::GetInst().GetScreenHeight();
+			float width_ratio = (float)sc::kResolutionWidth / (float)EngineMain::GetInst().GetScreenWidth();
+			float height_ratio = (float)sc::kResolutionHeight / (float)EngineMain::GetInst().GetScreenHeight();
 
 			//비율만큼 축소
 			mouse_pos.x *= width_ratio;
@@ -64,8 +68,8 @@ namespace engine
 			//윈도우 기준 좌상단이 0, 0 / 게임 기준 좌상단 -width / 2, height / 2
 			//윈도우 기준 우하단이 width, height / 게임 기준 width / 2, height / 2
 			// 선형 변환 시 GameX = (WindowX - width / 2), GameY = (height / 2 - WindowY)
-			mouse_pos.x = (mouse_pos.x - SC::kResolutionWidth * 0.5f);
-			mouse_pos.y = (SC::kResolutionHeight * 0.5f - mouse_pos.y);
+			mouse_pos.x = (mouse_pos.x - sc::kResolutionWidth * 0.5f);
+			mouse_pos.y = (sc::kResolutionHeight * 0.5f - mouse_pos.y);
 
 			//여기에 카메라의 위치를 더해주면 월드 좌표계(Transform이 완성되지 않았으므로 일단은 LocalPosition으로) 기준 좌표로 변환됨
 			const auto& cam_pos = cam->GetOwnerGameObject()->GetTransform()->GetLocalPosition();
@@ -73,7 +77,7 @@ namespace engine
 			mouse_pos.y += cam_pos.y;
 			
 			//우클릭 강제이동
-			*command_input_ = "ForceMove"_hash;
+			*command_input_ = "ForceMove";
 			*destination_ = mouse_pos;
 		}
 	}

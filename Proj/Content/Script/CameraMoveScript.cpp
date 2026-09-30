@@ -9,7 +9,7 @@
 
 #include <Engine/Core/Debug.h>
 
-namespace engine
+namespace sc
 {
 	CameraMoveScript::CameraMoveScript()
 		: Super(CameraMoveScript::kClassConcreteName)
@@ -21,6 +21,8 @@ namespace engine
 
 	void CameraMoveScript::Update()
 	{
+		using namespace engine;
+
 		Super::Update();
 		Transform* transform = GetComponent<Transform>();
 		ASSERT(transform);

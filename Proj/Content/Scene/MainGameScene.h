@@ -9,24 +9,20 @@
 
 #include <array>
 
-namespace engine
+namespace sc
 {
     class SCUnitObj;
-
-    namespace sc
-    {
-        class SCImageLibrary;
-    }
+    class SCImageLibrary;
 
     struct UnitEntry {
-        wh_ptr<SCUnitObj> object;
+        SCUnitObj* object = {};
         uint32_t serial = 0;
     };
 
     class MainGameScene :
-        public Scene
+        public engine::Scene
     {
-        ENTITY_INFO(MainGameScene, Scene)
+        ENTITY_INFO(MainGameScene, engine::Scene);
     public:
         MainGameScene();
         virtual ~MainGameScene() override;
@@ -53,7 +49,7 @@ namespace engine
 		ankerl::unordered_dense::map<uint32_t, UnitEntry> unit_objects_;
 		uint32_t sync_serial_ = 0;
 
-		u_ptr<sc::SCImageLibrary> sc_image_library_ = {};
+		std::unique_ptr<sc::SCImageLibrary> sc_image_library_ = {};
 		MPQFileSystem mpq_file_system_ = {};
     };
 }

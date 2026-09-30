@@ -18,21 +18,24 @@
 
 #include <span>
 
-namespace engine
+namespace sc
 {
 	SCMapBakeComputePass::SCMapBakeComputePass()
 		: Super(SCMapBakeComputePass::kClassConcreteName)
 	{}
 	SCMapBakeComputePass::~SCMapBakeComputePass()
 	{}
-	s_ptr<ComputeShader> SCMapBakeComputePass::LoadComputeShader()
+	std::shared_ptr<engine::ComputeShader> SCMapBakeComputePass::LoadComputeShader()
 	{
-		s_ptr<ComputeShader> cs = ResourceManager::GetInst().LoadFromFile<ComputeShader>("Shader/SCMapBaker_CS.cso"_hash);
+		using namespace engine::literals;
+		std::shared_ptr<engine::ComputeShader> cs = engine::ResourceManager::GetInst().LoadFromFile<engine::ComputeShader>("Shader/SCMapBaker_CS.cso");
 		ASSERT(cs != nullptr);
 		return cs;
 	}
 	bool SCMapBakeComputePass::CreateTileSetGPUData(const std::array<TileSet, (size_t)TileSetType::kEND>& tileset_data)
 	{
+		using namespace engine;
+
 		auto clear_tilesets = [&]() {
 			for (size_t i = 0; i < tileset_gpu_buffers_.size(); ++i)
 			{
@@ -136,8 +139,10 @@ namespace engine
 
 		return true;
 	}
-	s_ptr<Texture2D> SCMapBakeComputePass::BakeMapTexture(const SCMapLoadingData& map_data)
+	std::shared_ptr<engine::Texture2D> SCMapBakeComputePass::BakeMapTexture(const SCMapLoadingData& map_data)
 	{
+		using namespace engine;
+
 		if (map_data.megatile_width == 0 || map_data.megatile_height == 0)
 		{
 			ERR_MSG("Invalid map size. Width and height must be greater than 0.");
@@ -169,7 +174,7 @@ namespace engine
 		auto context = GraphicsDevice::GetInst().GetContext();
 
 		MapInfoCB map_info_cb = {};
-		map_info_cb.megatile_size = { map_data.megatile_width, map_data.megatile_height };
+		map_info_cb.megatile_size = { (int32)map_data.megatile_width, (int32)map_data.megatile_height };
 		
 		if (map_info_buffer_ == nullptr)
 		{
@@ -182,7 +187,7 @@ namespace engine
 		// CB bind
 		map_info_buffer_->Bind(context, ShaderStage::Compute, REG_B_MAP_INFO);
 
-		s_ptr<Texture2D> map_texture = EntityManager::CreateEntity<Texture2D>();
+		std::shared_ptr<Texture2D> map_texture = EntityManager::CreateEntity<Texture2D>();
 		D3D11_TEXTURE2D_DESC desc = {};
 		desc.Format = DXGI_FORMAT_R8_UINT;
 		desc.MipLevels = 1;
@@ -202,7 +207,7 @@ namespace engine
 		tileset_gpu.VR4_minitile_wpe_indices->BindSRV(context, ShaderStage::Compute, REG_T_TILESET_VR4);
 
 		// scx 맵 데이터(mtxm) 생성 및 binding
-		u_ptr<TypedBuffer> mtxm_buffer = EntityManager::CreateEntity<TypedBuffer>();
+		std::unique_ptr<TypedBuffer> mtxm_buffer = EntityManager::CreateEntity<TypedBuffer>();
 		std::span<const MTXM> mtxm_span = map_data.mtxm;
 		result = mtxm_buffer->CreateImmutableBuffer(DXGI_FORMAT_R16_UINT, mtxm_span);
 		if (!result) { return nullptr; }

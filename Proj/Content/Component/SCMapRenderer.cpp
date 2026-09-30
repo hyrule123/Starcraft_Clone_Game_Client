@@ -23,9 +23,9 @@
 
 #include <Content/HLSL/SCMapRender.hlsli>
 
-namespace engine
+namespace sc
 {
-	constexpr RenderPassOrder kMapRenderPass = RenderPassOrder::ForwardOpaque;
+	constexpr engine::RenderPassOrder kMapRenderPass = engine::RenderPassOrder::ForwardOpaque;
 
 
 	SCMapRenderer::SCMapRenderer()
@@ -37,24 +37,27 @@ namespace engine
 	{
 		Super::Init();
 
-		bool result = SetMesh("Mesh_Standard2D_Rect"_hash);
+		using namespace engine;
+		using namespace engine::literals;
+
+		bool result = SetMesh("Mesh_Standard2D_Rect");
 		ASSERT(result);
 
-		constexpr HashedStringView material_name = "Material_SCMap"_hash;
-		s_ptr<Material> map_mtrl = ResourceManager::GetInst().Find<Material>(material_name);
+		constexpr HashedStringView material_name = "Material_SCMap";
+		std::shared_ptr<Material> map_mtrl = ResourceManager::GetInst().Find<Material>(material_name);
 
 		if (map_mtrl == nullptr)
 		{
 			map_mtrl = EntityManager::CreateEntity<Material>();
 
-			s_ptr<PipelineState> pipeline_state = EntityManager::GetInst().CreateEntity<PipelineState>();
+			std::shared_ptr<PipelineState> pipeline_state = EntityManager::GetInst().CreateEntity<PipelineState>();
 			pipeline_state->SetInstancingSupport(false);
 			pipeline_state->SetPerInstanceDataStride(sizeof(MapInfoCB));
-			pipeline_state->SetVertexShader("Shader/SCMapRender_VS.cso"_hash);
-			pipeline_state->SetPixelShader("Shader/SCMapRender_PS.cso"_hash);
-			pipeline_state->SetDepthStencilState("DSS_Default"_hash);
-			pipeline_state->SetRasterizerState("RSS_Solid_Back"_hash);
-			pipeline_state->CreateInputLayout("InputLayoutDesc_Standard2D"_hash);
+			pipeline_state->SetVertexShader("Shader/SCMapRender_VS.cso");
+			pipeline_state->SetPixelShader("Shader/SCMapRender_PS.cso");
+			pipeline_state->SetDepthStencilState("DSS_Default");
+			pipeline_state->SetRasterizerState("RSS_Solid_Back");
+			pipeline_state->CreateInputLayout("InputLayoutDesc_Standard2D");
 			map_mtrl->SetPipelineState(kMapRenderPass, pipeline_state);
 
 			ResourceManager::GetInst().AddResource(material_name, map_mtrl);
@@ -69,6 +72,8 @@ namespace engine
 	}
 	void SCMapRenderer::LateUpdate()
 	{
+		using namespace engine;
+
 		Super::LateUpdate();
 
 		if (sc_map_ == nullptr)
@@ -113,16 +118,20 @@ namespace engine
 	}
 	void SCMapRenderer::OnDestroy()
 	{
+		using namespace engine;
+
 		Super::OnDestroy();
 		auto& per_pass_table = RenderManager::GetInst().GetPerFrameBindingTable();
 
 		per_pass_table.RemoveShaderResource(REG_T_SC_WPE_PALETTE);
 		per_pass_table.RemoveShaderResource(REG_T_SC_PCX_TILESET_LUT);	
 	}
-	void SCMapRenderer::WritePerObjectData(DataBlock data_block)
+	void SCMapRenderer::WritePerObjectData(engine::DataBlock data_block)
 	{
+		using namespace engine;
+
 		MapInfoCB map_info_cb = {};
-		map_info_cb.megatile_size = { sc_map_->megatile_width, sc_map_->megatile_height };
+		map_info_cb.megatile_size = { (int32)sc_map_->megatile_width, (int32)sc_map_->megatile_height };
 		map_info_cb.world_mat = GetTransform()->GetWorldMatrix();
 
 		data_block.Write(map_info_cb);
@@ -148,8 +157,10 @@ namespace engine
 
 		//data_block.Write(map_info_cb);
 	}
-	void SCMapRenderer::SetSCMap(u_ptr<SCMap> sc_map)
+	void SCMapRenderer::SetSCMap(std::unique_ptr<SCMap> sc_map)
 	{
+		using namespace engine;
+
 		if (sc_map == nullptr)
 		{
 			SetEnable(false);

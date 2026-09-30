@@ -3,12 +3,12 @@
 
 #include <SCSimulator/Include/SCSimulatorTypes.h>
 
-namespace engine
+namespace sc
 {
     class SCUnitDebug :
-        public GameObject
+        public engine::GameObject
     {
-        ENTITY_INFO(SCUnitDebug, GameObject);
+        ENTITY_INFO(SCUnitDebug, ::engine::GameObject);
 
 	public:
         SCUnitDebug();

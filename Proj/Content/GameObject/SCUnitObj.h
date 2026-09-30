@@ -3,22 +3,21 @@
 
 #include <SCSimulator/Include/SCSimulatorTypes.h>
 
-namespace engine
+namespace sc
 {
     class SCUnit;
     class SCUnitBehavior;
 
     class SCUnitObj :
-        public GameObject
+        public engine::GameObject
     {
-        ENTITY_INFO(SCUnitObj, GameObject);
+        ENTITY_INFO(SCUnitObj, engine::GameObject);
 
 	public:
         SCUnitObj();
         virtual ~SCUnitObj() override;
 
 		virtual void Init() override;
-
 
         void SetUnitID(uint32_t id) { unit_id_ = id; }
         uint32_t GetUnitID() const { return unit_id_; }

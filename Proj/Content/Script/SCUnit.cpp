@@ -1,7 +1,7 @@
 #include "Content/pch.h"
 #include "SCUnit.h"
 
-namespace engine
+namespace sc
 {
 	SCUnit::SCUnit()
 		: Super(SCUnit::kClassConcreteName)

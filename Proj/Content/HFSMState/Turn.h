@@ -5,12 +5,12 @@
 
 #include <Engine/Core/Math.h>
 
-namespace engine
+namespace sc
 {
     class Turn :
-        public HFSMState
+        public engine::HFSMState
     {
-		ENTITY_INFO(Turn, HFSMState)
+		ENTITY_INFO(Turn, engine::HFSMState)
     public:
         Turn();
 		virtual ~Turn() override;  

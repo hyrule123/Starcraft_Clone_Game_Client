@@ -1,23 +1,23 @@
 #pragma once
 #include <Engine/Game/Component/HFSMState.h>
 
-namespace engine
+namespace sc
 {
 	class UnitRoot :
-		public HFSMState
+		public engine::HFSMState
 	{
-		ENTITY_INFO(UnitRoot, HFSMState)
+		ENTITY_INFO(UnitRoot, engine::HFSMState)
 	public:
 		UnitRoot();
 		virtual ~UnitRoot() override;
 
-		virtual void OnAwake(const AIContext& ai_context) override;
+		virtual void OnAwake(const engine::AIContext& ai_context) override;
 
-		virtual HashedStringView CheckTransition(const AIContext& ai_context) override;
+		virtual engine::HashedStringView CheckTransition(const engine::AIContext& ai_context) override;
 
 	private:
-		HashedStringView* command_input_ = {};
-		HashedStringView* current_action_ = {};
+		engine::HashedStringView* command_input_ = {};
+		engine::HashedStringView* current_action_ = {};
 	};
 }
 

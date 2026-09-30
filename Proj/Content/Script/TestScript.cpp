@@ -8,7 +8,7 @@
 #include <Engine/Game/Component/SpriteAnimator.h>
 #include <Engine/Game/Scene.h>
 
-namespace engine
+namespace sc
 {
 	TestScript::TestScript()
 		: Super(TestScript::kClassConcreteName)
@@ -23,10 +23,10 @@ namespace engine
 
 		DEBUG_LOG("TestScript Awake() called.");
 
-		auto animator = GetComponent<SpriteAnimator>();
+		auto animator = GetComponent<engine::SpriteAnimator>();
 		if (animator)
 		{
-			animator->AddNotifyCallback("MoveEnd"_hash, [this]() {
+			animator->AddNotifyCallback("MoveEnd", [this]() {
 				DEBUG_LOG("TestScript received MoveEnd callback.");
 				});
 		}
@@ -41,6 +41,8 @@ namespace engine
 
 	void TestScript::Update()
 	{
+		using namespace engine;
+		
 		Super::Update();
 		
 		if (InputManager::GetInst().GetKeyDown(KeyCode::kE))
@@ -51,7 +53,7 @@ namespace engine
 			{
 				DEBUG_LOG("Creating New TerranMarine Object...");
 
-				target_obj_ = GetOwnerGameObject()->GetOwnerScene()->AddGameObject("TerranMarine"_hash);
+				target_obj_ = GetOwnerGameObject()->GetOwnerScene()->AddGameObject("TerranMarine");
 			}
 			else
 			{

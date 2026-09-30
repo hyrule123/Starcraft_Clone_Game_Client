@@ -10,17 +10,19 @@
 
 #include <Engine/Core/Debug.h>
 
-namespace engine
+namespace sc
 {
 	AnimationHandler::AnimationHandler()
 		: Super(AnimationHandler::kClassConcreteName)
-		, current_anim_key_(""_hash)
+		, current_anim_key_("")
 	{}
 	AnimationHandler::~AnimationHandler()
 	{}
 
 	void AnimationHandler::Awake()
 	{
+		using namespace engine;
+
 		Super::Awake();
 
 		transform_ = GetOwnerGameObject()->GetComponent<Transform>();
@@ -28,10 +30,10 @@ namespace engine
 		renderer_ = GetOwnerGameObject()->GetComponent<SpriteRenderer>();
 		blackboard_ = GetOwnerGameObject()->GetComponent<BlackBoard>();
 
-		direction_ = blackboard_->GetValue<float2>("Direction"_hash);
+		direction_ = blackboard_->GetValue<float2>("Direction");
 		ASSERT(direction_);
 
-		playing_animation_ = blackboard_->GetValue<HashedStringView>("PlayingAnimation"_hash);
+		playing_animation_ = blackboard_->GetValue<HashedStringView>("PlayingAnimation");
 		ASSERT(playing_animation_);
 
 		ASSERT(false == anim_clips_table_.cont.empty());
@@ -47,6 +49,8 @@ namespace engine
 
 	void AnimationHandler::Update()
 	{
+		using namespace engine;
+		
 		Super::Update();
 
 		ASSERT(transform_);

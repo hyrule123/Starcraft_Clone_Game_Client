@@ -1,12 +1,12 @@
 #pragma once
 #include <Engine/Game/Component/Script.h>
 
-namespace engine
+namespace sc
 {
     class DestroyTestScript :
-        public Script
+        public engine::Script
     {
-		ENTITY_INFO(DestroyTestScript, Script)
+		ENTITY_INFO(DestroyTestScript, engine::Script)
 	public:
 		DestroyTestScript();
 		virtual ~DestroyTestScript() override;

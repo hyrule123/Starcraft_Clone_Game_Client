@@ -8,7 +8,7 @@
 
 #include <Engine/Game/Component/Transform.h>
 
-namespace engine
+namespace sc
 {
 	SCUnitDebug::SCUnitDebug()
 		: GameObject(SCUnitDebug::kClassConcreteName)
@@ -19,9 +19,11 @@ namespace engine
 	{
 		Super::Init();
 
-		auto* p = AddComponent("SCSpriteDebugRenderer"_hash);
+		auto* p = AddComponent("SCSpriteDebugRenderer");
 		CHECK(p != nullptr);
 		
+		using namespace engine;
+
 		Transform* transform = GetComponent<Transform>();
 		transform->SetLocalScale(float3(100.0f, 100.0f, 1.0f));
 		transform->SetLocalPosition(float3(0.f, 0.f, 10.0f));

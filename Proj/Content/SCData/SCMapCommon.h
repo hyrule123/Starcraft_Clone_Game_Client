@@ -5,6 +5,12 @@
 
 namespace engine
 {
+	class Texture2D;
+	class TypedBuffer;
+}
+
+namespace sc
+{
 #pragma pack(push, 1)
 
 	// ===================================================================
@@ -115,10 +121,9 @@ namespace engine
 
 #pragma pack(pop)
 
-	namespace sc
-	{
-		class SCTileSetPcxLUT;
-	}
+
+	class SCTileSetPcxLUT;
+
 	struct TileSet
 	{
 		std::vector<CV5> cv5;
@@ -126,7 +131,7 @@ namespace engine
 		std::vector<VF4> vf4;
 		std::vector<VR4> vr4;
 		std::vector<WPE> wpe;
-		u_ptr<sc::SCTileSetPcxLUT> pcx_lut = nullptr;
+		std::unique_ptr<SCTileSetPcxLUT> pcx_lut = nullptr;
 	};
 
 	//스타크래프트 맵 데이터 속 "ERA" 안에 들어있는 정보 
@@ -268,11 +273,6 @@ namespace engine
 	constexpr uint32 MTXMGroup(uint16 v) { return (v & 0b0111'1111'1111'0000) >> 4; }
 	constexpr uint32 MTXMTile(uint16 v) { return  v & 0b0000'0000'0000'1111; }
 
-	class Texture2D;
-	class TypedBuffer;
-	struct TileSet;
-	struct TileSetGPU;
-
 	// 최종 결과물
 	struct SCMap
 	{
@@ -283,11 +283,11 @@ namespace engine
 		std::vector<UnitData> unit_data = {};
 
 		// 결과물
-		s_ptr<Texture2D> texture = {};	// uint8 texture
+		std::shared_ptr<engine::Texture2D> texture = {};	// uint8 texture
 
 		// WPE 색상 팔레트
-		s_ptr<TypedBuffer> wpe_color_palettes = {};
-		s_ptr<TypedBuffer> pcx_tileset_LUT = {};
+		std::shared_ptr<engine::TypedBuffer> wpe_color_palettes = {};
+		std::shared_ptr<engine::TypedBuffer> pcx_tileset_LUT = {};
 	};
 
 	struct SCMapLoadingData
@@ -297,7 +297,7 @@ namespace engine
 		uint32 megatile_height = 0;
 
 		std::vector<uint8> map_raw_bytes = {};
-		StringHashTable<std::vector<uint8>> map_data_table = {};
+		engine::StringHashTable<std::vector<uint8>> map_data_table = {};
 
 		std::vector<MTXM> mtxm = {};
 		std::vector<UnitData> unit_data = {};

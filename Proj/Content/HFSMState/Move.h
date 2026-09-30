@@ -3,26 +3,26 @@
 
 #include <Engine/Core/Math.h>
 
-namespace engine
+namespace sc
 {
 	//class HashedStringView;
 	class AnimationHandler;
 
     class Move :
-        public HFSMState
+        public engine::HFSMState
     {
-		ENTITY_INFO(Move, HFSMState)
+		ENTITY_INFO(Move, engine::HFSMState)
 	public:
 		Move();
 		virtual ~Move() override;
 		
-		virtual void OnAwake(const AIContext& ai_context) override;
-		virtual void OnEnter(const AIContext& ai_context) override;
-		virtual void OnUpdate(const AIContext& ai_context) override;
-		virtual void OnExit(const AIContext& ai_context) override;
+		virtual void OnAwake(const engine::AIContext& ai_context) override;
+		virtual void OnEnter(const engine::AIContext& ai_context) override;
+		virtual void OnUpdate(const engine::AIContext& ai_context) override;
+		virtual void OnExit(const engine::AIContext& ai_context) override;
 
 	private:
-		HashedStringView* playing_animation_ = {};
+		engine::HashedStringView* playing_animation_ = {};
 		bool* is_moving_ = {};
 		float2* cur_direction_ = {};
 		float2* destination_ = {};

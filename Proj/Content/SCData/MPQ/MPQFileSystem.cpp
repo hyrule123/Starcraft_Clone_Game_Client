@@ -6,16 +6,16 @@
 #include <Engine/Core/Debug.h>
 #include <Engine/Core/Constants.h>
 
-namespace engine
+namespace sc
 {
-    bool MPQFileSystem::AddArchive(const stdfs::path& file_path, bool required)
+    bool MPQFileSystem::AddArchive(const std::filesystem::path& file_path, bool required)
     {
-        if (!required && !stdfs::exists(file_path))
+        if (!required && !std::filesystem::exists(file_path))
         {
             return true;  // 선택 아카이브가 없는 건 정상
         }
 
-        u_ptr<MPQArchive> archive = std::make_unique<MPQArchive>();
+        std::unique_ptr<MPQArchive> archive = std::make_unique<MPQArchive>();
         if (!archive->OpenMPQFile(file_path))
         {
             return false;  // 필수가 없거나, 선택이라도 존재하는데 손상된 경우
@@ -25,7 +25,7 @@ namespace engine
         return true;
     }
 
-    bool MPQFileSystem::HasFile(const stdfs::path& inner_path) const
+    bool MPQFileSystem::HasFile(const std::filesystem::path& inner_path) const
     {
 		for (const auto& archive : archives_)
 		{
@@ -38,7 +38,7 @@ namespace engine
         return false;
     }
 
-    MPQFile MPQFileSystem::OpenFile(const stdfs::path& inner_path) const
+    MPQFile MPQFileSystem::OpenFile(const std::filesystem::path& inner_path) const
     {
 		for (const auto& archive : archives_)
 		{

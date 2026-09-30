@@ -1,12 +1,12 @@
 #pragma once
 #include <Engine/Game/Component/Script.h>
 
-namespace engine
+namespace sc
 {
     class CameraMoveScript :
-        public Script
+        public engine::Script
     {
-        ENTITY_INFO(CameraMoveScript, Script);
+        ENTITY_INFO(CameraMoveScript, engine::Script);
 
 	public:
         CameraMoveScript();

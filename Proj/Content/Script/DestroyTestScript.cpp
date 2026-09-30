@@ -6,7 +6,7 @@
 
 #include <Engine/Core/Debug.h>
 
-namespace engine
+namespace sc
 {
 	DestroyTestScript::DestroyTestScript()
 		: Super(DestroyTestScript::kClassConcreteName)
@@ -16,6 +16,8 @@ namespace engine
 	{}
 	void DestroyTestScript::Update()
 	{
+		using namespace engine;
+
 		Super::Update();
 
 		if (InputManager::GetInst().GetKeyDown(KeyCode::kSpace))

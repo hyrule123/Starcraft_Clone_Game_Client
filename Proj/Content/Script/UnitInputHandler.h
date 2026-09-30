@@ -9,11 +9,14 @@ namespace engine
     class InputManager;
     class Camera;
     class BlackBoard;
+}
 
+namespace sc
+{
     class UnitInputHandler :
-        public Script
+        public engine::Script
     {
-		ENTITY_INFO(UnitInputHandler, Script)
+		ENTITY_INFO(UnitInputHandler, engine::Script)
     public:
         UnitInputHandler();
 		virtual ~UnitInputHandler() override;
@@ -22,10 +25,10 @@ namespace engine
 		virtual void Update() override;
 
     private:
-        InputManager& input_mgr_;
-		BlackBoard* blackboard_ = {};
+        engine::InputManager& input_mgr_;
+		engine::BlackBoard* blackboard_ = {};
 
-		HashedStringView* command_input_ = {};
+		engine::HashedStringView* command_input_ = {};
 		float2* destination_ = {};
     };
 }

@@ -39,7 +39,7 @@ namespace engine
 		//anim_ = res_mgr.Find<SpriteAnimation>("Medic_SpriteAnimation");
 		//if (!anim_)
 		//{
-		//	s_ptr<Texture2DArray> medic_sprite =
+		//	std::shared_ptr<Texture2DArray> medic_sprite =
 		//		res_mgr.LoadFromFileWithoutAdd<Texture2DArray>("Texture2D/SC/Terran/medic.bmp");
 		//	ASSERT((bool)medic_sprite);
 
@@ -50,7 +50,7 @@ namespace engine
 		//	res_mgr.AddResource("Medic_SpriteAnimation", anim_);
 		//	anim_->SetSprite(medic_sprite);
 
-		//	u_ptr<SpriteAnimClip> clip = std::make_unique<SpriteAnimClip>();
+		//	std::unique_ptr<SpriteAnimClip> clip = std::make_unique<SpriteAnimClip>();
 		//	std::vector<uint32> frames = {};
 		//	for (uint32 i = 0; i < 9; ++i)
 		//	{

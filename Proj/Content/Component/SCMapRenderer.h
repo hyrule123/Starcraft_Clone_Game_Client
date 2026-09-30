@@ -1,16 +1,17 @@
 #pragma once
 #include <Engine/Game/Component/Renderer.h>
 
-namespace engine
+namespace sc
 {
 	struct SCMap;
 	class SCMapLoader;
 	class Texture2D;
 	class ConstantBuffer;
     class SCMapRenderer :
-        public Renderer
+        public engine::Renderer
     {
-		ENTITY_INFO(SCMapRenderer, Renderer)
+		ENTITY_INFO(SCMapRenderer, engine::Renderer);
+
     public:
 		SCMapRenderer();
 		virtual ~SCMapRenderer() override;
@@ -22,12 +23,12 @@ namespace engine
 
 		virtual void OnDestroy() override;
 
-		virtual void WritePerObjectData(DataBlock data_block) override;
+		virtual void WritePerObjectData(engine::DataBlock data_block) override;
 
-		void SetSCMap(u_ptr<SCMap> sc_map);
+		void SetSCMap(std::unique_ptr<SCMap> sc_map);
 
 	private:
-		u_ptr<SCMap> sc_map_ = nullptr;
+		std::unique_ptr<SCMap> sc_map_ = nullptr;
 
 		bool needs_scale_matching_ = false;
     };

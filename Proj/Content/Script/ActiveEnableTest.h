@@ -1,12 +1,12 @@
 #pragma once
 #include <Engine/Game/Component/Script.h>
 
-namespace engine
+namespace sc
 {
     class ActiveEnableTest :
-        public Script
+        public engine::Script
     {
-		ENTITY_INFO(ActiveEnableTest, Script)
+		ENTITY_INFO(ActiveEnableTest, engine::Script)
 
     public:
         ActiveEnableTest();

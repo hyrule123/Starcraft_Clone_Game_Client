@@ -8,18 +8,22 @@
 namespace engine
 {
     class BlackBoard;
+}
+
+namespace sc
+{
     class Locomotion :
-        public HFSMState
+        public engine::HFSMState
     {
-        ENTITY_INFO(Locomotion, HFSMState)
+        ENTITY_INFO(Locomotion, engine::HFSMState)
     public:
         Locomotion();
         virtual ~Locomotion() override;
 
-		virtual void OnAwake(const AIContext& ai_context) override;
-        virtual void OnEnter(const AIContext& ai_context) override;
+		virtual void OnAwake(const engine::AIContext& ai_context) override;
+        virtual void OnEnter(const engine::AIContext& ai_context) override;
 
-        virtual HashedStringView CheckTransition(const AIContext& ai_context) override;
+        virtual engine::HashedStringView CheckTransition(const engine::AIContext& ai_context) override;
 
     private:
         float2* direction_ = {};

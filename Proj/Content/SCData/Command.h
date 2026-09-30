@@ -3,7 +3,7 @@
 
 #include <variant>
 
-namespace engine
+namespace sc
 {
 	struct MoveCommand
 	{

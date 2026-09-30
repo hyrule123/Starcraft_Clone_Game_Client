@@ -3,7 +3,7 @@
 
 #include <Engine/Core/Debug.h>
 
-namespace engine
+namespace sc
 {
 	MarineTestScript::MarineTestScript()
 		: Super(MarineTestScript::kClassConcreteName)
@@ -15,7 +15,7 @@ namespace engine
 	void MarineTestScript::Init()
 	{
 		Super::Init();
-		Subscribe(SubscribeType::kCollision);
+		Subscribe(engine::SubscribeType::kCollision);
 
 		DEBUG_LOG("MarineTestScript::Init() called.");
 	}
@@ -69,13 +69,13 @@ namespace engine
 		Super::OnDestroy();
 		DEBUG_LOG("MarineTestScript::OnDestroy() called.");
 	}
-	void MarineTestScript::OnCollisionEnter2D(const Collision2D& _info)
+	void MarineTestScript::OnCollisionEnter2D(const engine::Collision2D& _info)
 	{
 		Super::OnCollisionEnter2D(_info);
 
 		DEBUG_LOG("MarineTestScript::OnCollisionEnter2D()");
 	}
-	void MarineTestScript::OnCollisionExit2D(Collider2D * other)
+	void MarineTestScript::OnCollisionExit2D(engine::Collider2D * other)
 	{
 		Super::OnCollisionExit2D(other);
 

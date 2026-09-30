@@ -6,7 +6,7 @@
 
 #include <Engine/Core/Debug.h>
 
-namespace engine
+namespace sc
 {
 	SCUnitObj::SCUnitObj()
 		: Super(SCUnitObj::kClassConcreteName)

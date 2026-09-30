@@ -1,7 +1,7 @@
 #include "Content/pch.h"
 #include "Turn.h"
 
-namespace engine
+namespace sc
 {
 	Turn::Turn()
 		: Super(Turn::kClassConcreteName)

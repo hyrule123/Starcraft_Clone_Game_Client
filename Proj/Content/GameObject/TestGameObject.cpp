@@ -20,7 +20,7 @@
 
 #include <random>
 
-namespace engine
+namespace sc
 {
 	TestGameObject::TestGameObject()
 	{
@@ -30,6 +30,8 @@ namespace engine
 	}
 	void TestGameObject::Init()
 	{
+		using namespace engine;
+
 		Super::Init();
 
 		static std::random_device rand_dev;
@@ -58,10 +60,10 @@ namespace engine
 		//auto renderer = AddComponent<SpriteRenderer>();
 
 		//auto& resmgr = ResourceManager::GetInst();
-		//s_ptr<Mesh> mesh = resmgr.Find<Mesh>("Sprite_Mesh");
-		//s_ptr<Material> material = resmgr.Find<Material>("Sprite_Material");
+		//std::shared_ptr<Mesh> mesh = resmgr.Find<Mesh>("Sprite_Mesh");
+		//std::shared_ptr<Material> material = resmgr.Find<Material>("Sprite_Material");
 		//
-		//s_ptr<Texture2D> tex = resmgr.LoadFromFile<Texture2D>("Texture2D/Magenta.png");
+		//std::shared_ptr<Texture2D> tex = resmgr.LoadFromFile<Texture2D>("Texture2D/Magenta.png");
 		//material->SetTexture(tex, REG_T_BASE_COLOR);
 
 		//ASSERT(mesh);

@@ -5,7 +5,7 @@
 
 #include <Content/HLSL/SCSpriteDebug.hlsli>
 
-namespace engine
+namespace sc
 {
     constexpr uint32 SpriteFlagMask(uint32 bits)
     {

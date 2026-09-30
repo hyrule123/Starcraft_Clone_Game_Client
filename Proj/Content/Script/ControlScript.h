@@ -3,12 +3,12 @@
 
 #include <Engine/Core/CoreMinimal.h>
 
-namespace engine
+namespace sc
 {
     class ControlScript :
-        public Script
+        public engine::Script
     {
-        ENTITY_INFO(ControlScript, Script)
+        ENTITY_INFO(ControlScript, engine::Script)
     public:
         ControlScript();
         virtual ~ControlScript() override;

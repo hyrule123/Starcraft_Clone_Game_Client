@@ -54,13 +54,7 @@
     <ClInclude Include="HFSMState\Move.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Commands.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="HFSMState\Locomotion.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Script\UnitStats.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SCData\Command.h">
@@ -84,7 +78,7 @@
     <ClInclude Include="Script\TestScript.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MarineTestScript.h">
+    <ClInclude Include="Script\MarineTestScript.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SCData\SCMapLoader.h">
@@ -99,7 +93,7 @@
     <ClInclude Include="SCData\SCMapCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCMapRenderer.h">
+    <ClInclude Include="Component\SCMapRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GameObject\SCUnitObj.h">
@@ -138,7 +132,7 @@
     <ClInclude Include="GameObject\SCUnitDebug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCSpriteDebugRenderer.h">
+    <ClInclude Include="Component\SCSpriteDebugRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SCData\SCSpriteCommon.h">
@@ -185,9 +179,6 @@
     <ClCompile Include="HFSMState\Locomotion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Script\UnitStats.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="HFSMState\UnitRoot.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -203,7 +194,7 @@
     <ClCompile Include="Script\TestScript.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MarineTestScript.cpp">
+    <ClCompile Include="Script\MarineTestScript.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SCData\SCMapLoader.cpp">
@@ -215,7 +206,7 @@
     <ClCompile Include="SCData\SCMapBakeComputePass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SCMapRenderer.cpp">
+    <ClCompile Include="Component\SCMapRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GameObject\SCUnitObj.cpp">
@@ -254,7 +245,7 @@
     <ClCompile Include="GameObject\SCUnitDebug.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SCSpriteDebugRenderer.cpp">
+    <ClCompile Include="Component\SCSpriteDebugRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Script\CameraMoveScript.cpp">

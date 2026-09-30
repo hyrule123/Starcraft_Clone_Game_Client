@@ -1,12 +1,12 @@
 #pragma once
 #include <Engine/Game/GameObject.h>
 
-namespace engine
+namespace sc
 {
     class TestGameObject :
-        public GameObject
+        public engine::GameObject
     {
-        ENTITY_INFO(TestGameObject, GameObject)
+        ENTITY_INFO(TestGameObject, engine::GameObject)
     public:
         TestGameObject();
         virtual ~TestGameObject() override;

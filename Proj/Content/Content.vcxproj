@@ -220,7 +220,7 @@
     <ClInclude Include="SCData\PCXFile.h" />
     <ClInclude Include="SCData\GrpFile.h" />
     <ClInclude Include="HFSMState\SCBBCommon.h" />
-    <ClInclude Include="MarineTestScript.h" />
+    <ClInclude Include="Script\MarineTestScript.h" />
     <ClInclude Include="SCData\MPQ\MPQFileSystem.h" />
     <ClInclude Include="SCData\MPQ\MPQArchive.h" />
     <ClInclude Include="SCData\SCMapCommon.h" />
@@ -229,9 +229,8 @@
     <ClInclude Include="SCData\SCImageData.h" />
     <ClInclude Include="SCData\SCImageLibrary.h" />
     <ClInclude Include="SCData\SCSpriteCommon.h" />
-    <ClInclude Include="SCMapRenderer.h" />
+    <ClInclude Include="Component\SCMapRenderer.h" />
     <ClInclude Include="Script\ActiveEnableTest.h" />
-    <ClInclude Include="Commands.h" />
     <ClInclude Include="Script\DestroyTestScript.h" />
     <ClInclude Include="HFSMState\Locomotion.h" />
     <ClInclude Include="HFSMState\Move.h" />
@@ -247,7 +246,7 @@
     <ClInclude Include="Script\SCUnitBehavior.h" />
     <ClInclude Include="SCData\SCTileSetPcxLUT.h" />
     <ClInclude Include="GameObject\SCUnitDebug.h" />
-    <ClInclude Include="SCSpriteDebugRenderer.h" />
+    <ClInclude Include="Component\SCSpriteDebugRenderer.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="GameObject\TerranMarine.h" />
     <ClInclude Include="GameObject\TerranMedic.h" />
@@ -255,7 +254,6 @@
     <ClInclude Include="Scene\MainGameScene.h" />
     <ClInclude Include="Script\AnimationHandler.h" />
     <ClInclude Include="Script\UnitInputHandler.h" />
-    <ClInclude Include="Script\UnitStats.h" />
     <ClInclude Include="HFSMState\UnitRoot.h" />
     <ClInclude Include="HFSMState\Turn.h" />
     <ClInclude Include="Script\TestScript.h" />
@@ -266,14 +264,14 @@
     <ClCompile Include="SCData\PCXFile.cpp" />
     <ClCompile Include="SCData\GrpFile.cpp" />
     <ClCompile Include="HFSMState\SCBBCommon.cpp" />
-    <ClCompile Include="MarineTestScript.cpp" />
+    <ClCompile Include="Script\MarineTestScript.cpp" />
     <ClCompile Include="SCData\MPQ\MPQFileSystem.cpp" />
     <ClCompile Include="SCData\MPQ\MPQArchive.cpp" />
     <ClCompile Include="SCData\SCMapLoader.cpp" />
     <ClCompile Include="SCData\SCMapBakeComputePass.cpp" />
     <ClCompile Include="SCData\SCImageData.cpp" />
     <ClCompile Include="SCData\SCImageLibrary.cpp" />
-    <ClCompile Include="SCMapRenderer.cpp" />
+    <ClCompile Include="Component\SCMapRenderer.cpp" />
     <ClCompile Include="Script\ActiveEnableTest.cpp" />
     <ClCompile Include="Script\DestroyTestScript.cpp" />
     <ClCompile Include="HFSMState\Locomotion.cpp" />
@@ -293,7 +291,6 @@
     <ClCompile Include="Scene\MainGameScene.cpp" />
     <ClCompile Include="Script\AnimationHandler.cpp" />
     <ClCompile Include="Script\UnitInputHandler.cpp" />
-    <ClCompile Include="Script\UnitStats.cpp" />
     <ClCompile Include="HFSMState\UnitRoot.cpp" />
     <ClCompile Include="HFSMState\Turn.cpp" />
     <ClCompile Include="Script\TestScript.cpp" />
@@ -302,7 +299,7 @@
     <ClCompile Include="Script\SCUnitBehavior.cpp" />
     <ClCompile Include="SCData\SCTileSetPcxLUT.cpp" />
     <ClCompile Include="GameObject\SCUnitDebug.cpp" />
-    <ClCompile Include="SCSpriteDebugRenderer.cpp" />
+    <ClCompile Include="Component\SCSpriteDebugRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Content.rc" />

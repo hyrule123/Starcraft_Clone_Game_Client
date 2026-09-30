@@ -11,19 +11,14 @@
 // StormLib uses HANDLE(= void*), which is defined as void* in the header. Therefore, use static_assert to check type consistency
 static_assert(std::is_same_v<HANDLE, void*>, "HANDLE and void* are not the same type. Change the variable in header accordingly.");
 
-namespace
-{
-
-}
-
-namespace engine
+namespace sc
 {
 	MPQArchive::MPQArchive()
 	{}
 	MPQArchive::~MPQArchive()
 	{}
 
-	bool MPQArchive::OpenMPQFile(const stdfs::path & file_path)
+	bool MPQArchive::OpenMPQFile(const std::filesystem::path & file_path)
 	{
 		//파일 로드
 		MPQFile mpq_file;
@@ -37,12 +32,12 @@ namespace engine
 		return true;
 	}
 
-	bool MPQArchive::HasInnerFile(const stdfs::path& mpq_inner_file_path) const
+	bool MPQArchive::HasInnerFile(const std::filesystem::path& mpq_inner_file_path) const
 	{
 		return SFileHasFile(archive_mpq_.handle_, mpq_inner_file_path.string().c_str());
 	}
 
-	MPQFile MPQArchive::OpenInnerFile(const stdfs::path& mpq_inner_file_path) const
+	MPQFile MPQArchive::OpenInnerFile(const std::filesystem::path& mpq_inner_file_path) const
 	{
 		if (archive_mpq_.IsValid() == false)
 		{

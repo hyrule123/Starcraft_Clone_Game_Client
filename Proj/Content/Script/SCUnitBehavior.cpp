@@ -1,7 +1,7 @@
 #include "Content/pch.h"
 #include "SCUnitBehavior.h"
 
-namespace engine
+namespace sc
 {
 	SCUnitBehavior::SCUnitBehavior()
 		: Super(SCUnitBehavior::kClassConcreteName, SCUnitBehavior::kComponentCategory)

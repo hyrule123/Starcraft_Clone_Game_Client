@@ -5,7 +5,7 @@
 
 #include <optional>
 
-namespace engine
+namespace sc
 {
 	void MPQErrMessage(std::string err_msg);
 
@@ -19,6 +19,8 @@ namespace engine
 	{
 		friend class MPQArchive;
 	public:
+		static constexpr size_t kInvalidSize = engine::kInvalidSize;
+
 		MPQFile() = default;
 		MPQFile(const MPQFile&) = delete;
 		MPQFile& operator=(const MPQFile&) = delete;

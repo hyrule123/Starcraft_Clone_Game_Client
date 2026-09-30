@@ -8,7 +8,7 @@
 
 #include <Engine/Game/Component/Transform.h>
 
-namespace engine
+namespace sc
 {
 	ControlScript::ControlScript()
 		: Super(ControlScript::kClassConcreteName)
@@ -20,6 +20,8 @@ namespace engine
 	}
 	void ControlScript::Awake()
 	{
+		using namespace engine;
+
 		Super::Awake();
 
 		Transform* tf = GetComponent<Transform>();
@@ -28,6 +30,8 @@ namespace engine
 	}
 	void ControlScript::Update()
 	{
+		using namespace engine;
+		
 		Super::Update();
 
 		InputManager& input = InputManager::GetInst();
@@ -66,6 +70,8 @@ namespace engine
 	}
 	void ControlScript::KeyDownDebug()
 	{
+		using namespace engine;
+
 		const auto& down_keys = InputManager::GetInst().GetDownKeys();
 		const auto& pressed_keys = InputManager::GetInst().GetKeys();
 		const auto& up_keys = InputManager::GetInst().GetUpKeys();
@@ -90,7 +96,7 @@ namespace engine
 	}
 	void ControlScript::MousePosDebug()
 	{
-		int32_2 mousepos = InputManager::GetInst().GetMousePos();
+		engine::int32_2 mousepos = engine::InputManager::GetInst().GetMousePos();
 		DEBUG_LOG("Mouse Pos: x({}) y({})", mousepos.x, mousepos.y);
 	}
 }

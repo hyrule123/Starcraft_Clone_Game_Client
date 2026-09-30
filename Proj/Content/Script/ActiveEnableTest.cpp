@@ -5,7 +5,7 @@
 #include <Engine/Manager/TimeManager.h>
 #include <Engine/Core/Debug.h>
 
-namespace engine
+namespace sc
 {
 	ActiveEnableTest::ActiveEnableTest()
 		: Super(ActiveEnableTest::kClassConcreteName)
@@ -19,6 +19,8 @@ namespace engine
 	}
 	void ActiveEnableTest::Update()
 	{
+		using namespace engine;
+
 		Super::Update();
 
 		if (InputManager::GetInst().GetKeyDown(KeyCode::kSpace))

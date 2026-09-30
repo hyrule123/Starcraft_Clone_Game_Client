@@ -1,13 +1,13 @@
 #pragma once
 #include <Engine/Game/Component/Component.h>
 
-namespace engine
+namespace sc
 {
     class SCUnitBehavior :
-        public Component
+        public engine::Component
     {
-		ENTITY_INFO(SCUnitBehavior, Component);
-		COMPONENT_CATEGORY(ComponentCategory::kBehavior);
+		ENTITY_INFO(SCUnitBehavior, engine::Component);
+		COMPONENT_CATEGORY(engine::ComponentCategory::kBehavior);
 
     public:
         SCUnitBehavior();

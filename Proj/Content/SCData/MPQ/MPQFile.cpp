@@ -15,7 +15,7 @@
 
 #include <StormLib/Include/StormLib.h>
 
-namespace engine
+namespace sc
 {
 	void MPQErrMessage(std::string err_msg)
 	{
@@ -46,7 +46,7 @@ namespace engine
 		if (!handle_)
 		{
 			ERR_MSG("MPQFile handle is null.");
-			return kInvalidSize;
+			return engine::kInvalidSize;
 		}
 
 		// DWORD 상태로 비교해야 함
@@ -55,7 +55,7 @@ namespace engine
 		if (file_size == SFILE_INVALID_SIZE)
 		{
 			MPQErrMessage("Failed to get inner file size.");
-			return kInvalidSize;
+			return engine::kInvalidSize;
 		}
 		return static_cast<size_t>(file_size);
 	}
@@ -65,7 +65,7 @@ namespace engine
 		if (!handle_)
 		{
 			ERR_MSG("MPQFile handle is null.");
-			return kInvalidSize;
+			return engine::kInvalidSize;
 		}
 
 		ASSERT(dest != nullptr || size == 0);
@@ -73,27 +73,27 @@ namespace engine
 
 		// SFileSetFilePointer는 파일 끝을 넘는 이동을 에러 없이 끝으로 잘라내므로 범위를 먼저 검사
 		const size_t file_size = Size();
-		if (file_size == kInvalidSize)
+		if (file_size == engine::kInvalidSize)
 		{
-			return kInvalidSize;
+			return engine::kInvalidSize;
 		}
 		if (offset > file_size || size > file_size - offset)
 		{
 			ERR_MSG("MPQFile: 읽기 범위가 파일 크기를 벗어남 (offset {}, size {}, file {})", offset, size, file_size);
-			return kInvalidSize;
+			return engine::kInvalidSize;
 		}
 
 		if (SFileSetFilePointer(handle_, static_cast<LONG>(offset), nullptr, FILE_BEGIN) == SFILE_INVALID_POS)
 		{
 			MPQErrMessage("Failed to seek inner file.");
-			return kInvalidSize;
+			return engine::kInvalidSize;
 		}
 
 		DWORD actual_read_bytes = 0;
 		if (!SFileReadFile(handle_, dest, static_cast<DWORD>(size), &actual_read_bytes, nullptr))
 		{
 			MPQErrMessage("Failed to read inner file.");
-			return kInvalidSize;
+			return engine::kInvalidSize;
 		}
 		return static_cast<size_t>(actual_read_bytes);
 	}

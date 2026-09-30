@@ -23,8 +23,10 @@
 
 #include <SCSimulator/Include/SCSimulatorAPI.h>
 
-namespace engine
+namespace sc
 {
+	using namespace engine;
+
 	SCSpriteDebugRenderer::SCSpriteDebugRenderer()
 		: Super(SCSpriteDebugRenderer::kClassConcreteName)
 	{}
@@ -32,25 +34,26 @@ namespace engine
 	{}
 	void SCSpriteDebugRenderer::Init()
 	{
+		
 		Super::Init();
 
-		bool result = SetMesh("Mesh_Standard2D_Rect"_hash);
+		bool result = SetMesh("Mesh_Standard2D_Rect");
 		CHECK(result);
 
-		s_ptr<Material> material = ResourceManager::GetInst().Find<Material>("SCUnitDebugMaterial"_hash);
+		std::shared_ptr<Material> material = ResourceManager::GetInst().Find<Material>("SCUnitDebugMaterial");
 		if (material == nullptr)
 		{
 			material = EntityManager::CreateEntity<Material>();
-			ResourceManager::GetInst().AddResource("SCUnitDebugMaterial"_hash, material);
+			ResourceManager::GetInst().AddResource("SCUnitDebugMaterial", material);
 
-			s_ptr<PipelineState> pipeline_state = EntityManager::GetInst().CreateEntity<PipelineState>();
+			std::shared_ptr<PipelineState> pipeline_state = EntityManager::GetInst().CreateEntity<PipelineState>();
 
-			pipeline_state->SetVertexShader("Shader/SCSpriteDebug_VS.cso"_hash);
-			pipeline_state->SetPixelShader("Shader/SCSpriteDebug_PS.cso"_hash);
-			pipeline_state->CreateInputLayout("InputLayoutDesc_Standard2D"_hash);
+			pipeline_state->SetVertexShader("Shader/SCSpriteDebug_VS.cso");
+			pipeline_state->SetPixelShader("Shader/SCSpriteDebug_PS.cso");
+			pipeline_state->CreateInputLayout("InputLayoutDesc_Standard2D");
 
-			pipeline_state->SetDepthStencilState("DSS_Default"_hash);
-			pipeline_state->SetRasterizerState("RSS_Solid_Back"_hash);
+			pipeline_state->SetDepthStencilState("DSS_Default");
+			pipeline_state->SetRasterizerState("RSS_Solid_Back");
 
 			pipeline_state->SetPerInstanceDataStride<SCSpriteInstance>();
 			pipeline_state->SetInstancingSupport(true);
@@ -61,7 +64,7 @@ namespace engine
 		result = SetMaterial(0, material);
 		CHECK(result);
 
-		//material->SetTexture(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_SC_GRP_SPRITE, "Texture2D/Magenta.png"_hash);
+		//material->SetTexture(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_SC_GRP_SPRITE, "Texture2D/Magenta.png");
 
 
 
@@ -94,11 +97,11 @@ namespace engine
 		// 이미지 타입이 바뀔 때만 텍스처 교체 (변태·사망 애니메이션 등)
 		if (image_info.image_type != bound_image_type_)
 		{
-			sc::SCImageLibrary* image_library = scene->GetSCImageLibrary();
+			SCImageLibrary* image_library = scene->GetSCImageLibrary();
 			CHECK(image_library);
 			const sc::ImageDef& image_def = image_library->GetImageDef(image_info.image_type);
 
-			s_ptr<Texture2D> texture = image_library->GetTexture(image_info.image_type);
+			std::shared_ptr<Texture2D> texture = image_library->GetTexture(image_info.image_type);
 			ASSERT(texture != nullptr);   // 유닛 본체 이미지는 항상 GRP가 있어야 함
 			GetMaterial(0)->RemoveTexture(REG_T_SC_GRP_SPRITE);
 			GetMaterial(0)->SetTexture(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_SC_GRP_SPRITE, texture);   // PerMaterial 슬롯 t30
@@ -122,8 +125,7 @@ namespace engine
 		
 		SCSpriteInstance inst_data = {};
 
-		// SC 좌표로 재설정
-		inst_data.position = float2((float)image_info.x, (float)-image_info.y);
+		inst_data.position = float2((float)image_info.x, (float)image_info.y);
 		inst_data.frame = image_info.frame;
 
 		sc::SCImageLibrary* image_library = scene->GetSCImageLibrary();

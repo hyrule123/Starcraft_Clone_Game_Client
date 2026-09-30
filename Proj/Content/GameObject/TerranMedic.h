@@ -18,7 +18,7 @@ namespace engine
         virtual void Init() override;
 
     private:
-        s_ptr<SpriteAnimation> anim_ = {};
+        std::shared_ptr<SpriteAnimation> anim_ = {};
     };
 }
 

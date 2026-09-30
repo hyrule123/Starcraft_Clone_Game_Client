@@ -4,12 +4,12 @@
 #include <SCSimulator/Include/SCSimulatorAPI.h>
 
 //클래스 설명: SCUnit의 main 컴포넌트(모든 데이터 저장)
-namespace engine
+namespace sc
 {
     class SCUnit :
-        public Script
+        public engine::Script
     {
-        ENTITY_INFO(SCUnit, Script);
+        ENTITY_INFO(SCUnit, engine::Script);
 
 	public:
         SCUnit();

@@ -11,7 +11,7 @@
 
 #include <Content/Script/AnimationHandler.h>
 
-namespace engine
+namespace sc
 {
 	Move::Move()
 		: Super(Move::kClassConcreteName)
@@ -19,43 +19,47 @@ namespace engine
 	Move::~Move()
 	{}
 
-	void Move::OnAwake(const AIContext& ai_context)
+	void Move::OnAwake(const engine::AIContext& ai_context)
 	{
+		using namespace engine;
+
 		Super::OnAwake(ai_context);
 
 		ASSERT(ai_context.game_object);
 
 		ASSERT(ai_context.black_board);
 
-		playing_animation_ = ai_context.black_board->GetValue<HashedStringView>("PlayingAnimation"_hash);
+		playing_animation_ = ai_context.black_board->GetValue<HashedStringView>("PlayingAnimation");
 		ASSERT(playing_animation_);
 
-		is_moving_ = ai_context.black_board->GetValue<bool>("IsMoving"_hash);
+		is_moving_ = ai_context.black_board->GetValue<bool>("IsMoving");
 		ASSERT(is_moving_);
 
-		cur_direction_ = ai_context.black_board->GetValue<float2>("Direction"_hash);
+		cur_direction_ = ai_context.black_board->GetValue<float2>("Direction");
 		ASSERT(cur_direction_);
 
-		destination_ = ai_context.black_board->GetValue<float2>("Destination"_hash);
+		destination_ = ai_context.black_board->GetValue<float2>("Destination");
 		ASSERT(destination_);
 
-		speed_ = ai_context.black_board->GetValue<float>("Speed"_hash);
+		speed_ = ai_context.black_board->GetValue<float>("Speed");
 		ASSERT(speed_);
 
-		turn_speed_ = ai_context.black_board->GetValue<float>("TurnSpeed"_hash);
+		turn_speed_ = ai_context.black_board->GetValue<float>("TurnSpeed");
 		ASSERT(turn_speed_);
 	}
 
-	void Move::OnEnter(const AIContext& ai_context)
+	void Move::OnEnter(const engine::AIContext& ai_context)
 	{
 		Super::OnEnter(ai_context);
 
-		*playing_animation_ = "Move"_hash;
+		*playing_animation_ = "Move";
 		*is_moving_ = true;
 	}
 
-	void Move::OnUpdate(const AIContext& ai_context)
+	void Move::OnUpdate(const engine::AIContext& ai_context)
 	{
+		using namespace engine;
+
 		Super::OnUpdate(ai_context);
 
 		ASSERT(ai_context.transform);
@@ -128,7 +132,7 @@ namespace engine
 			}
 		}
 	}
-	void Move::OnExit(const AIContext& ai_context)
+	void Move::OnExit(const engine::AIContext& ai_context)
 	{
 		Super::OnExit(ai_context);
 		DEBUG_LOG("Move::OnExit() called.");

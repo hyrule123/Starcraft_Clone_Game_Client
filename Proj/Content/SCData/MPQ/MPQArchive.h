@@ -3,8 +3,7 @@
 
 #include <Content/SCData/MPQ/MPQFile.h>
 
-
-namespace engine
+namespace sc
 {
 	class MPQArchive
 	{
@@ -12,12 +11,12 @@ namespace engine
 		MPQArchive();
 		~MPQArchive();
 
-		bool OpenMPQFile(const stdfs::path& file_path);
-		bool HasInnerFile(const stdfs::path& mpq_inner_file_path) const;
-		[[nodiscard]] MPQFile OpenInnerFile(const stdfs::path& mpq_inner_file_path) const;
+		bool OpenMPQFile(const std::filesystem::path& file_path);
+		bool HasInnerFile(const std::filesystem::path& mpq_inner_file_path) const;
+		[[nodiscard]] MPQFile OpenInnerFile(const std::filesystem::path& mpq_inner_file_path) const;
 
 		template  <typename T = uint8> requires std::is_trivially_copyable_v<T>
-		[[nodiscard]] std::optional<std::vector<T>> ReadInnerFile(const stdfs::path& mpq_inner_file_path) const
+		[[nodiscard]] std::optional<std::vector<T>> ReadInnerFile(const std::filesystem::path& mpq_inner_file_path) const
 		{
 			MPQFile file = OpenInnerFile(mpq_inner_file_path);
 			if (!file.IsValid())
@@ -28,7 +27,7 @@ namespace engine
 		}
 
 		template <typename T = uint8> requires std::is_trivially_copyable_v<T>
-		[[nodiscard]] bool ReadInnerFile(const stdfs::path& mpq_inner_file_path, std::vector<T>& out_data) const
+		[[nodiscard]] bool ReadInnerFile(const std::filesystem::path& mpq_inner_file_path, std::vector<T>& out_data) const
 		{
 			out_data.clear();
 			MPQFile file = OpenInnerFile(mpq_inner_file_path);

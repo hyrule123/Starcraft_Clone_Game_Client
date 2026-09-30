@@ -1,12 +1,12 @@
 #pragma once
 #include <Engine/Game/Component/Script.h>
 
-namespace engine
+namespace sc
 {
     class MarineTestScript :
-        public Script
+        public engine::Script
     {
-		ENTITY_INFO(MarineTestScript, Script)
+		ENTITY_INFO(MarineTestScript, engine::Script)
 	public:
 		MarineTestScript();
 		virtual ~MarineTestScript() override;
@@ -20,8 +20,8 @@ namespace engine
 		virtual void OnDisable() override;
 		virtual void OnDestroy() override;
 
-		virtual void OnCollisionEnter2D(const Collision2D& _info) override;
-		virtual void OnCollisionExit2D(Collider2D* other) override;
+		virtual void OnCollisionEnter2D(const engine::Collision2D& _info) override;
+		virtual void OnCollisionExit2D(engine::Collider2D* other) override;
     };
 }
 

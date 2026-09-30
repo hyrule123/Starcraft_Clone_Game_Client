@@ -25,6 +25,7 @@
 #include <Content/GameObject/TerranMedic.h>
 #include <Content/GameObject/SCUnitObj.h>
 #include <Content/GameObject/SCUnitDebug.h>
+#include <Content/Script/SCUnit.h>
 
 #include <Content/Script/DestroyTestScript.h>
 #include <Content/Script/ActiveEnableTest.h>
@@ -34,7 +35,7 @@
 #include <Content/SCData/SCMapLoader.h>
 #include <Content/SCData/SCMapBakeComputePass.h>
 
-#include <Content/SCMapRenderer.h>
+#include <Content/Component/SCMapRenderer.h>
 
 #include <Content/HLSL/SCMapRender.hlsli>
 
@@ -47,7 +48,7 @@
 #include <Engine/Core/Debug.h>
 #include <SCSimulator/Include/SCSimulatorAPI.h>
 
-namespace engine
+namespace sc
 {
 	MainGameScene::MainGameScene()
 		: Scene(MainGameScene::kClassConcreteName)
@@ -65,18 +66,20 @@ namespace engine
 
 	void MainGameScene::Init()
 	{
+		using namespace engine;
+
 		Super::Init();
 
-		const stdfs::path mpq_dir = ResourceManager::GetInst().GetResourceDir() / "SCSim" / "mpq";
+		const std::filesystem::path mpq_dir = ResourceManager::GetInst().GetResourceDir() / "SCSim" / "mpq";
 		
 		mpq_file_system_.AddArchive(mpq_dir / "patch_rt.mpq", true);
 		mpq_file_system_.AddArchive(mpq_dir / "BrooDat.mpq", true);
 		mpq_file_system_.AddArchive(mpq_dir / "stardat.mpq", true);
 
-		sc_image_library_ = std::make_unique<sc::SCImageLibrary>();
+		sc_image_library_ = std::make_unique<SCImageLibrary>();
 		bool result = sc_image_library_->Init(mpq_file_system_);
 
-		GetCollisionSystem2D()->SetCellSize(SC::kCellSize);
+		GetCollisionSystem2D()->SetCellSize(sc::kCellSize);
 		SetCollisionMask(0, 0, true);
 
 		LoadResources();
@@ -86,7 +89,7 @@ namespace engine
 		sc_sim_ctx_ = SCSim_Create(mpq_dir.string().c_str());
 		CHECK_F(sc_sim_ctx_ != nullptr, "Failed to create SCSimContext: {}", SCSim_GetLastError());
 
-		stdfs::path map_dir = res_dir / "SCMap" / "(4)Fighting Spirit 1.4.scx";
+		std::filesystem::path map_dir = res_dir / "SCMap" / "(4)Fighting Spirit 1.4.scx";
 		result = SCSim_LoadMap(sc_sim_ctx_, map_dir.string().c_str(), true);
 		if (!result)
 		{
@@ -145,16 +148,16 @@ namespace engine
 		auto cam = camobj->AddComponent<Camera>();
 		Camera::ProjectionMatrixDesc proj_desc = cam->GetProjectionMatrixDesc();
 		proj_desc.proj_mode = Camera::ProjectionMode::Orthographic;
-		proj_desc.viewport_width = (float)SC::kResolutionWidth;
-		proj_desc.viewport_height = (float)SC::kResolutionHeight;
+		proj_desc.viewport_width = (float)sc::kResolutionWidth;
+		proj_desc.viewport_height = (float)sc::kResolutionHeight;
 		cam->CreateProjMatrix(proj_desc);
-		camobj->AddComponent("CameraMoveScript"_hash);
+		camobj->AddComponent("CameraMoveScript");
 
-		//auto marine = AddGameObject("TerranMarine"_hash);
+		//auto marine = AddGameObject("TerranMarine");
 		//
 		//for (size_t i = 0; i < 30; ++i)
 		//{
-		//	AddGameObject("TestGameObject"_hash);
+		//	AddGameObject("TestGameObject");
 		//}
 
 
@@ -164,7 +167,7 @@ namespace engine
 
 		{
 			// Test Area
-			stdfs::path map_path = ResourceManager::GetInst().GetResourceDir();
+			std::filesystem::path map_path = ResourceManager::GetInst().GetResourceDir();
 			map_path /= "SCMap";
 			map_path /= L"(4)Fighting Spirit 1.4.scx";
 
@@ -172,7 +175,7 @@ namespace engine
 			map_loader.LoadTilesetData(mpq_file_system_);
 			
 			bool result = true;
-			s_ptr<Texture2D> map_tex;
+			std::shared_ptr<Texture2D> map_tex;
 
 			//CPU
 			//auto sc_map = map_loader.LoadMapDataGPU(map_path);
@@ -196,10 +199,10 @@ namespace engine
 	void MainGameScene::FrameStart()
 	{
 		ASSERT(sc_sim_ctx_ != nullptr);
-		acc_delta_time_ += TimeManager::GetInst().GetDeltaTime();
-		while (acc_delta_time_ >= SC::kFrameTime)
+		acc_delta_time_ += engine::TimeManager::GetInst().GetDeltaTime();
+		while (acc_delta_time_ >= sc::kFrameTime)
 		{
-			acc_delta_time_ -= SC::kFrameTime;
+			acc_delta_time_ -= sc::kFrameTime;
 			bool result = SCSim_NextFrame(sc_sim_ctx_);
 			CHECK_F(result, "Failed to advance simulation to the next frame: {}", SCSim_GetLastError());
 		}
@@ -214,26 +217,28 @@ namespace engine
 	{}
 	void MainGameScene::LoadResources()
 	{
+		using namespace engine;
+
 		auto& res_mgr = ResourceManager::GetInst();
 		auto& resmgr = ResourceManager::GetInst();
 
 		auto device = GraphicsDevice::GetInst().GetDevice();
 
 		// Render Target
-		s_ptr<RenderTargetGroup> sc_rendertarget_group = std::move(EntityManager::CreateEntity<RenderTargetGroup>());
-		s_ptr<RenderTargetView> sc_rtv = std::move(EntityManager::CreateEntity<RenderTargetView>());
+		std::shared_ptr<RenderTargetGroup> sc_rendertarget_group = std::move(EntityManager::CreateEntity<RenderTargetGroup>());
+		std::shared_ptr<RenderTargetView> sc_rtv = std::move(EntityManager::CreateEntity<RenderTargetView>());
 		
-		bool result = sc_rtv->CreateDefaultBuffer((UINT)SC::kResolutionWidth, (UINT)SC::kResolutionHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
+		bool result = sc_rtv->CreateDefaultBuffer((UINT)sc::kResolutionWidth, (UINT)sc::kResolutionHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
 		CHECK(result);
 
 		//최종 렌더타겟에 이어붙일 때는 SRV가 필요
 		result = sc_rtv->CreateSRV(nullptr);
 		CHECK(result);
 
-		s_ptr<DepthStencilView> dsv = std::move(EntityManager::CreateEntity<DepthStencilView>());
+		std::shared_ptr<DepthStencilView> dsv = std::move(EntityManager::CreateEntity<DepthStencilView>());
 		D3D11_TEXTURE2D_DESC depth_buffer_desc = {};
-		depth_buffer_desc.Width = (UINT)SC::kResolutionWidth;            // RTV의 가로 크기와 완전히 일치해야 합니다.
-		depth_buffer_desc.Height = (UINT)SC::kResolutionHeight;          // RTV의 세로 크기와 완전히 일치해야 합니다.
+		depth_buffer_desc.Width = (UINT)sc::kResolutionWidth;            // RTV의 가로 크기와 완전히 일치해야 합니다.
+		depth_buffer_desc.Height = (UINT)sc::kResolutionHeight;          // RTV의 세로 크기와 완전히 일치해야 합니다.
 		depth_buffer_desc.MipLevels = 1;               // 깊이 버퍼는 밉맵이 필요 없으므로 1 고정입니다.
 		depth_buffer_desc.ArraySize = 1;
 
@@ -263,14 +268,14 @@ namespace engine
 		/*
 		bool load_result = map_loader.LoadMapDataCPU(map_path);
 
-		s_ptr<Texture2D> map_tex = map_loader.GetMapTexture();
+		std::shared_ptr<Texture2D> map_tex = map_loader.GetMapTexture();
 
 		map_tex->SaveToFile(ResourceManager::GetInst().GetResourceDir() / L"MapTexture.png");
 
 		GameObject* map_obj = AddGameObject<GameObject>();
 		map_obj->SetName("MapObject");
 		SpriteRenderer* renderer = map_obj->AddComponent<SpriteRenderer>();
-		s_ptr<Material> map_mtrl = renderer->GetMaterial()->Clone();
+		std::shared_ptr<Material> map_mtrl = renderer->GetMaterial()->Clone();
 		map_mtrl->SetTexture(map_tex, 0);
 		renderer->SetMaterial(map_mtrl);
 
@@ -280,6 +285,8 @@ namespace engine
 	}
 	void MainGameScene::SyncUnits()
 	{
+		using namespace engine;
+
 		const SCSim::UnitData* units = nullptr;
 		int32_t count = SCSim_GetUnits(sc_sim_ctx_, &units);
 		CHECK_F(count >= 0, "SCSim_GetUnits failed: {}", SCSim_GetLastError());
@@ -291,29 +298,27 @@ namespace engine
 			const SCSim::UnitData& snapshot = units[i];
 			UnitEntry& entry = unit_objects_[snapshot.id];
 
-			SCUnitObj* obj = entry.object.get();
-			if (obj == nullptr) 
+			if (entry.object == nullptr) 
 			{          
-				// 새 유닛이거나, 오브젝트가 사라진 경우
-				obj = AddGameObject<SCUnitObj>();
-				obj->SetUnitID(snapshot.id);
-				entry.object = obj;
+				// 새 유닛인 경우
+				entry.object = AddGameObject<SCUnitObj>();
+				entry.object->SetUnitID(snapshot.id);
 			}
 
 			// Serial Update
 			entry.serial = sync_serial_;
 
-			obj->GetComponent<SCUnit>()->SetSnapshot(snapshot);
+			entry.object->GetComponent<SCUnit>()->SetSnapshot(snapshot);
 
 			const bool hidden = (snapshot.flags & SCSim::UnitFlags::Hidden) != 0;
-			obj->SetActive(!hidden);
+			entry.object->SetActive(!hidden);
 		}
 
 		// 이번에 못 본 유닛 = 죽었거나 사라짐
 		for (auto it = unit_objects_.begin(); it != unit_objects_.end(); ) 
 		{
 			if (it->second.serial != sync_serial_) {
-				if (SCUnitObj* obj = it->second.object.get()) 
+				if (SCUnitObj* obj = it->second.object) 
 				{
 					obj->Destroy();
 				}

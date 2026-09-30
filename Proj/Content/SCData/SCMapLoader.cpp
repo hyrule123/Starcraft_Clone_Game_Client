@@ -24,7 +24,7 @@
 
 #include <Content/HLSL/SCMapRender.hlsli>
 
-namespace engine
+namespace sc
 {
 	SCMapLoader::SCMapLoader()
 	{
@@ -34,10 +34,12 @@ namespace engine
 	{}
 	bool SCMapLoader::LoadTilesetData(const MPQFileSystem& mpq_file_system)
 	{
-		const stdfs::path tileset_dir = "tileset";
+		using namespace engine;
+
+		const std::filesystem::path tileset_dir = "tileset";
 
 		// 파일 하나를 읽어 대상 vector로 이동. 실패 시 false (원인은 ReadFile이 이미 알림)
-		auto read_into = [&mpq_file_system]<typename T>(stdfs::path & path, std::string_view extension, std::vector<T>&out) -> bool
+		auto read_into = [&mpq_file_system]<typename T>(std::filesystem::path & path, std::string_view extension, std::vector<T>&out) -> bool
 		{
 			path.replace_extension(extension);
 			return mpq_file_system.ReadFile(path, out);;
@@ -49,7 +51,7 @@ namespace engine
 			TileSet& tileset = tilesets_[tileset_idx];
 			const std::string_view tileset_name = kTileSetTypeNames[tileset_idx];
 
-			stdfs::path each_tileset_path = tileset_dir / tileset_name;
+			std::filesystem::path each_tileset_path = tileset_dir / tileset_name;
 
 			// CV5, VX4, VR4, WPE, VF4 순서로 읽음. || 는 첫 실패에서 뒤를 평가하지 않음
 			if (!read_into(each_tileset_path, ".CV5", tileset.cv5) ||
@@ -94,7 +96,7 @@ namespace engine
 		auto tunit_data = mpq_file_system.ReadFile("game\\tunit.pcx");
 		CHECK(tunit_data.has_value());
 
-		sc::PcxFile tunit_pcx;
+		PcxFile tunit_pcx;
 		result = tunit_pcx.Load(*tunit_data);
 		CHECK(result);
 
@@ -110,8 +112,10 @@ namespace engine
 		return true;
 	}
 
-	u_ptr<SCMap> SCMapLoader::LoadMapDataCPU(const stdfs::path& map_path)
+	std::unique_ptr<SCMap> SCMapLoader::LoadMapDataCPU(const std::filesystem::path& map_path)
 	{
+		using namespace engine;
+
 		ASSERT(sc_map_baker_ != nullptr);
 
 		SCMapLoadingData map_data = LoadMapLoadingData(map_path);
@@ -200,7 +204,7 @@ namespace engine
 		init_data.pSysMem = WPE_idx.data();
 		init_data.SysMemPitch = (uint32)(sizeof(uint8)) * (uint32)pixel_width;      // 바이트 단위
 
-		u_ptr<SCMap> result_map = std::make_unique<SCMap>();
+		std::unique_ptr<SCMap> result_map = std::make_unique<SCMap>();
 		result_map->texture = EntityManager::CreateEntity<Texture2D>();
 		bool result = result_map->texture->CreateTexture2D(&desc, &init_data);
 		if (result == false) { return nullptr; }
@@ -214,11 +218,11 @@ namespace engine
 
 		return result_map;
 	}
-	u_ptr<SCMap> SCMapLoader::LoadMapDataGPU(const stdfs::path& map_path)
+	std::unique_ptr<SCMap> SCMapLoader::LoadMapDataGPU(const std::filesystem::path& map_path)
 	{
 		SCMapLoadingData map_data = LoadMapLoadingData(map_path);
 
-		u_ptr<SCMap> result_map = std::make_unique<SCMap>();
+		std::unique_ptr<SCMap> result_map = std::make_unique<SCMap>();
 		result_map->texture = sc_map_baker_->BakeMapTexture(map_data);
 		if(result_map->texture == nullptr) { return nullptr; }
 		
@@ -232,7 +236,7 @@ namespace engine
 		return result_map;
 	}
 
-	SCMapLoadingData SCMapLoader::LoadMapLoadingData(const stdfs::path& map_path)
+	SCMapLoadingData SCMapLoader::LoadMapLoadingData(const std::filesystem::path& map_path)
 	{
 		MPQArchive mpq_archive;
 		bool result = mpq_archive.OpenMPQFile(map_path);
@@ -277,8 +281,10 @@ namespace engine
 		return map_data;
 	}
 
-	StringHashTable<std::vector<uint8>> SCMapLoader::ParseMapData(const std::vector<uint8>& map_data)
+	engine::StringHashTable<std::vector<uint8>> SCMapLoader::ParseMapData(const std::vector<uint8>& map_data)
 	{
+		using namespace engine;
+
 		// ERA, DIM, MTXM, UNIT 파일을 순차적으로 읽어와서 처리
 		StringHashTable <std::vector<uint8>> map_data_table;
 
@@ -337,8 +343,10 @@ namespace engine
 
 		return map_data_table;
 	}
-	std::array<uint32, 2> SCMapLoader::GetMegaTileCount(const StringHashTable<std::vector<uint8>>& map_data_table)
+	std::array<uint32, 2> SCMapLoader::GetMegaTileCount(const engine::StringHashTable<std::vector<uint8>>& map_data_table)
 	{
+		using namespace engine;
+
 		auto it = map_data_table.find(SCChunkTypeName[(uint32)SCChunkType::kMapSize]);
 		
 		if (it == map_data_table.end())
@@ -370,7 +378,7 @@ namespace engine
 	}
 
 	// return TileSetType::kEND if the map is invalid
-	TileSetType SCMapLoader::GetTerrainType(const StringHashTable<std::vector<uint8>>& map_data_table)
+	TileSetType SCMapLoader::GetTerrainType(const engine::StringHashTable<std::vector<uint8>>& map_data_table)
 	{
 		static_assert((int32)TileSetType::kEND == 8, "TileSetType::kEND must be 8.");
 
@@ -399,7 +407,7 @@ namespace engine
 		return static_cast<TileSetType>(terrain_byte);
 	}
 
-	std::vector<UnitData> SCMapLoader::GetUnitData(const StringHashTable<std::vector<uint8>>& map_data_table)
+	std::vector<UnitData> SCMapLoader::GetUnitData(const engine::StringHashTable<std::vector<uint8>>& map_data_table)
 	{
 		auto it = map_data_table.find(SCChunkTypeName[(uint32)SCChunkType::kUnitPlacement]);
 
@@ -424,7 +432,7 @@ namespace engine
 
 		return unit_data_vector;
 	}
-	std::vector<MTXM> SCMapLoader::GetMTXM(const StringHashTable<std::vector<uint8>>& map_data_table, uint32 megatile_width, uint32 megatile_height)
+	std::vector<MTXM> SCMapLoader::GetMTXM(const engine::StringHashTable<std::vector<uint8>>& map_data_table, uint32 megatile_width, uint32 megatile_height)
 	{
 		auto it = map_data_table.find(SCChunkTypeName[(uint32)SCChunkType::kTileMapAtlas]);
 		if (it == map_data_table.end())
