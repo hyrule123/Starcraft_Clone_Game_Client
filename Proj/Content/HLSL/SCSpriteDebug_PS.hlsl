@@ -1,15 +1,15 @@
 
 #include <Content/HLSL/SCSpriteDebug.hlsli>
 
-Buffer<float4> g_wpe : register(REG_T_SC_WPE_PALETTE); // R8G8B8A8_UNORM, 256개
-Buffer<uint> g_tunit : register(REG_T_SC_TUNIT); // R8_UINT, 128개
+Buffer<float4> g_wpe : register(REG_T_SC_WPE_PALETTE_DEBUG); // R8G8B8A8_UNORM, 256개
+Buffer<uint> g_tunit : register(REG_T_SC_TUNIT_DEBUG); // R8_UINT, 128개
 
-float4 main(SpritePSInput input) : SV_Target
+float4 main(ScDebugSpritePSInput input) : SV_Target
 {
 	//return float4(1.f, 0.f, 1.f, 1.f);
 	
 	const int2 texel = int2(floor(input.local));
-	const uint2 sampled = g_grp_sprite.Load(int4(texel, input.frame, 0));
+	const uint2 sampled = g_sc_sprite_debug.Load(int4(texel, input.frame, 0));
 
 	if (sampled.y == 0)
 	{

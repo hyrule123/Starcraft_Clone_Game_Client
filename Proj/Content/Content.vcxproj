@@ -215,6 +215,8 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="GameObject\SCImageObj.h" />
+    <ClInclude Include="Component\SCImageRenderer.h" />
     <ClInclude Include="Script\CameraMoveScript.h" />
     <ClInclude Include="SCData\MPQ\MPQFile.h" />
     <ClInclude Include="SCData\PCXFile.h" />
@@ -224,7 +226,7 @@
     <ClInclude Include="SCData\MPQ\MPQFileSystem.h" />
     <ClInclude Include="SCData\MPQ\MPQArchive.h" />
     <ClInclude Include="SCData\SCMapCommon.h" />
-    <ClInclude Include="SCData\SCMapLoader.h" />
+    <ClInclude Include="SCData\SCResourceManager.h" />
     <ClInclude Include="SCData\SCMapBakeComputePass.h" />
     <ClInclude Include="SCData\SCImageData.h" />
     <ClInclude Include="SCData\SCImageLibrary.h" />
@@ -247,6 +249,7 @@
     <ClInclude Include="SCData\SCTileSetPcxLUT.h" />
     <ClInclude Include="GameObject\SCUnitDebug.h" />
     <ClInclude Include="Component\SCSpriteDebugRenderer.h" />
+    <ClInclude Include="GameObject\SCSpriteObj.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Legacy\GameObject\TerranMarine.h" />
     <ClInclude Include="Legacy\GameObject\TerranMedic.h" />
@@ -259,6 +262,8 @@
     <ClInclude Include="Legacy\Script\TestScript.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GameObject\SCImageObj.cpp" />
+    <ClCompile Include="Component\SCImageRenderer.cpp" />
     <ClCompile Include="Script\CameraMoveScript.cpp" />
     <ClCompile Include="SCData\MPQ\MPQFile.cpp" />
     <ClCompile Include="SCData\PCXFile.cpp" />
@@ -267,7 +272,7 @@
     <ClCompile Include="Legacy\Script\MarineTestScript.cpp" />
     <ClCompile Include="SCData\MPQ\MPQFileSystem.cpp" />
     <ClCompile Include="SCData\MPQ\MPQArchive.cpp" />
-    <ClCompile Include="SCData\SCMapLoader.cpp" />
+    <ClCompile Include="SCData\SCResourceManager.cpp" />
     <ClCompile Include="SCData\SCMapBakeComputePass.cpp" />
     <ClCompile Include="SCData\SCImageData.cpp" />
     <ClCompile Include="SCData\SCImageLibrary.cpp" />
@@ -300,6 +305,7 @@
     <ClCompile Include="SCData\SCTileSetPcxLUT.cpp" />
     <ClCompile Include="GameObject\SCUnitDebug.cpp" />
     <ClCompile Include="Component\SCSpriteDebugRenderer.cpp" />
+    <ClCompile Include="GameObject\SCSpriteObj.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Content.rc" />
@@ -309,6 +315,24 @@
     <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="HLSL\SCImage\SCImageShadow_PS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="HLSL\SCImage\SCImage_VS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile Include="HLSL\SCImage\SCImageOpaque_PS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
     <FxCompile Include="HLSL\SCMapBaker_CS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
@@ -345,6 +369,7 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="HLSL\SCImage\SCImageCommon.hlsli" />
     <None Include="HLSL\SCSpriteDebug.hlsli" />
     <None Include="HLSL\SCMapCommon.hlsli" />
     <None Include="HLSL\SCMapRender.hlsli" />

@@ -2,7 +2,7 @@
 #include "SCUnitObj.h"
 
 #include <Content/Script/SCUnit.h>
-#include <Content/Script/SCUnitBehavior.h>
+#include <Content/Legacy/Script/SCUnitBehavior.h>
 
 #include <Engine/Core/Debug.h>
 

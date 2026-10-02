@@ -1,18 +1,18 @@
 #include <Content/HLSL/SCSpriteDebug.hlsli>
 
-StructuredBuffer<SCSpriteInstance> g_sprite_instances : register(REG_T_INSTANCE_BUFFER);
+StructuredBuffer<ScDebugSpriteInstance> g_sprite_instances : register(REG_T_INSTANCE_BUFFER);
 
-SpritePSInput main(SpriteVSInput input)
+ScDebugSpritePSInput main(ScDebugSpriteVSInput input)
 {
-	SpritePSInput output;
+	ScDebugSpritePSInput output;
 
-	const SCSpriteInstance inst = g_sprite_instances[input.instance_ID];
+	const ScDebugSpriteInstance inst = g_sprite_instances[input.instance_ID];
 
 	uint width, height, slices;
-	g_grp_sprite.GetDimensions(width, height, slices);
+	g_sc_sprite_debug.GetDimensions(width, height, slices);
 
     // 반전은 로컬 좌표를 뒤집어서 처리 (정점 감김 순서 유지)
-	const bool flipped = GetSpriteBits(inst.flags, kSpriteFlippedShift, kSpriteFlippedBits) != 0;
+	const bool flipped = GetSpriteBitsDebug(inst.flags, kSpriteFlippedShiftDebug, kSpriteFlippedBitsDebug) != 0;
 	const float u = flipped ? (1.0 - input.uv.x) : input.uv.x;
 	output.local = float2(u, input.uv.y) * float2(width, height);
 
@@ -26,6 +26,6 @@ SpritePSInput main(SpriteVSInput input)
 	output.position = mul(float4(world, 0.0, 1.0), g_camera.view_proj);
 
 	output.frame = inst.frame;
-	output.color = GetSpriteBits(inst.flags, kSpriteColorShift, kSpriteColorBits);
+	output.color = GetSpriteBitsDebug(inst.flags, kSpriteColorShiftDebug, kSpriteColorBitsDebug);
 	return output;
 }

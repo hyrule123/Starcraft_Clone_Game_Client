@@ -27,118 +27,11 @@ namespace sc
 	{}
 	std::shared_ptr<engine::ComputeShader> SCMapBakeComputePass::LoadComputeShader()
 	{
-		using namespace engine::literals;
 		std::shared_ptr<engine::ComputeShader> cs = engine::ResourceManager::GetInst().LoadFromFile<engine::ComputeShader>("Shader/SCMapBaker_CS.cso");
 		ASSERT(cs != nullptr);
 		return cs;
 	}
-	bool SCMapBakeComputePass::CreateTileSetGPUData(const std::array<TileSet, (size_t)TileSetType::kEND>& tileset_data)
-	{
-		using namespace engine;
 
-		auto clear_tilesets = [&]() {
-			for (size_t i = 0; i < tileset_gpu_buffers_.size(); ++i)
-			{
-				tileset_gpu_buffers_[i] = TileSetGPU();
-			}
-			};
-
-		std::vector<uint16> megatile_data;
-		bool result = false;
-
-		//index tileset
-		for (size_t tileset_i = 0; tileset_i < tileset_gpu_buffers_.size(); ++tileset_i)
-		{
-			const TileSet& tileset = tileset_data[tileset_i];
-			tileset_gpu_buffers_[tileset_i] = TileSetGPU();
-			TileSetGPU& tileset_gpu = tileset_gpu_buffers_[tileset_i];
-
-#pragma region CV5 - Megatile
-			// CV5 구조체의 CV5_megatiles 배열 크기와 오프셋을 컴파일 타임에 검증
-			static_assert(CV5{}.megatiles.size() == megatiles_per_group);
-			static_assert(offsetof(CV5, megatiles) == 20);
-			if (tileset.cv5.empty())
-			{
-				ERR_MSG("CV5 data is empty for current tileset index");
-				clear_tilesets();
-				return false;
-			}
-			megatile_data.resize(tileset.cv5.size() * megatiles_per_group);
-
-			// CV5에서 megatile index만 추출하여 LUT 생성
-			for (size_t j = 0; j < tileset.cv5.size(); ++j)
-			{
-				std::ranges::copy(tileset.cv5[j].megatiles,
-					megatile_data.begin() + j * megatiles_per_group);
-			}
-
-			tileset_gpu.CV5_megatiles = EntityManager::CreateEntity<TypedBuffer>();
-			std::span<const uint16> megatile_span = megatile_data;
-			result = tileset_gpu.CV5_megatiles->CreateImmutableBuffer(DXGI_FORMAT_R16_UINT, megatile_span);
-			if (!result) { clear_tilesets(); return false; }
-#pragma endregion CV5 - Megatile
-
-
-
-#pragma region VX4 - Minitile
-			static_assert(sizeof(VX4) == sizeof(uint16) * minitiles_per_VX4);
-			if (tileset.vx4.empty())
-			{
-				ERR_MSG("VX4 data is empty for tileset index");
-				clear_tilesets();
-				return false;
-			}
-			tileset_gpu.VX4_minitiles = EntityManager::CreateEntity<TypedBuffer>();
-			result = tileset_gpu.VX4_minitiles->CreateImmutableBuffer(DXGI_FORMAT_R16_UINT, sizeof(VX4::Elem), tileset.vx4.data(), (uint32)(tileset.vx4.size() * minitiles_per_VX4));
-			if (!result) { clear_tilesets(); return false; }
-#pragma endregion VX4 - Minitile
-
-
-
-#pragma region VR4 - Minitile WPE index
-			if (tileset.vr4.empty())
-			{
-				ERR_MSG("VR4 data is empty for current tileset index");
-				clear_tilesets();
-				return false;
-			}
-			tileset_gpu.VR4_minitile_wpe_indices = EntityManager::CreateEntity<TypedBuffer>();
-
-			result = tileset_gpu.VR4_minitile_wpe_indices->CreateImmutableBuffer(DXGI_FORMAT_R8_UINT, sizeof(VR4::Elem), tileset.vr4.data(), (uint32)(tileset.vr4.size() * minile_pixel_count));
-			if (!result) { clear_tilesets(); return false; }
-#pragma endregion VR4 - Minitile WPE index
-
-
-
-#pragma region WPE - Color Palette
-			if (tileset.wpe.empty() || tileset.wpe.size() != 256)
-			{
-				ERR_MSG("WPE data is empty or invalid for current tileset index");
-				clear_tilesets();
-				return false;
-			}
-			tileset_gpu.WPE_color_palettes = EntityManager::CreateEntity<TypedBuffer>();
-			std::span<const WPE> wpe_span = tileset.wpe;
-			result = tileset_gpu.WPE_color_palettes->CreateImmutableBuffer(DXGI_FORMAT_R8G8B8A8_UNORM, wpe_span);
-			if (!result) { clear_tilesets(); return false; }
-#pragma endregion WPE - Color Palette
-
-#pragma region PCX - Tileset LUT
-			{
-				auto& pcx_lut = tileset.pcx_lut;
-				auto& pcx_lut_gpu = tileset_gpu.PCX_tileset_LUT;
-				pcx_lut_gpu = EntityManager::CreateEntity<TypedBuffer>();
-				
-				std::span<const sc::SCTileSetPcxLUT::ElemType> pcx_lut_span = pcx_lut->data();
-				result = pcx_lut_gpu->CreateImmutableBuffer(DXGI_FORMAT_R8_UINT, pcx_lut_span);
-				CHECK(result);
-			}
-#pragma endregion PCX - Tileset LUT
-
-		}
-
-		return true;
-	}
 	std::shared_ptr<engine::Texture2D> SCMapBakeComputePass::BakeMapTexture(const SCMapLoadingData& map_data)
 	{
 		using namespace engine;
@@ -153,13 +46,9 @@ namespace sc
 			ERR_MSG("MTXM data is invalid.");
 			return nullptr;
 		}
-		if ((size_t)map_data.terrain_type >= tileset_gpu_buffers_.size())
-		{
-			ERR_MSG("Invalid terrain type or TileSet GPU data is not created.");
-			return nullptr;
-		}
 
-		const auto& tileset_gpu = tileset_gpu_buffers_[(size_t)map_data.terrain_type];
+		CHECK_F(map_data.tileset_gpu != nullptr, "TileSet GPU data is empty.");
+		const auto& tileset_gpu = *(map_data.tileset_gpu);
 		if (
 			tileset_gpu.CV5_megatiles == nullptr ||
 			tileset_gpu.VX4_minitiles == nullptr ||

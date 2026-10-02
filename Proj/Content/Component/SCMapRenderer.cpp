@@ -9,7 +9,7 @@
 #include <Engine/Resource/GPU/PipelineState.h>
 #include <Engine/Resource/GPU/Buffer/ConstantBuffer.h>
 #include <Engine/Resource/GPU/Buffer/TypedBuffer.h>
-#include <Engine/Resource/GPU/Shader/InputLayoutDesc.h>
+#include <Engine/Resource/GPU/Shader/InputLayout.h>
 
 #include <Engine/Manager/RenderManager.h>
 #include <Engine/Manager/ResourceManager.h>
@@ -18,7 +18,7 @@
 #include <Engine/Game/Component/Transform.h>
 #include <Engine/Game/Component/Camera.h>
 
-#include <Content/SCData/SCMapLoader.h>
+#include <Content/SCData/SCResourceManager.h>
 #include <Content/SCData/SCMapBakeComputePass.h>
 
 #include <Content/HLSL/SCMapRender.hlsli>
@@ -57,7 +57,7 @@ namespace sc
 			pipeline_state->SetPixelShader("Shader/SCMapRender_PS.cso");
 			pipeline_state->SetDepthStencilState("DSS_Default");
 			pipeline_state->SetRasterizerState("RSS_Solid_Back");
-			pipeline_state->CreateInputLayout("InputLayoutDesc_Standard2D");
+			pipeline_state->SetInputLayout("InputLayout_Standard2D");
 			map_mtrl->SetPipelineState(kMapRenderPass, pipeline_state);
 
 			ResourceManager::GetInst().AddResource(material_name, map_mtrl);

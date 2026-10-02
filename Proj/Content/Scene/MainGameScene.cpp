@@ -33,7 +33,7 @@
 #include <Content/Script/DestroyTestScript.h>
 #include <Content/Script/SCUnit.h>
 
-#include <Content/SCData/SCMapLoader.h>
+#include <Content/SCData/SCResourceManager.h>
 #include <Content/SCData/SCMapBakeComputePass.h>
 
 #include <Content/Component/SCMapRenderer.h>
@@ -45,6 +45,8 @@
 #include <Content/SCData/MPQ/MPQFileSystem.h>
 #include <Content/SCData/MPQ/MPQArchive.h>
 #include <Content/SCData/SCTileSetPcxLUT.h>
+#include <Content/GameObject/SCSpriteObj.h>
+#include <Content/GameObject/SCImageObj.h>
 
 #include <Engine/Core/Debug.h>
 #include <SCSimulator/Include/SCSimulatorAPI.h>
@@ -71,27 +73,18 @@ namespace sc
 
 		Super::Init();
 
-		const std::filesystem::path mpq_dir = ResourceManager::GetInst().GetResourceDir() / "SCSim" / "mpq";
-		
-		mpq_file_system_.AddArchive(mpq_dir / "patch_rt.mpq", true);
-		mpq_file_system_.AddArchive(mpq_dir / "BrooDat.mpq", true);
-		mpq_file_system_.AddArchive(mpq_dir / "stardat.mpq", true);
+		DefaultEngineSetting();
 
-		sc_image_library_ = std::make_unique<SCImageLibrary>();
-		bool result = sc_image_library_->Init(mpq_file_system_);
-
-		GetCollisionSystem2D()->SetCellSize(sc::kCellSize);
-		SetCollisionMask(0, 0, true);
-
-		LoadResources();
+		SCResourceManager::GetInst().Init();
 
 		const auto& res_dir = ResourceManager::GetInst().GetResourceDir();
+		const auto& mpq_dir = SCResourceManager::GetInst().GetMPQDir();
 
 		sc_sim_ctx_ = SCSim_Create(mpq_dir.string().c_str());
 		CHECK_F(sc_sim_ctx_ != nullptr, "Failed to create SCSimContext: {}", SCSim_GetLastError());
 
 		std::filesystem::path map_dir = res_dir / "SCMap" / "(4)Fighting Spirit 1.4.scx";
-		result = SCSim_LoadMap(sc_sim_ctx_, map_dir.string().c_str(), true);
+		bool result = SCSim_LoadMap(sc_sim_ctx_, map_dir.string().c_str(), true);
 		if (!result)
 		{
 			const char* err = SCSim_GetLastError();
@@ -172,8 +165,7 @@ namespace sc
 			map_path /= "SCMap";
 			map_path /= L"(4)Fighting Spirit 1.4.scx";
 
-			SCMapLoader& map_loader = SCMapLoader::GetInst();
-			map_loader.LoadTilesetData(mpq_file_system_);
+			SCResourceManager& map_loader = SCResourceManager::GetInst();
 			
 			bool result = true;
 			std::shared_ptr<Texture2D> map_tex;
@@ -199,6 +191,8 @@ namespace sc
 	}
 	void MainGameScene::FrameStart()
 	{
+		Super::FrameStart();
+
 		ASSERT(sc_sim_ctx_ != nullptr);
 		acc_delta_time_ += engine::TimeManager::GetInst().GetDeltaTime();
 		while (acc_delta_time_ >= sc::kFrameTime)
@@ -210,18 +204,13 @@ namespace sc
 
 		// 유닛 Sync는 매 프레임 진행
 		//SyncUnits();
-
-		// SC 업데이트 이후 FrameStart 해줘야 정상적으로 신규 생성한 유닛들의 업데이트가 반영됨
-		Super::FrameStart();
+		SyncSprites();
 	}
 	void MainGameScene::PrepareMapLoader()
 	{}
-	void MainGameScene::LoadResources()
+	void MainGameScene::DefaultEngineSetting()
 	{
 		using namespace engine;
-
-		auto& res_mgr = ResourceManager::GetInst();
-		auto& resmgr = ResourceManager::GetInst();
 
 		auto device = GraphicsDevice::GetInst().GetDevice();
 
@@ -264,8 +253,11 @@ namespace sc
 
 		//렌더링
 		RenderManager::GetInst().GetOpaquePass()->SetRenderTargetGroup(sc_rendertarget_group);
+		RenderManager::GetInst().GetForwardBlendPass()->SetRenderTargetGroup(sc_rendertarget_group);
 		RenderManager::GetInst().GetPresentPass()->SetSourceRenderTarget(sc_rendertarget_group);
 
+		GetCollisionSystem2D()->SetCellSize(sc::kCellSize);
+		SetCollisionMask(0, 0, true);
 		/*
 		bool load_result = map_loader.LoadMapDataCPU(map_path);
 
@@ -328,6 +320,84 @@ namespace sc
 			else 
 			{
 				++it;
+			}
+		}
+	}
+
+	void MainGameScene::SyncSprites()
+	{
+		SCSim::SpriteSnapshot snapshot = {};
+		bool result = SCSim_GetSprites(sc_sim_ctx_, &snapshot);
+		CHECK_F(result, "SCSim_GetSprites failed: {}", SCSim_GetLastError());
+
+		++sprite_sync_serial_;
+
+		for (int32_t i = 0; i < snapshot.sprite_count; ++i)
+		{
+			const SCSim::SpriteData& sprt_data = snapshot.sprites[i];
+			SpriteSlot& sprt_slot = sprite_slots_[sprt_data.index];	// 슬롯 번호로 조회
+
+			SCSpriteObj* sprt_obj = sprt_slot.object.get();
+			if (sprt_obj == nullptr)
+			{
+				sprt_obj = AddGameObject<SCSpriteObj>();
+				ASSERT(sprt_obj);
+				sprt_slot.object = sprt_obj;
+			}
+			sprt_obj->ApplySnapshot(sprt_data);
+			sprt_slot.serial = sprite_sync_serial_;
+			sprt_obj->SetActive(true);
+
+			const int32_t img_end = sprt_data.first_image + sprt_data.image_count;
+			ASSERT(img_end <= snapshot.image_count);
+
+			for (int32_t j = sprt_data.first_image; j < img_end; ++j)
+			{
+				const SCSim::ImageData& img_data = snapshot.images[j];
+				ImageSlot& img_slot = image_slots_[img_data.index];	// 슬롯 번호로 조회
+
+				SCImageObj* img_obj = img_slot.object.get();
+				if (img_obj == nullptr)
+				{
+					img_obj = AddGameObject<SCImageObj>();
+					ASSERT(img_obj);
+					img_slot.object = img_obj;
+					img_slot.sprite_index = SCSim::kInvalidSpriteIndex;	// 아래에서 반드시 SetParent
+				}
+
+				if (img_slot.sprite_index != img_data.sprite_index)
+				{
+					img_slot.sprite_index = img_data.sprite_index;
+					img_obj->GetTransform()->SetParent(sprt_obj->GetTransform());
+				}
+
+				// 매 프레임 바뀌기 때문에 ApplySnapshot을 항상 호출해줘야 함
+				img_obj->ApplySnapshot(img_data, sprt_data.player_color);
+				img_slot.serial = sprite_sync_serial_;
+				img_obj->SetActive(true);
+			}
+		}
+
+		// 이번 싱크에서 못 본 슬롯 비활성화 (슬롯 배열 전체)
+		for (SpriteSlot& slot : sprite_slots_)
+		{
+			if (slot.serial != sprite_sync_serial_)
+			{
+				if (SCSpriteObj* obj = slot.object.get())
+				{
+					obj->SetActive(false);
+				}
+			}
+		}
+
+		for (ImageSlot& slot : image_slots_)
+		{
+			if (slot.serial != sprite_sync_serial_)
+			{
+				if (SCImageObj* obj = slot.object.get())
+				{
+					obj->SetActive(false);
+				}
 			}
 		}
 	}

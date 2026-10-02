@@ -11,6 +11,7 @@
 
 #include <Engine/HLSL/Core/Register.hlsli>
 
+#include <Content/SCData/SCResourceManager.h>
 #include <Content/SCData/SCImageLibrary.h>
 #include <Content/SCData/SCSpriteCommon.h>
 #include <Content/SCData/MPQ/MPQArchive.h>
@@ -50,12 +51,12 @@ namespace sc
 
 			pipeline_state->SetVertexShader("Shader/SCSpriteDebug_VS.cso");
 			pipeline_state->SetPixelShader("Shader/SCSpriteDebug_PS.cso");
-			pipeline_state->CreateInputLayout("InputLayoutDesc_Standard2D");
+			pipeline_state->SetInputLayout("InputLayout_Standard2D");
 
 			pipeline_state->SetDepthStencilState("DSS_Default");
 			pipeline_state->SetRasterizerState("RSS_Solid_Back");
 
-			pipeline_state->SetPerInstanceDataStride<SCSpriteInstance>();
+			pipeline_state->SetPerInstanceDataStride<ScDebugSpriteInstance>();
 			pipeline_state->SetInstancingSupport(true);
 
 			material->SetPipelineState(RenderPassOrder::ForwardOpaque, pipeline_state);
@@ -97,14 +98,14 @@ namespace sc
 		// 이미지 타입이 바뀔 때만 텍스처 교체 (변태·사망 애니메이션 등)
 		if (image_info.image_type != bound_image_type_)
 		{
-			SCImageLibrary* image_library = scene->GetSCImageLibrary();
-			CHECK(image_library);
-			const sc::ImageDef& image_def = image_library->GetImageDef(image_info.image_type);
 
-			std::shared_ptr<Texture2D> texture = image_library->GetTexture(image_info.image_type);
+			const SCImageLibrary& image_library = SCResourceManager::GetInst().GetSCImageLibraryInst();
+			const sc::ImageDef& image_def = image_library.GetImageDef(image_info.image_type);
+
+			std::shared_ptr<Texture2D> texture = image_library.GetTexture(image_info.image_type);
 			ASSERT(texture != nullptr);   // 유닛 본체 이미지는 항상 GRP가 있어야 함
-			GetMaterial(0)->RemoveTexture(REG_T_SC_GRP_SPRITE);
-			GetMaterial(0)->SetTexture(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_SC_GRP_SPRITE, texture);   // PerMaterial 슬롯 t30
+			GetMaterial(0)->RemoveTexture(REG_T_SC_GRP_SPRITE_DEBUG);
+			GetMaterial(0)->SetTexture(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_SC_GRP_SPRITE_DEBUG, texture);   // PerMaterial 슬롯 t30
 			bound_image_type_ = image_info.image_type;
 		}
 	}
@@ -123,14 +124,13 @@ namespace sc
 		bool result = SCSim_GetUnitMainImage(scene->GetSCSimContext(), unit_id, &image_info);
 		CHECK(result);
 		
-		SCSpriteInstance inst_data = {};
+		ScDebugSpriteInstance inst_data = {};
 
 		inst_data.position = float2((float)image_info.x, (float)image_info.y);
 		inst_data.frame = image_info.frame;
 
-		sc::SCImageLibrary* image_library = scene->GetSCImageLibrary();
-		CHECK(image_library);
-		const sc::ImageDef& image_def = image_library->GetImageDef(image_info.image_type);
+		const SCImageLibrary& image_library = SCResourceManager::GetInst().GetSCImageLibraryInst();
+		const sc::ImageDef& image_def = image_library.GetImageDef(image_info.image_type);
 
 		inst_data.flags = PackSpriteFlags(
 			image_info.flipped != 0,

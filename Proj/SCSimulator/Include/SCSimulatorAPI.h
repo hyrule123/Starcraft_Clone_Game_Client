@@ -86,4 +86,8 @@ extern "C" {
 	// 디버그용 단일 조회. 렌더링 경로는 추후 스냅샷 API 사용
 	// 실패(무효·사망 유닛, broken 컨텍스트) 시 false, 원인은 SCSim_GetLastError()
 	SCSIM_API bool SCSim_GetUnitMainImage(SCSim::Context* ctx, uint32_t unit_id, SCSim::ImageInfo* out_info);
+
+	// 보이는 스프라이트·이미지 전체를 컨텍스트 소유 버퍼에 채움.
+	// 포인터는 컨텍스트 수명 동안 유효, 내용은 다음 NextFrame / GetSprites 호출 전까지 유효
+	SCSIM_API bool SCSim_GetSprites(SCSim::Context* ctx, SCSim::SpriteSnapshot* out);
 }

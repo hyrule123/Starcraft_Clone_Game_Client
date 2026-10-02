@@ -3,7 +3,7 @@
 
 #include <Engine/ThirdParty/ankerl/unordered_dense.h>
 
-#include <Content/SCData/MPQ/MPQFileSystem.h>
+
 
 #include <SCSimulator/Include/SCSimulatorAPI.h>
 
@@ -13,10 +13,26 @@ namespace sc
 {
     class SCUnitObj;
     class SCImageLibrary;
+    
+    class SCSpriteObj;
+    class SCImageObj;
 
     struct UnitEntry {
         SCUnitObj* object = {};
         uint32_t serial = 0;
+    };
+
+    struct SpriteSlot
+    {
+        engine::weak_handle_ptr<SCSpriteObj> object;	// 슬롯이 처음 쓰일 때 생성, 이후 계속 유지
+        uint32_t serial = 0;		// 마지막으로 본 싱크 번호
+    };
+
+    struct ImageSlot
+    {
+        engine::weak_handle_ptr<SCImageObj> object;
+        uint32_t serial = 0;
+        uint16_t sprite_index = SCSim::kInvalidSpriteIndex;	// 현재 부모 스프라이트 슬롯 (재부모화 판정)
     };
 
     class MainGameScene :
@@ -31,12 +47,12 @@ namespace sc
         virtual void FrameStart() override;
 
 		SCSim::Context* GetSCSimContext() const { return sc_sim_ctx_; }
-		sc::SCImageLibrary* GetSCImageLibrary() const { return sc_image_library_.get(); }
 
     private:
         void PrepareMapLoader();
-		void LoadResources();
+		void DefaultEngineSetting();
         void SyncUnits();
+        void SyncSprites();
 
     private:
         SCSim::Context* sc_sim_ctx_ = nullptr;
@@ -46,10 +62,12 @@ namespace sc
 		int32_t sc_units_count_ = 0;
 
         // Unit ID - UnitEntry pair
-		ankerl::unordered_dense::map<uint32_t, UnitEntry> unit_objects_;
+        ankerl::unordered_dense::map<uint32_t, UnitEntry> unit_objects_ = {};
 		uint32_t sync_serial_ = 0;
 
-		std::unique_ptr<sc::SCImageLibrary> sc_image_library_ = {};
-		MPQFileSystem mpq_file_system_ = {};
+        // 스프라이트 이미지
+        std::array<SpriteSlot, SCSim::kMaxSprites> sprite_slots_ = {};
+        std::array<ImageSlot, SCSim::kMaxImages> image_slots_ = {};
+        uint32_t sprite_sync_serial_ = 0;
     };
 }

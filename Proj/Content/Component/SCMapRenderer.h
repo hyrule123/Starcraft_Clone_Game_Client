@@ -4,7 +4,7 @@
 namespace sc
 {
 	struct SCMap;
-	class SCMapLoader;
+	class SCResourceManager;
 	class Texture2D;
 	class ConstantBuffer;
     class SCMapRenderer :

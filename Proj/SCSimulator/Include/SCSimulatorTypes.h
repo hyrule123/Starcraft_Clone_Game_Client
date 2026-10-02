@@ -1,6 +1,7 @@
 #pragma once
-
 #include <cstdint>
+#include <type_traits>
+#include <limits>
 
 namespace SCSim
 {
@@ -22,6 +23,64 @@ namespace SCSim
 		Neutral = 11,
 		kCount
 	};
+
+	constexpr uint32_t kMaxSprites = 2500;	// OpenBW sprites_container 상한
+	constexpr uint32_t kMaxImages = 5000;	// OpenBW images_container 상한
+
+	// depth_key 유효 비트 수. 셰이더에서 2^kDepthKeyBits 기준으로 정규화
+	constexpr uint32_t kDepthKeyBits = 23;
+
+	namespace ImageFlags
+	{
+		enum : uint8_t
+		{
+			None = 0,
+			Flipped = 1u << 0,
+		};
+	}
+
+	constexpr uint16_t kInvalidSpriteIndex = std::numeric_limits<uint16_t>::max();
+
+	struct SpriteData
+	{
+		uint16_t index;			// sprite_t::index (슬롯 번호, 0도 유효)
+		uint8_t  player_color;	// st.players[owner].color (0~15, tunit 행)
+		uint8_t  reserved;
+		int32_t  x;				// sprite->position
+		int32_t  y;
+		uint16_t first_image;	// SpriteSnapshot::images 내 시작 위치
+		uint16_t image_count;	// 그리는 순서(아래 → 위)로 연속 배치
+	};
+	static_assert(sizeof(SpriteData) == 16);
+
+	// 이미지 하나. 숨김 이미지는 스냅샷에서 제외
+	constexpr uint16_t kInvalidImageType = std::numeric_limits<uint16_t>::max();
+	constexpr uint8_t kInvalidModifier = std::numeric_limits<uint8_t>::max();
+	struct ImageData
+	{
+		uint16_t index;			// image_t::index (슬롯 번호, 0도 유효)
+		uint16_t sprite_index;	// 소속 sprite_t::index
+		uint16_t image_type = kInvalidImageType;	// images.dat 번호 (GRP / Material 선택)
+		uint16_t frame;			// 최종 frame_index (텍스처 배열 슬라이스)
+		int16_t  offset_x;		// image->offset (스프라이트 기준 로컬 좌표)
+		int16_t  offset_y;
+		uint32_t depth_key;		// 클수록 위에 그려짐. 하위 kDepthKeyBits 사용
+		uint8_t  modifier = kInvalidModifier;		// 그리기 방식 (현재 0/1/10만 처리)
+		uint8_t  flags;			// ImageFlags
+		uint16_t reserved;
+	};
+	static_assert(sizeof(ImageData) == 20);
+
+	struct SpriteSnapshot
+	{
+		const SpriteData* sprites;
+		const ImageData* images;
+		int32_t sprite_count;
+		int32_t image_count;
+	};
+
+	static_assert(std::is_trivially_copyable_v<SpriteData>&& std::is_standard_layout_v<SpriteData>);
+	static_assert(std::is_trivially_copyable_v<ImageData>&& std::is_standard_layout_v<ImageData>);
 
 	enum class UnitType : int32_t {
 		TerranMarine = 0,

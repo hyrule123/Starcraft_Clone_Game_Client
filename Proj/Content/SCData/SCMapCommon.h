@@ -7,10 +7,14 @@ namespace engine
 {
 	class Texture2D;
 	class TypedBuffer;
+	class ConstantBuffer;
 }
 
 namespace sc
 {
+	struct TileSetData;
+	struct TileSetDataGPU;
+
 #pragma pack(push, 1)
 
 	// ===================================================================
@@ -124,14 +128,14 @@ namespace sc
 
 	class SCTileSetPcxLUT;
 
-	struct TileSet
+	struct TileSetData
 	{
 		std::vector<CV5> cv5;
 		std::vector<VX4> vx4;
 		std::vector<VF4> vf4;
 		std::vector<VR4> vr4;
 		std::vector<WPE> wpe;
-		std::unique_ptr<SCTileSetPcxLUT> pcx_lut = nullptr;
+		std::shared_ptr<SCTileSetPcxLUT> pcx_lut = nullptr;
 	};
 
 	//스타크래프트 맵 데이터 속 "ERA" 안에 들어있는 정보 
@@ -145,10 +149,10 @@ namespace sc
 		kDesert = 0x05,
 		kIce = 0x06,
 		kTwilight = 0x07,
-		kEND = 0x08
+		kCount = 0x08
 	};
 
-	constexpr std::array<std::string_view, (size_t)TileSetType::kEND> kTileSetTypeNames = {
+	constexpr std::array<std::string_view, (size_t)TileSetType::kCount> kTileSetTypeNames = {
 		"badlands",
 		"platform",
 		"install",
@@ -276,7 +280,7 @@ namespace sc
 	// 최종 결과물
 	struct SCMap
 	{
-		TileSetType terrain_type = TileSetType::kEND;
+		TileSetType terrain_type = TileSetType::kCount;
 		uint32 megatile_width = 0;
 		uint32 megatile_height = 0;
 		
@@ -292,7 +296,7 @@ namespace sc
 
 	struct SCMapLoadingData
 	{
-		TileSetType terrain_type = TileSetType::kEND;
+		TileSetType terrain_type = TileSetType::kCount;
 		uint32 megatile_width = 0;
 		uint32 megatile_height = 0;
 
@@ -301,5 +305,19 @@ namespace sc
 
 		std::vector<MTXM> mtxm = {};
 		std::vector<UnitData> unit_data = {};
+
+		const TileSetData* tileset = {};
+		const TileSetDataGPU* tileset_gpu = {};
 	};
+
+	struct TileSetDataGPU
+	{
+		std::shared_ptr<engine::TypedBuffer> CV5_megatiles = {};	// from CV5
+		std::shared_ptr<engine::TypedBuffer> VX4_minitiles = {};	// from VX4
+		std::shared_ptr<engine::TypedBuffer> VR4_minitile_wpe_indices = {}; // from VR4
+		std::shared_ptr<engine::TypedBuffer> WPE_color_palettes = {}; // from WPE, std::shared_ptr - 렌더링할 때 필요
+		std::shared_ptr<engine::TypedBuffer> PCX_tileset_LUT = {}; // from SCTileSetPcxLUT, std::shared_ptr - 렌더링할 때 필요
+		std::shared_ptr<engine::ConstantBuffer> PCX_tileset_LUT_offsets = {}; // from SCTileSetPcxLUT, std::shared_ptr - 렌더링할 때 필요
+	};
+
 }

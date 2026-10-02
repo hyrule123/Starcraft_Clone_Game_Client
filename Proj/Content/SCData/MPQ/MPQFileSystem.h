@@ -1,6 +1,6 @@
 #pragma once
 #include <Engine/Core/CoreMinimal.h>
-#include <Content/SCData/MPQ/MPQFile.h>
+#include <Content/SCData/MPQ/MPQArchive.h>
 
 namespace sc
 {
