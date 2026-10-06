@@ -83,14 +83,39 @@ namespace sc
 		sc_sim_ctx_ = SCSim_Create(mpq_dir.string().c_str());
 		CHECK_F(sc_sim_ctx_ != nullptr, "Failed to create SCSimContext: {}", SCSim_GetLastError());
 
-		std::filesystem::path map_dir = res_dir / "SCMap" / "(4)Fighting Spirit 1.4.scx";
-		bool result = SCSim_LoadMap(sc_sim_ctx_, map_dir.string().c_str(), true);
+		std::filesystem::path map_path = res_dir / "SCMap" / "(4)Fighting Spirit 1.4.scx";
+		bool result = SCSim_LoadMap(sc_sim_ctx_, map_path.string().c_str(), true);
 		if (!result)
 		{
 			const char* err = SCSim_GetLastError();
 			ENSURE_F(false, "Failed to load map: {}", err ? err : "Unknown error");
 
 			return;
+		}
+
+		{
+			// Map Loading
+			SCResourceManager& map_loader = SCResourceManager::GetInst();
+
+			bool result = true;
+			std::shared_ptr<Texture2D> map_tex;
+
+			//CPU
+			//auto sc_map = map_loader.LoadMapDataGPU(map_path);
+			//ASSERT(result);
+
+			//GPU
+			auto sc_map = map_loader.LoadMapDataGPU(map_path);
+
+			//Save Map Texture to File
+			//map_path = ResourceManager::GetInst().GetResourceDir();
+			//map_path /= "MapTest.png";
+			//map_tex->SaveToFile(map_path);
+
+			GameObject* map_obj = AddGameObject<GameObject>();
+			SCMapRenderer* renderer = map_obj->AddComponent<SCMapRenderer>();
+
+			renderer->SetSCMap(std::move(sc_map));
 		}
 
 		uint32_t unit_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranMarine, SCSim::Player::_1, 2048, 2048);
@@ -159,35 +184,7 @@ namespace sc
 		//auto test_script = camobj->AddComponent<TestScript>();
 		//test_script->SetTargetEnableObject(marine);
 
-		{
-			// Test Area
-			std::filesystem::path map_path = ResourceManager::GetInst().GetResourceDir();
-			map_path /= "SCMap";
-			map_path /= L"(4)Fighting Spirit 1.4.scx";
 
-			SCResourceManager& map_loader = SCResourceManager::GetInst();
-			
-			bool result = true;
-			std::shared_ptr<Texture2D> map_tex;
-
-			//CPU
-			//auto sc_map = map_loader.LoadMapDataGPU(map_path);
-			//ASSERT(result);
-
-			//GPU
-			auto sc_map = map_loader.LoadMapDataGPU(map_path);
-
-			//Save Map Texture to File
-			//map_path = ResourceManager::GetInst().GetResourceDir();
-			//map_path /= "MapTest.png";
-			//map_tex->SaveToFile(map_path);
-
-			GameObject* map_obj = AddGameObject<GameObject>();
-			SCMapRenderer* renderer = map_obj->AddComponent<SCMapRenderer>();
-			SCMapRenderer* renderer2test = map_obj->GetComponent<SCMapRenderer>();
-
-			renderer->SetSCMap(std::move(sc_map));
-		}
 	}
 	void MainGameScene::FrameStart()
 	{

@@ -73,6 +73,9 @@ struct ImagePSInput
 };
 
 Texture2DArray<uint2> g_grp_sprite : register(REG_T_SC_GRP_SPRITE);
+Buffer<uint> g_tunit : register(REG_T_SC_TUNIT); // R8_UINT, 128개
+Buffer<float4> g_wpe : register(REG_T_SC_WPE_PALETTE); // R8G8B8A8_UNORM, 256개
+Buffer<uint> g_pcx_tileset_lut : register(REG_T_SC_PCX_TILESET_LUT); // R8_UINT
 
 uint GetSpriteBits(uint flags, uint shift, uint bits)
 {
