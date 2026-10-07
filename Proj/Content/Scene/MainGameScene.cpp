@@ -127,10 +127,10 @@ namespace sc
 			// units[0..n)의 id, x, y, sprite_x, sprite_y 출력
 		}
 
-		SCUnitDebug* u = AddGameObject<SCUnitDebug>();
-		CHECK(u);
+		//SCUnitDebug* u = AddGameObject<SCUnitDebug>();
+		//CHECK(u);
 
-		u->SetUnitId(unit_id);
+		//u->SetUnitId(unit_id);
 
 
 		//SCSim_Order(sc_sim_ctx_, SCSim::Player::_1, SCSim::OrderType::Move, 2048, 2048, SCSim::kInvalidUnitId, -1, false);

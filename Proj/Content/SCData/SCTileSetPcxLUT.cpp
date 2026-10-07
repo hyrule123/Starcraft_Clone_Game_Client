@@ -63,7 +63,7 @@ namespace sc
                 return false;
             }
 
-            const bool is_dark = (i == static_cast<uint32>(PcxLUT::kDark));
+            const bool is_dark = (i == static_cast<uint32>(PcxLUT::Dark));
             if (is_dark && pcx.height() != kDarkRows)
             {
                 ERR_MSG("SCTileSetPcxLUT: dark.pcx는 256x32여야 함 {} ({}x{})", path, pcx.width(), pcx.height());

@@ -15,14 +15,14 @@ namespace sc
     // (OpenBW draw_alpha(4, ...)의 4 = light 배열 기준 trans50 → 여기서는 kTrans50 = 5)
     enum class PcxLUT : uint8
     {
-        kDark = 0,
-        kOfire,
-        kGfire,
-        kBfire,
-        kBexpl,
-        kTrans50,
-        kRed,
-        kGreen,
+        Dark = 0,
+        OFire,
+        Gfire,
+        Bfire,
+        Bexpl,
+        Trans50,
+        Red,
+        Green,
         kCount
     };
 
