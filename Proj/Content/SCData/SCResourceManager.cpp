@@ -35,6 +35,9 @@
 #include <Content/HLSL/SCMapRender.hlsli>
 #include <Content/HLSL/SCImage/SCImageCommon.hlsli>
 
+#include <Engine/Util/file_system.h>
+#include <Engine/Resource/GPU/Shader/PixelShader.h>
+
 namespace
 {
 	constexpr uint8_t kModifierShadow = 10;
@@ -493,6 +496,28 @@ namespace sc
 		shadow_state->SetPerInstanceDataStride(sizeof(SCImageInstance));
 		shadow_state->SetInstancingSupport(true);
 		shadow_state->SetRasterizerState(rss);
+
+		// Check ROV support
+		{
+			ComPtr<ID3D11PixelShader> ps = shadow_state->GetPixelShader()->GetD3D11PixelShader();
+
+			ComPtr<ID3D11ShaderReflection> reflection;
+
+			auto pth = ResourceManager::GetInst().GetResourceDir();
+			pth /= "Shader/SCImageShadow_PS.cso";
+
+			auto shader_bytecode = engine::file_system::ReadAllBytes(pth);
+
+			HRESULT hr = D3DReflect(
+				shader_bytecode.data(),
+				shader_bytecode.size(),
+				IID_ID3D11ShaderReflection,
+				reinterpret_cast<void**>(reflection.GetAddressOf())
+			);
+
+			bool rov_supported = reflection->GetRequiresFlags() & D3D_SHADER_REQUIRES_ROVS;
+			CHECK(rov_supported);
+		}
 		
 		std::shared_ptr<DepthStencilState> dss = EntityManager::CreateEntity<DepthStencilState>();
 		{
