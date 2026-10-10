@@ -36,8 +36,8 @@ namespace sc
 
 		static std::random_device rand_dev;
 		static std::mt19937 rand_gen(rand_dev());
-		static std::uniform_real_distribution<float> float_dist_x(-320.0f, 320.0f);
-		static std::uniform_real_distribution<float> float_dist_y(-240.0f, 240.0f);
+		static std::uniform_real_distribution<float> float_dist_x(1800.0f, 2200.0f);
+		static std::uniform_real_distribution<float> float_dist_y(-2200.0f, -1800.0f);
 
 		float2 rand_pos(float_dist_x(rand_gen), float_dist_y(rand_gen));
 		GetTransform()->SetLocalPosition(float3(rand_pos.x, rand_pos.y, 1.0f));

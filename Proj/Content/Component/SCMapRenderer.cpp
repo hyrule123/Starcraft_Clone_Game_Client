@@ -5,7 +5,6 @@
 
 #include <Engine/Resource/GPU/Material.h>
 #include <Engine/Resource/GPU/Mesh.h>
-#include <Engine/Render/RenderPass/ForwardOpaqueRenderPass.h>
 #include <Engine/Resource/GPU/PipelineState.h>
 #include <Engine/Resource/GPU/Buffer/ConstantBuffer.h>
 #include <Engine/Resource/GPU/Buffer/TypedBuffer.h>
@@ -25,7 +24,7 @@
 
 namespace sc
 {
-	constexpr engine::RenderPassOrder kMapRenderPass = engine::RenderPassOrder::ForwardOpaque;
+	constexpr engine::render_pass::ID kMapRenderPass = engine::render_pass::ID::ForwardOpaque;
 
 
 	SCMapRenderer::SCMapRenderer()

@@ -173,11 +173,11 @@ namespace sc
 		camobj->AddComponent("CameraMoveScript");
 
 		//auto marine = AddGameObject("TerranMarine");
-		//
-		//for (size_t i = 0; i < 30; ++i)
-		//{
-		//	AddGameObject("TestGameObject");
-		//}
+		
+		for (size_t i = 0; i < 30; ++i)
+		{
+			AddGameObject("TestGameObject");
+		}
 
 
 
@@ -212,8 +212,8 @@ namespace sc
 		auto device = GraphicsDevice::GetInst().GetDevice();
 
 		// Render Target
-		std::shared_ptr<RenderTargetGroup> sc_rendertarget_group = std::move(EntityManager::CreateEntity<RenderTargetGroup>());
-		std::shared_ptr<RenderTargetView> sc_rtv = std::move(EntityManager::CreateEntity<RenderTargetView>());
+		std::shared_ptr<RenderTargetGroup> sc_rendertarget_group = EntityManager::CreateEntity<RenderTargetGroup>();
+		std::shared_ptr<RenderTargetView> sc_rtv = EntityManager::CreateEntity<RenderTargetView>();
 		
 		bool result = sc_rtv->CreateDefaultBuffer((UINT)sc::kResolutionWidth, (UINT)sc::kResolutionHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
 		CHECK(result);
@@ -222,7 +222,7 @@ namespace sc
 		result = sc_rtv->CreateSRV(nullptr);
 		CHECK(result);
 
-		std::shared_ptr<DepthStencilView> dsv = std::move(EntityManager::CreateEntity<DepthStencilView>());
+		std::shared_ptr<DepthStencilView> dsv = EntityManager::CreateEntity<DepthStencilView>();
 		D3D11_TEXTURE2D_DESC depth_buffer_desc = {};
 		depth_buffer_desc.Width = (UINT)sc::kResolutionWidth;            // RTV의 가로 크기와 완전히 일치해야 합니다.
 		depth_buffer_desc.Height = (UINT)sc::kResolutionHeight;          // RTV의 세로 크기와 완전히 일치해야 합니다.
@@ -249,9 +249,7 @@ namespace sc
 		sc_rendertarget_group->SetDepthStencilView(dsv);
 
 		//렌더링
-		RenderManager::GetInst().GetOpaquePass()->SetRenderTargetGroup(sc_rendertarget_group);
-		RenderManager::GetInst().GetForwardBlendPass()->SetRenderTargetGroup(sc_rendertarget_group);
-		RenderManager::GetInst().GetPresentPass()->SetSourceRenderTarget(sc_rendertarget_group);
+		RenderManager::GetInst().SetMainRenderTarget(sc_rendertarget_group);
 
 		GetCollisionSystem2D()->SetCellSize(sc::kCellSize);
 		SetCollisionMask(0, 0, true);

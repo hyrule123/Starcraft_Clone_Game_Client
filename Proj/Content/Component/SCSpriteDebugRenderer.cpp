@@ -59,7 +59,7 @@ namespace sc
 			pipeline_state->SetPerInstanceDataStride<ScDebugSpriteInstance>();
 			pipeline_state->SetInstancingSupport(true);
 
-			material->SetPipelineState(RenderPassOrder::ForwardOpaque, pipeline_state);
+			material->SetPipelineState(render_pass::ID::ForwardOpaque, pipeline_state);
 		}
 		material = material->Clone();
 		result = SetMaterial(0, material);

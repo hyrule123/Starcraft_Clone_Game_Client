@@ -1,12 +1,7 @@
 #include <Content/HLSL/SCImage/SCImageCommon.hlsli>
 
-RasterizerOrderedTexture2D<uint> test : register(u1);
-
 float4 main(ImagePSInput input) : SV_TARGET
 {
-	const uint value = test[int2(input.position.xy)]; // 바인딩 없으면 0
-	return float4(1.0f, 1.0f, 1.0f, 1.0f) + value; // 값을 사용해서 제거되지 않게
-	
 	const int2 texel = int2(floor(input.local));
 	const uint2 sampled = g_grp_sprite.Load(int4(texel, input.frame, 0));
 
