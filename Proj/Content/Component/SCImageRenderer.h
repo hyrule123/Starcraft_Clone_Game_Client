@@ -24,7 +24,7 @@ namespace sc
 
 		void ApplySnapshot(const SCSim::ImageData& img_data, uint8_t player_color);
 
-		virtual void WritePerObjectData(engine::DataBlock data_block) override;
+		virtual void WriteInstanceData(engine::DataBlock data_block) override;
 
     private:
         SCSim::ImageData img_data_cache_ = {};

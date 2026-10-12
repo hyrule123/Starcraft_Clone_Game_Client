@@ -110,7 +110,7 @@ namespace sc
 		}
 	}
 
-	void SCSpriteDebugRenderer::WritePerObjectData(DataBlock data_block)
+	void SCSpriteDebugRenderer::WriteInstanceData(DataBlock data_block)
 	{
 		SCUnitDebug* unit_debug = dynamic_cast<SCUnitDebug*>(GetOwnerGameObject());
 		CHECK(unit_debug);

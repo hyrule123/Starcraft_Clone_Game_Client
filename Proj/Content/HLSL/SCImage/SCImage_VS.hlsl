@@ -6,7 +6,7 @@ ImagePSInput main(ImageVSInput input)
 {
 	ImagePSInput output;
 
-	const SCImageInstance inst = g_image_instances[input.instance_ID];
+	const SCImageInstance inst = g_image_instances[input.instance_id];
 
 	uint width, height, slices;
 	g_grp_sprite.GetDimensions(width, height, slices);

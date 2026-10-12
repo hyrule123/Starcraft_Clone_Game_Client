@@ -59,7 +59,7 @@ struct ImageVSInput
 	float2 uv SEMANTIC(TEXCOORD);
 	
 #ifdef __HLSL
-uint instance_ID : SV_InstanceID;
+	uint instance_id : INSTANCE_ID;
 #endif //__HLSL
 };
 

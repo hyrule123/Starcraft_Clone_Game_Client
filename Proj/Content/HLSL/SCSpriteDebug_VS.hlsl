@@ -6,7 +6,7 @@ ScDebugSpritePSInput main(ScDebugSpriteVSInput input)
 {
 	ScDebugSpritePSInput output;
 
-	const ScDebugSpriteInstance inst = g_sprite_instances[input.instance_ID];
+	const ScDebugSpriteInstance inst = g_sprite_instances[input.instance_id];
 
 	uint width, height, slices;
 	g_sc_sprite_debug.GetDimensions(width, height, slices);

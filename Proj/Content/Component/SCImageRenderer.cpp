@@ -72,7 +72,7 @@ namespace sc
 		player_color_ = player_color;
 	}
 
-	void SCImageRenderer::WritePerObjectData(engine::DataBlock data_block)
+	void SCImageRenderer::WriteInstanceData(engine::DataBlock data_block)
 	{
 		ASSERT(data_block.size == sizeof(SCImageInstance));
 

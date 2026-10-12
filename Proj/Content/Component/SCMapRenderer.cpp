@@ -125,7 +125,7 @@ namespace sc
 		per_pass_table.RemoveShaderResource(REG_T_SC_WPE_PALETTE);
 		per_pass_table.RemoveShaderResource(REG_T_SC_PCX_TILESET_LUT);	
 	}
-	void SCMapRenderer::WritePerObjectData(engine::DataBlock data_block)
+	void SCMapRenderer::WriteInstanceData(engine::DataBlock data_block)
 	{
 		using namespace engine;
 

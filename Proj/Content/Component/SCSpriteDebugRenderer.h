@@ -16,7 +16,7 @@ namespace sc
         virtual void Awake() override;
         virtual void LateUpdate() override;
 
-        virtual void WritePerObjectData(engine::DataBlock data_block) override;
+        virtual void WriteInstanceData(engine::DataBlock data_block) override;
 
     private:
         uint16 bound_image_type_ = {};
