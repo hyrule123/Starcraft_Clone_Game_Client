@@ -57,7 +57,6 @@ namespace sc
 			pipeline_state->SetRasterizerState("RSS_Solid_Back");
 
 			pipeline_state->SetPerInstanceDataStride<ScDebugSpriteInstance>();
-			pipeline_state->SetInstancingSupport(true);
 
 			material->SetPipelineState(render_pass::ID::ForwardOpaque, pipeline_state);
 		}

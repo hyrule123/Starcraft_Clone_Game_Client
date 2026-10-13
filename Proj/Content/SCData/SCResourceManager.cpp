@@ -21,6 +21,8 @@
 #include <Engine/Resource/GPU/Shader/VertexShader.h>
 #include <Engine/Resource/GPU/Shader/InputLayout.h>
 
+#include <Engine/Resource/GPU/Vertex.h>
+
 #include <Content/SCData/MPQ/MPQArchive.h>
 #include <Content/SCData/MPQ/MPQFileSystem.h>
 #include <Content/SCData/SCMapBakeComputePass.h>
@@ -443,7 +445,8 @@ namespace sc
 		using namespace engine;
 
 		std::shared_ptr<VertexShader> vs = ResourceManager::GetInst().LoadFromFile<VertexShader>("Shader/SCImage_VS.cso");
-		D3D11_INPUT_ELEMENT_DESC desc[1] = {};
+
+		std::array<D3D11_INPUT_ELEMENT_DESC, 2> desc = {};
 		desc[0].SemanticName = "TEXCOORD";
 		desc[0].SemanticIndex = 0;
 		desc[0].Format = DXGI_FORMAT_R32G32_FLOAT;
@@ -451,6 +454,9 @@ namespace sc
 		desc[0].AlignedByteOffset = 0;
 		desc[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 		desc[0].InstanceDataStepRate = 0;
+
+		desc[1] = vertex::instance_id::kInputLayoutDesc;
+
 		std::shared_ptr<InputLayout> il = EntityManager::CreateEntity<InputLayout>();
 		bool result = il->Create({ desc }, vs.get());
 		CHECK_F(result, "Failed to create InputLayout.");
@@ -474,7 +480,6 @@ namespace sc
 		normal_state->SetPixelShader("Shader/SCImageOpaque_PS.cso");
 
 		normal_state->SetPerInstanceDataStride(sizeof(SCImageInstance));
-		normal_state->SetInstancingSupport(true);
 		normal_state->SetDepthStencilState("DSS_Default");
 		normal_state->SetRasterizerState(rss);
 
@@ -491,7 +496,6 @@ namespace sc
 		shadow_state->SetVertexShader(vs);
 		shadow_state->SetPixelShader("Shader/SCImageShadow_PS.cso");
 		shadow_state->SetPerInstanceDataStride(sizeof(SCImageInstance));
-		shadow_state->SetInstancingSupport(true);
 		shadow_state->SetRasterizerState(rss);
 		
 		std::shared_ptr<DepthStencilState> dss = EntityManager::CreateEntity<DepthStencilState>();
