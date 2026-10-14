@@ -59,7 +59,7 @@ namespace sc
 			SetMaterial(0, new_mtrl);
 
 			// 컬링 bounds: 1픽셀 여유
-			const auto& tex = resource_manager.GetSCImageLibraryInst().GetTexture(img_data.image_type);
+			const auto& tex = resource_manager.GetSCImageLibrary().GetTexture(img_data.image_type);
 
 			const float hx = (float)((tex->GetWidth() >> 1) + 1);
 			const float hy = (float)((tex->GetHeight() >> 1) + 1);

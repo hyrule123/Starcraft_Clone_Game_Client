@@ -174,10 +174,10 @@ namespace sc
 
 		//auto marine = AddGameObject("TerranMarine");
 		
-		for (size_t i = 0; i < 30; ++i)
-		{
-			AddGameObject("TestGameObject");
-		}
+		//for (size_t i = 0; i < 30; ++i)
+		//{
+		//	AddGameObject("TestGameObject");
+		//}
 
 
 
@@ -215,7 +215,7 @@ namespace sc
 		std::shared_ptr<RenderTargetGroup> sc_rendertarget_group = EntityManager::CreateEntity<RenderTargetGroup>();
 		std::shared_ptr<RenderTargetView> sc_rtv = EntityManager::CreateEntity<RenderTargetView>();
 		
-		bool result = sc_rtv->CreateDefaultBuffer((UINT)sc::kResolutionWidth, (UINT)sc::kResolutionHeight, DXGI_FORMAT_R8G8B8A8_UNORM);
+		bool result = sc_rtv->CreateDefaultBuffer((UINT)sc::kResolutionWidth, (UINT)sc::kResolutionHeight, DXGI_FORMAT_R32_UINT);
 		CHECK(result);
 
 		//최종 렌더타겟에 이어붙일 때는 SRV가 필요
@@ -253,6 +253,10 @@ namespace sc
 
 		GetCollisionSystem2D()->SetCellSize(sc::kCellSize);
 		SetCollisionMask(0, 0, true);
+
+
+
+		// 맵 데이터 이미지로 저장하는 코드
 		/*
 		bool load_result = map_loader.LoadMapDataCPU(map_path);
 

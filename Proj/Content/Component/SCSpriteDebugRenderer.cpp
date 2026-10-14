@@ -56,7 +56,7 @@ namespace sc
 			pipeline_state->SetDepthStencilState("DSS_Default");
 			pipeline_state->SetRasterizerState("RSS_Solid_Back");
 
-			pipeline_state->SetPerInstanceDataStride<ScDebugSpriteInstance>();
+			pipeline_state->SetInstanceDataStride<ScDebugSpriteInstance>();
 
 			material->SetPipelineState(render_pass::ID::ForwardOpaque, pipeline_state);
 		}
@@ -98,7 +98,7 @@ namespace sc
 		if (image_info.image_type != bound_image_type_)
 		{
 
-			const SCImageLibrary& image_library = SCResourceManager::GetInst().GetSCImageLibraryInst();
+			const SCImageLibrary& image_library = SCResourceManager::GetInst().GetSCImageLibrary();
 			const sc::ImageDef& image_def = image_library.GetImageDef(image_info.image_type);
 
 			std::shared_ptr<Texture2D> texture = image_library.GetTexture(image_info.image_type);
@@ -128,7 +128,7 @@ namespace sc
 		inst_data.position = float2((float)image_info.x, (float)image_info.y);
 		inst_data.frame = image_info.frame;
 
-		const SCImageLibrary& image_library = SCResourceManager::GetInst().GetSCImageLibraryInst();
+		const SCImageLibrary& image_library = SCResourceManager::GetInst().GetSCImageLibrary();
 		const sc::ImageDef& image_def = image_library.GetImageDef(image_info.image_type);
 
 		inst_data.flags = PackSpriteFlags(

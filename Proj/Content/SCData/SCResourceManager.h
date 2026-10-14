@@ -52,7 +52,7 @@ namespace sc
 			return tileset_gpu_buffers_[(size_t)terrain_type].PCX_tileset_LUT;
 		}
 
-		const sc::SCImageLibrary& GetSCImageLibraryInst() const { return sc_image_library_; }
+		const sc::SCImageLibrary& GetSCImageLibrary() const { return sc_image_library_; }
 
 		std::shared_ptr<engine::Material> GetImageMaterial(uint32 image_type, SCImageMaterialVariant variant);
 		std::shared_ptr<engine::Mesh> GetImageMesh() const { return image_mesh_; }

@@ -50,7 +50,7 @@ namespace sc
 			map_mtrl = EntityManager::CreateEntity<Material>();
 
 			std::shared_ptr<PipelineState> pipeline_state = EntityManager::GetInst().CreateEntity<PipelineState>();
-			pipeline_state->SetPerInstanceDataStride(sizeof(MapInfoCB));
+			pipeline_state->SetInstanceDataStride(sizeof(MapInfoCB));
 			pipeline_state->SetVertexShader("Shader/SCMapRender_VS.cso");
 			pipeline_state->SetPixelShader("Shader/SCMapRender_PS.cso");
 			pipeline_state->SetDepthStencilState("DSS_Default");

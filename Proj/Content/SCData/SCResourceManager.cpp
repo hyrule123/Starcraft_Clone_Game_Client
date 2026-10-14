@@ -479,7 +479,7 @@ namespace sc
 		normal_state->SetVertexShader(vs);
 		normal_state->SetPixelShader("Shader/SCImageOpaque_PS.cso");
 
-		normal_state->SetPerInstanceDataStride(sizeof(SCImageInstance));
+		normal_state->SetInstanceDataStride(sizeof(SCImageInstance));
 		normal_state->SetDepthStencilState("DSS_Default");
 		normal_state->SetRasterizerState(rss);
 
@@ -495,7 +495,7 @@ namespace sc
 		shadow_state->SetInputLayout(il);
 		shadow_state->SetVertexShader(vs);
 		shadow_state->SetPixelShader("Shader/SCImageShadow_PS.cso");
-		shadow_state->SetPerInstanceDataStride(sizeof(SCImageInstance));
+		shadow_state->SetInstanceDataStride(sizeof(SCImageInstance));
 		shadow_state->SetRasterizerState(rss);
 		
 		std::shared_ptr<DepthStencilState> dss = EntityManager::CreateEntity<DepthStencilState>();
