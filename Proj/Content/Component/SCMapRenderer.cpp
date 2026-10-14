@@ -17,6 +17,7 @@
 #include <Engine/Game/Component/Transform.h>
 #include <Engine/Game/Component/Camera.h>
 
+#include <Content/SCData/Constants.h>
 #include <Content/SCData/SCResourceManager.h>
 #include <Content/SCData/SCMapBakeComputePass.h>
 
@@ -24,8 +25,6 @@
 
 namespace sc
 {
-	constexpr engine::render_pass::ID kMapRenderPass = engine::render_pass::ID::ForwardOpaque;
-
 
 	SCMapRenderer::SCMapRenderer()
 		: Super(SCMapRenderer::kClassConcreteName)
@@ -56,14 +55,14 @@ namespace sc
 			pipeline_state->SetDepthStencilState("DSS_Default");
 			pipeline_state->SetRasterizerState("RSS_Solid_Back");
 			pipeline_state->SetInputLayout("InputLayout_Standard2D");
-			map_mtrl->SetPipelineState(kMapRenderPass, pipeline_state);
+			map_mtrl->SetPipelineState(sc::kScOpaquePass, pipeline_state);
 
 			ResourceManager::GetInst().AddResource(material_name, map_mtrl);
 		}
 		ASSERT(map_mtrl);
 		SetMaterial(0, map_mtrl);
 
-		PipelineState* pipeline_state = map_mtrl->GetPipelineState(kMapRenderPass);
+		PipelineState* pipeline_state = map_mtrl->GetPipelineState(sc::kScOpaquePass);
 		ASSERT(pipeline_state);
 
 		SetEnable(false);

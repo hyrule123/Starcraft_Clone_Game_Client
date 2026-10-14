@@ -3,6 +3,8 @@
 #include <Engine/Core/Math.h>
 #include <limits>
 
+#include <Engine/Render/RenderTypes.h>
+
 namespace sc
 {
 	constexpr uint32 kResolutionWidth = 640;
@@ -23,4 +25,7 @@ namespace sc
 	{
 		return (sc_degree_per_sec / kDegree) * engine::kTwoPi * kFrameTime;
 	}
+
+	constexpr ::engine::render_pass::ID kScOpaquePass = ::engine::render_pass::ID::Custom0;
+	constexpr ::engine::render_pass::ID kScBlitPass = ::engine::render_pass::ID::Custom2;
 }

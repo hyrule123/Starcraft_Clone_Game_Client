@@ -7,14 +7,16 @@
 #include <Engine/Manager/TimeManager.h>
 
 #include <Engine/Resource/GPU/RenderTargetGroup.h>
-#include <Engine/Resource/GPU/Buffer/RenderTargetView.h>
-#include <Engine/Resource/GPU/Buffer/DepthStencilView.h>
+#include <Engine/Resource/GPU/Buffer/RenderTarget.h>
+#include <Engine/Resource/GPU/Buffer/DepthStencilTarget.h>
 #include <Engine/Resource/GPU/Buffer/TypedBuffer.h>
-
-
 #include <Engine/Resource/GPU/Material.h>
 #include <Engine/Resource/GPU/Mesh.h>
 #include <Engine/Resource/GPU/PipelineState.h>
+#include <Engine/Resource/GPU/Shader/PixelShader.h>
+
+#include <Engine/Render/RenderPass/MeshRenderPass.h>
+#include <Engine/Render/RenderPass/BlitPass.h>
 
 #include <Engine/Game/GameObject.h>
 #include <Engine/Game/Component/Camera.h>
@@ -33,9 +35,6 @@
 #include <Content/Script/DestroyTestScript.h>
 #include <Content/Script/SCUnit.h>
 
-#include <Content/SCData/SCResourceManager.h>
-#include <Content/SCData/SCMapBakeComputePass.h>
-
 #include <Content/Component/SCMapRenderer.h>
 
 #include <Content/HLSL/SCMapRender.hlsli>
@@ -45,11 +44,15 @@
 #include <Content/SCData/MPQ/MPQFileSystem.h>
 #include <Content/SCData/MPQ/MPQArchive.h>
 #include <Content/SCData/SCTileSetPcxLUT.h>
+#include <Content/SCData/SCResourceManager.h>
+#include <Content/SCData/SCMapBakeComputePass.h>
+
 #include <Content/GameObject/SCSpriteObj.h>
 #include <Content/GameObject/SCImageObj.h>
 
 #include <Engine/Core/Debug.h>
 #include <SCSimulator/Include/SCSimulatorAPI.h>
+
 
 namespace sc
 {
@@ -211,50 +214,82 @@ namespace sc
 
 		auto device = GraphicsDevice::GetInst().GetDevice();
 
-		// Render Target
+		// Render Target creation
+		RenderTargetPool& rt_pool = RenderManager::GetInst().GetRenderTargetPool();
+
+		ColorTargetDesc color_desc = {};
+		color_desc.create_srv = true;
+		color_desc.create_uav = true;
+		color_desc.format = DXGI_FORMAT_R32_UINT;
+		color_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32)sc::kResolutionWidth, .height = (uint32)sc::kResolutionHeight, .scale = 1.0f };
+
+		std::shared_ptr<RenderTarget> sc_rt = rt_pool.AcquireColor("ScWpeRenderTarget", color_desc);
+
 		std::shared_ptr<RenderTargetGroup> sc_rendertarget_group = EntityManager::CreateEntity<RenderTargetGroup>();
-		std::shared_ptr<RenderTargetView> sc_rtv = EntityManager::CreateEntity<RenderTargetView>();
-		
-		bool result = sc_rtv->CreateDefaultBuffer((UINT)sc::kResolutionWidth, (UINT)sc::kResolutionHeight, DXGI_FORMAT_R32_UINT);
-		CHECK(result);
 
-		//최종 렌더타겟에 이어붙일 때는 SRV가 필요
-		result = sc_rtv->CreateSRV(nullptr);
-		CHECK(result);
+		DepthTargetDesc depth_desc = {};
+		depth_desc.format = DXGI_FORMAT_D32_FLOAT;
+		depth_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32)sc::kResolutionWidth, .height = (uint32)sc::kResolutionHeight, .scale = 1.0f };
+		std::shared_ptr<DepthStencilTarget> sc_dst = rt_pool.AcquireDepth("ScWpeDepthTarget", depth_desc);
 
-		std::shared_ptr<DepthStencilView> dsv = EntityManager::CreateEntity<DepthStencilView>();
-		D3D11_TEXTURE2D_DESC depth_buffer_desc = {};
-		depth_buffer_desc.Width = (UINT)sc::kResolutionWidth;            // RTV의 가로 크기와 완전히 일치해야 합니다.
-		depth_buffer_desc.Height = (UINT)sc::kResolutionHeight;          // RTV의 세로 크기와 완전히 일치해야 합니다.
-		depth_buffer_desc.MipLevels = 1;               // 깊이 버퍼는 밉맵이 필요 없으므로 1 고정입니다.
-		depth_buffer_desc.ArraySize = 1;
+		sc_rendertarget_group->SetRenderTargets({sc_rt, });
+		sc_rendertarget_group->SetDepthStencilTarget(sc_dst);
 
-		// Reversed-Z 사용 시 f32 포맷 사용
-		// 차후 Stencil 버퍼 필요 시 버퍼 공간을 확장
-		depth_buffer_desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-		// 멀티샘플링 설정 (RTV 생성할 때 넣은 Count, Quality 값과 무조건 일치해야 에러가 안 납니다)
-		depth_buffer_desc.SampleDesc.Count = 1;
-		depth_buffer_desc.SampleDesc.Quality = 0;
+		// Sc Opaque Pass
+		std::unique_ptr<MeshRenderPass> sc_opaque = EntityManager::CreateEntity<MeshRenderPass>(kScOpaquePass, MeshRenderPass::SortPolicy::State);
 
-		depth_buffer_desc.Usage = D3D11_USAGE_DEFAULT;          // GPU가 매 프레임 읽고 쓸 것이므로 DEFAULT
-		depth_buffer_desc.BindFlags = D3D11_BIND_DEPTH_STENCIL; // 이 텍스처의 용도는 깊이/스텐실 도화지임을 명시
-		depth_buffer_desc.CPUAccessFlags = 0;
-		depth_buffer_desc.MiscFlags = 0;
-		result = dsv->CreateTexture2D(&depth_buffer_desc);
-		CHECK(result);
-		result = dsv->CreateDSV(nullptr);
-		CHECK(result);
+		ClearSettings clear_setting = {};
+		clear_setting.flags = ClearTarget::Color | ClearTarget::DepthStencil;
+		clear_setting.depth = 1.0f;
+		clear_setting.color = { 0.0f, 0.0f, 0.0f, 0.0f };
+		clear_setting.stencil = 0;
 
-		sc_rendertarget_group->SetRenderTargets({sc_rtv, });
-		sc_rendertarget_group->SetDepthStencilView(dsv);
+		sc_opaque->SetOutputTarget(sc_rendertarget_group, clear_setting);
 
-		//렌더링
-		RenderManager::GetInst().SetMainRenderTarget(sc_rendertarget_group);
+		RenderManager::GetInst().RegisterRenderPass(std::move(sc_opaque));
+
+		// Sc Blit Pass
+		{
+			color_desc = {};
+			color_desc.create_srv = true;
+			color_desc.create_uav = false;
+			color_desc.format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			color_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32)sc::kResolutionWidth, .height = (uint32)sc::kResolutionHeight, .scale = 1.0f };
+
+			DepthTargetDesc depth_desc = {};
+			depth_desc.format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+			depth_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32)sc::kResolutionWidth, .height = (uint32)sc::kResolutionHeight, .scale = 1.0f };
+
+			std::shared_ptr<RenderTargetGroup> sc_color_rtg = EntityManager::CreateEntity<RenderTargetGroup>();
+			sc_color_rtg->SetRenderTargets({ rt_pool.AcquireColor("ScColorRenderTarget", color_desc), });
+			sc_color_rtg->SetDepthStencilTarget(rt_pool.AcquireDepth("ScColorDepthTarget", depth_desc));
+
+			clear_setting = {};
+			clear_setting.flags = ClearTarget::Color | ClearTarget::DepthStencil;
+			clear_setting.depth = 1.0f;
+			clear_setting.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+			clear_setting.stencil = 0;
+
+			std::unique_ptr<BlitPass> sc_blit = EntityManager::CreateEntity<BlitPass>(kScBlitPass);
+
+			sc_blit->SetInputTexture(sc_rt);
+			sc_blit->SetPixelShader(ResourceManager::GetInst().LoadFromFileWithoutAdd<PixelShader>("Shader/ScBlit_PS.cso"));
+
+			//출력 RenderTarget은 지정하지 않음 -> Main RenderTarget에 출력
+			RenderManager::GetInst().SetMainRenderTarget(sc_color_rtg);
+
+			RenderManager::GetInst().RegisterRenderPass(std::move(sc_blit));
+		}
+
+		std::vector<render_pass::ID> sc_pass_order = { kScOpaquePass, kScBlitPass, render_pass::ID::Present };
+#if ENABLE_DEBUG_DRAW
+		sc_pass_order.push_back(render_pass::ID::DebugDraw);
+#endif
+		RenderManager::GetInst().SetRenderPassOrder(std::move(sc_pass_order));
+
 
 		GetCollisionSystem2D()->SetCellSize(sc::kCellSize);
 		SetCollisionMask(0, 0, true);
-
-
 
 		// 맵 데이터 이미지로 저장하는 코드
 		/*

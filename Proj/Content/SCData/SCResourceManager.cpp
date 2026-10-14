@@ -23,6 +23,7 @@
 
 #include <Engine/Resource/GPU/Vertex.h>
 
+#include <Content/SCData/Constants.h>
 #include <Content/SCData/MPQ/MPQArchive.h>
 #include <Content/SCData/MPQ/MPQFileSystem.h>
 #include <Content/SCData/SCMapBakeComputePass.h>
@@ -483,7 +484,7 @@ namespace sc
 		normal_state->SetDepthStencilState("DSS_Default");
 		normal_state->SetRasterizerState(rss);
 
-		normal_material->SetPipelineState(render_pass::ID::ForwardOpaque, normal_state);
+		normal_material->SetPipelineState(sc::kScOpaquePass, normal_state);
 #pragma endregion NORMAL PIPELINE
 
 #pragma region SHADOW PIPELINE
@@ -535,7 +536,8 @@ namespace sc
 		}
 		shadow_state->SetBlendState(multiply_bs);
 		
-		shadow_material->SetPipelineState(render_pass::ID::ForwardBlend, shadow_state);
+		DEBUG_LOG("SCImage Shadow ID 바꿔야함");
+		shadow_material->SetPipelineState(engine::render_pass::ID::ForwardBlend, shadow_state);
 #pragma endregion SHADOW PIPELINE
 	}
 
