@@ -124,61 +124,17 @@ namespace // Error
 
 }  // namespace
 
-namespace { // ImageInfo 관련 함수(디버그 용도로 구현)
-
+namespace {
     void FillUnit(const bwgame::action_functions& funcs, const bwgame::unit_t* u,
         SCSim::UnitData& out) {
         out = {};
         out.id = funcs.get_unit_id_32(u).raw_value;
         out.x = u->position.x;
         out.y = u->position.y;
-        if (u->sprite) {
-            out.sprite_x = u->sprite->position.x;
-            out.sprite_y = u->sprite->position.y;
-        }
-        else {
-            out.sprite_x = out.x;
-            out.sprite_y = out.y;
-        }
+
+		out.sprite_index = u->sprite ? u->sprite->index : SCSim::kInvalidSpriteIndex;
+
         if (funcs.us_hidden(u)) { out.flags |= SCSim::UnitFlags::Hidden; }
-    }
-
-    // 상태를 읽기만 함. 검사가 끝난 이미지·스프라이트를 받음
-    constexpr int kMaxPlayerColor = 15;  // tunit.pcx 16행
-    bool FillImageInfo(const bwgame::state& st, const bwgame::sprite_t* sprite,
-        const bwgame::image_t* image, SCSim::ImageInfo& out)
-    {
-        const int owner = sprite->owner;
-        if (owner < 0 || owner >= static_cast<int>(st.players.size()))
-        {
-            SetError("sprite owner out of range: " + std::to_string(owner));
-            return false;
-        }
-
-        const int color = st.players[owner].color;
-        if (color < 0 || color > kMaxPlayerColor)
-        {
-            SetError("player color out of range: " + std::to_string(color) + " (owner " + std::to_string(owner) + ")");
-            return false;
-        }
-
-        if (image->frame_index > UINT16_MAX)
-        {
-            SetError("frame index too large: " + std::to_string(image->frame_index));
-            return false;
-        }
-
-        out = {};
-        out.image_type = static_cast<uint16_t>(image->image_type->id);
-        out.frame = static_cast<uint16_t>(image->frame_index);
-        // 공중 유닛 둥실거림(iscript setvertpos)은 image->offset에 있으므로 반드시 더함
-        out.x = sprite->position.x + image->offset.x;
-        out.y = sprite->position.y + image->offset.y;
-        out.flipped = (image->flags & bwgame::image_t::flag_horizontally_flipped) ? 1 : 0;
-        out.player_color = static_cast<uint8_t>(color);
-        out.hidden = ((sprite->flags & bwgame::sprite_t::flag_hidden) ||
-            (image->flags & bwgame::image_t::flag_hidden)) ? 1 : 0;
-        return true;
     }
 
 }  // namespace
@@ -276,15 +232,11 @@ namespace // ImageData 관련
     {
         if (owner < 0 || owner >= static_cast<int>(st.players.size()))
         {
-            SCSIM_ASSERT_MSG(false, "sprite owner out of range: " + std::to_string(owner));
+            SCSIM_ASSERT_MSG(false, "Sprite owner out of range: " + std::to_string(owner));
             return 0;
         }
 
-        const int color = st.players[owner].color;
-
-		SCSIM_ASSERT_MSG(color >= 0 && color <= kMaxPlayerColor, "sprite color out of range: " + std::to_string(color));
-
-        return static_cast<uint8_t>(std::clamp(color, 0, kMaxPlayerColor));
+        return static_cast<uint8_t>(st.players[owner].color);
     }
 }
 
@@ -626,7 +578,7 @@ extern "C" {
             SetError("SCSim_GetUnit: out_unit is null");
             return false;
         }
-        if (!CheckContext(ctx, "SCSim_GetUnit")) return false;
+        if (!CheckContext(ctx, "SCSim_GetUnit")) { return false; }
         try {
             bwgame::action_functions funcs(ctx->sim.st(), ctx->action_st);
             const bwgame::unit_t* u = funcs.get_unit(bwgame::unit_id_32(unit_id));
@@ -644,52 +596,6 @@ extern "C" {
             SetError("SCSim_GetUnit: unknown exception");
         }
         return false;
-    }
-
-    bool SCSim_GetUnitMainImage(SCSim::Context* ctx, uint32_t unit_id, SCSim::ImageInfo* out_info)
-    {
-        try
-        {
-            if (!CheckContext(ctx, "SCSim_GetUnitMainImage"))
-            {
-                return false;  // CheckContext가 메시지 설정
-            }
-            if (out_info == nullptr)
-            {
-                SetError("out_info is null");
-                return false;
-            }
-
-			bwgame::action_functions funcs(ctx->sim.st(), ctx->action_st);
-
-            // 읽기 전용이라 broken 표시가 필요한 변경 단계는 없음
-            const bwgame::unit_t* unit = funcs.get_unit(bwgame::unit_id_32(unit_id));
-            if (unit == nullptr)
-            {
-                SetError("invalid or dead unit id: " + std::to_string(unit_id));
-                return false;
-            }
-
-            // OpenBW가 검사하지 않는 포인터는 여기서 먼저 막음
-            const bwgame::sprite_t* sprite = unit->sprite;
-            if (sprite == nullptr || sprite->main_image == nullptr)
-            {
-                SetError("unit " + std::to_string(unit_id) + " has no sprite or main image");
-                return false;
-            }
-
-            return FillImageInfo(funcs.st, sprite, sprite->main_image, *out_info);
-        }
-        catch (const std::exception& e)
-        {
-            SetError("exception: " + std::string(e.what()));
-            return false;
-        }
-        catch (...)
-        {
-            SetError("unknown exception");
-            return false;
-        }
     }
 
     SCSIM_API bool SCSim_GetSprites(SCSim::Context* ctx, SCSim::SpriteSnapshot* out)

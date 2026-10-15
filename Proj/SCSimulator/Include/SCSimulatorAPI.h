@@ -10,46 +10,6 @@
 #define SCSIM_API __declspec(dllimport)
 #endif
 
-// TODO: 이후 변수 선별하여 SCSimulatorTypes.h 로 올릴것
-namespace SCSim
-{
-	struct Context;	// Forward
-
-	struct UnitData {
-		uint32_t id;
-		int32_t  x;          // 시뮬레이션 위치(u->position)
-		int32_t  y;
-		int32_t  sprite_x;   // 렌더링 위치(u->sprite->position)
-		int32_t  sprite_y;
-		uint32_t flags;      // SCSimUnitFlags
-	};
-	static_assert(sizeof(UnitData) == 24, "UnitData layout changed. Must update FillUnit()");
-
-	namespace UnitFlags {
-		enum : uint32_t {
-			None = 0,
-			Hidden = 1u << 0,
-		};
-	}  // namespace UnitFlags
-
-
-
-	
-	// 이미지 하나의 렌더링 정보. 나중에 렌더링 스냅샷의 원소로 확장 예정
-	struct ImageInfo
-	{
-		uint16_t image_type;    // images.dat 번호 (ImageTypes)
-		uint16_t frame;         // 최종 frame_index (base + 방향 offset)
-		int32_t  x;             // sprite->position + image->offset
-		int32_t  y;
-		uint8_t  flipped;       // 좌우 반전
-		uint8_t  player_color;  // st.players[owner].color (0~15, tunit 행)
-		uint8_t  hidden;        // 스프라이트 또는 이미지가 숨김 상태
-		uint8_t  reserved;
-	};
-	static_assert(sizeof(ImageInfo) == 16, "ImageInfo layout changed. Must update FillImageInfo()");
-}; // namespace SCSim
-
 extern "C" {
 
 	// 실패 시 nullptr. 원인은 SCSim_GetLastError()로 확인
@@ -84,10 +44,6 @@ extern "C" {
 	// '숨겨진' 유닛도 조회 가능
 	SCSIM_API bool SCSim_GetUnit(SCSim::Context* ctx, uint32_t unit_id,
 		SCSim::UnitData* out_unit);
-
-	// 디버그용 단일 조회. 렌더링 경로는 추후 스냅샷 API 사용
-	// 실패(무효·사망 유닛, broken 컨텍스트) 시 false, 원인은 SCSim_GetLastError()
-	SCSIM_API bool SCSim_GetUnitMainImage(SCSim::Context* ctx, uint32_t unit_id, SCSim::ImageInfo* out_info);
 
 	// 보이는 스프라이트·이미지 전체를 컨텍스트 소유 버퍼에 채움.
 	// 포인터는 컨텍스트 수명 동안 유효, 내용은 다음 NextFrame / GetSprites 호출 전까지 유효

@@ -5,6 +5,25 @@
 
 namespace SCSim
 {
+	struct Context;	// Forward
+
+	struct UnitData {
+		uint32_t id;
+		int32_t  x;          // 시뮬레이션 위치(u->position)
+		int32_t  y;
+		uint16_t sprite_index;
+		uint32_t flags;      // SCSimUnitFlags
+	};
+	static_assert(sizeof(UnitData) == 20, "UnitData layout changed. Must update FillUnit()");
+
+	namespace UnitFlags {
+		enum : uint32_t {
+			None = 0,
+			Hidden = 1u << 0,
+		};
+	}  // namespace UnitFlags
+
+
 	constexpr uint32_t kInvalidUnitId = 0;
 	constexpr size_t kMaxUnits = 1700;
 
@@ -56,19 +75,16 @@ namespace SCSim
 	};
 	static_assert(sizeof(SpriteData) == 16);
 
-	// 이미지 하나. 숨김 이미지는 스냅샷에서 제외
-	constexpr uint16_t kInvalidImageType = std::numeric_limits<uint16_t>::max();
-	constexpr uint8_t kInvalidModifier = std::numeric_limits<uint8_t>::max();
 	struct ImageData
 	{
 		uint16_t index;			// image_t::index (슬롯 번호, 0도 유효)
 		uint16_t sprite_index;	// 소속 sprite_t::index
-		uint16_t image_type = kInvalidImageType;	// images.dat 번호 (GRP / Material 선택)
+		uint16_t image_type;	// images.dat 번호 (GRP / Material 선택)
 		uint16_t frame;			// 최종 frame_index (텍스처 배열 슬라이스)
 		int16_t  offset_x;		// image->offset (스프라이트 기준 로컬 좌표)
 		int16_t  offset_y;
 		uint32_t depth_key;		// 클수록 위에 그려짐. 하위 kDepthKeyBits 사용
-		uint8_t  modifier = kInvalidModifier;		// 그리기 방식 (현재 0/1/10만 처리)
+		uint8_t  modifier;		// 그리기 방식 (현재 0/1/10만 처리)
 		uint8_t  flags;			// ImageFlags
 		uint16_t reserved;
 	};
