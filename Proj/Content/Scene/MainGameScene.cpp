@@ -279,6 +279,7 @@ namespace sc
 			RenderManager::GetInst().SetMainRenderTarget(sc_color_rtg);
 
 			RenderManager::GetInst().RegisterRenderPass(std::move(sc_blit));
+			RenderManager::GetInst().SetMainViewClearSettings(clear_setting);
 		}
 
 		std::vector<render_pass::ID> sc_pass_order = { kScOpaquePass, kScBlitPass, render_pass::ID::Present };

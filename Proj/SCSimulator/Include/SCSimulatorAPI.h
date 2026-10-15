@@ -32,8 +32,7 @@ namespace SCSim
 		};
 	}  // namespace UnitFlags
 
-	constexpr int kMaxActionPlayers = 8;  // action_state::selection 크기
-	constexpr int kMaxSelection = 12;     // 선택 가능한 최대값(부대지정)
+
 
 	
 	// 이미지 하나의 렌더링 정보. 나중에 렌더링 스냅샷의 원소로 확장 예정
@@ -72,8 +71,11 @@ extern "C" {
 	// 부대 선택, 최대 12, 아무것도 선택되지 않았을 경우 0, 실패 시 -1. nullptr은 무시됨
 	SCSIM_API int32_t SCSim_Select(SCSim::Context* ctx, SCSim::Player owner, const uint32_t* unit_ids, int count);
 
+	// 현재 선택된 유닛들에게 명령 (owner 0~7)
+	// 대상 유닛 없음: kInvalidUnitId, 대상 타입 없음: UnitType::None
+	// 선택이 비었거나 시뮬레이션이 거부하면 false
 	SCSIM_API bool SCSim_Order(SCSim::Context* ctx, SCSim::Player owner, SCSim::OrderType order_type, int x, int y,
-		uint32_t target_unit_id, int target_unit_type, bool queue);
+		uint32_t target_unit_id, SCSim::UnitType target_unit_type, bool queue);
 
 	// visible, hidden 상태의 모든 유닛을 배열로 반환.
 	SCSIM_API  int32_t SCSim_GetUnits(SCSim::Context* ctx, const SCSim::UnitData** out_units);

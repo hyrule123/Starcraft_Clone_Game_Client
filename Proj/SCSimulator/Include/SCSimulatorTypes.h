@@ -24,6 +24,9 @@ namespace SCSim
 		kCount
 	};
 
+	constexpr int kMaxActionPlayers = 8;  // action_state::selection 크기
+	constexpr int kMaxSelection = 12;     // 선택 가능한 최대값(부대지정)
+
 	constexpr uint32_t kMaxSprites = 2500;	// OpenBW sprites_container 상한
 	constexpr uint32_t kMaxImages = 5000;	// OpenBW images_container 상한
 

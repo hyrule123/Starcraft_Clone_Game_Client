@@ -7,7 +7,51 @@
 
 // Required STL for this source file
 #include <string>
+#include <string_view>
 #include <array>
+
+// Windows.h 대신 필요한 두 함수만 선언 (OpenBW와 매크로 충돌 방지). 시그니처는 SDK와 동일
+extern "C" __declspec(dllimport) void __stdcall OutputDebugStringA(const char* output_string);
+extern "C" __declspec(dllimport) int __stdcall IsDebuggerPresent();
+namespace // Assert
+{
+    // 메시지를 출력하고, 디버거가 붙어 있으면 true
+    bool ReportAssert(const char* expr, std::string_view msg, const char* file, int line)
+    {
+        // "파일(줄): 내용" 형식이면 VS 출력 창에서 더블클릭으로 해당 줄로 이동
+        std::string text = std::string(file) + "(" + std::to_string(line) + "): SCSIM_ASSERT failed: " + expr;
+        if (!msg.empty())
+        {
+            text += " - ";
+            text += msg;
+        }
+        text += "\n";
+
+        OutputDebugStringA(text.c_str());
+        return IsDebuggerPresent() != 0;
+    }
+}  // namespace
+
+// 실패해도 진행은 계속됨. 같은 위치는 처음 한 번만 보고, msg는 실패했을 때만 평가
+#ifndef NDEBUG
+#define SCSIM_ASSERT_MSG(cond, msg) \
+	do \
+	{ \
+		static bool scsim_assert_reported_ = false; \
+		if (!(cond) && !scsim_assert_reported_) \
+		{ \
+			scsim_assert_reported_ = true; \
+			if (ReportAssert(#cond, (msg), __FILE__, __LINE__)) \
+			{ \
+				__debugbreak(); \
+			} \
+		} \
+	} while (false)
+#else
+#define SCSIM_ASSERT_MSG(cond, msg) do { (void)sizeof(cond); } while (false)
+#endif
+
+#define SCSIM_ASSERT(cond) SCSIM_ASSERT_MSG(cond, "")
 
 // 헤더에서 전역으로 선언했으므로 정의도 전역
 struct SCSim::Context 
@@ -58,13 +102,25 @@ namespace // Error
         return true;
     }
 
-	bool CheckOwnerRange(SCSim::Player owner, const char* func_name) {
-		if ((int32_t)owner < 0 || (int32_t)SCSim::Player::kCount <= (int32_t)owner) {
+	bool CheckPlayerRange(SCSim::Player owner, const char* func_name) {
+		int32_t owner_int = static_cast<int32_t>(owner);
+		if (owner_int < 0 || owner_int >= static_cast<int32_t>(SCSim::Player::kCount)) {
 			SetError(std::string(func_name) + ": invalid owner");
 			return false;
 		}
 		return true;
 	}
+
+	bool CheckActionPlayerRange(SCSim::Player owner, const char* func_name) {
+		int32_t owner_int = static_cast<int32_t>(owner);
+        if(owner_int < 0 || owner_int >= SCSim::kMaxActionPlayers) {
+			SetError(std::string(func_name) + ": invalid owner");
+			return false;
+		}
+		return true;
+	}
+
+
 
 }  // namespace
 
@@ -72,6 +128,7 @@ namespace { // ImageInfo 관련 함수(디버그 용도로 구현)
 
     void FillUnit(const bwgame::action_functions& funcs, const bwgame::unit_t* u,
         SCSim::UnitData& out) {
+        out = {};
         out.id = funcs.get_unit_id_32(u).raw_value;
         out.x = u->position.x;
         out.y = u->position.y;
@@ -141,6 +198,8 @@ namespace // ImageData 관련
     static_assert(ContainerMaxSize<decltype(bwgame::state::sprites_container)>::value == SCSim::kMaxSprites);
     static_assert(ContainerMaxSize<decltype(bwgame::state::images_container)>::value == SCSim::kMaxImages);
     static_assert(SCSim::kMaxImages - 1 <= UINT16_MAX);
+    static_assert(std::tuple_size_v<decltype(bwgame::action_state::selection)> == SCSim::kMaxActionPlayers);
+    static_assert(std::tuple_size_v<decltype(bwgame::action_state::control_groups)> == SCSim::kMaxActionPlayers);
 
     // ---- depth_key 비트 배치 (하위 → 상위) ----
     // [order 4][turret 1][mid 13][elevation 5] = 23비트
@@ -170,10 +229,8 @@ namespace // ImageData 관련
     // 스프라이트 단위 키 (이미지 순서 비트는 0)
     uint32_t MakeSpriteDepthBase(const bwgame::sprite_t& sprite)
     {
-        if (sprite.elevation_level < 0 || sprite.elevation_level > static_cast<int>(Mask(kElevationBits)))
-        {
-			SetError("sprite elevation_level out of range: " + std::to_string(sprite.elevation_level));
-        }
+        SCSIM_ASSERT_MSG(0 <= sprite.elevation_level && sprite.elevation_level <= static_cast<int>(Mask(kElevationBits)),
+            "Sprite elevation level out of range: " + std::to_string(sprite.elevation_level));
 
         const uint32_t elevation = static_cast<uint32_t>(
             std::clamp(sprite.elevation_level, 0, static_cast<int>(Mask(kElevationBits))));
@@ -198,10 +255,7 @@ namespace // ImageData 관련
     void FillImageData(const bwgame::image_t& image, uint32_t sprite_depth_base, uint32_t order,
         SCSim::ImageData& out)
     {
-		if (order > Mask(kOrderBits)) 
-        {
-			SetError("image order out of range: " + std::to_string(order));
-		}
+		SCSIM_ASSERT_MSG(order <= Mask(kOrderBits), "image order out of range: " + std::to_string(order));
 
         const uint32_t clamped_order = std::min(order, Mask(kOrderBits));
 
@@ -222,17 +276,15 @@ namespace // ImageData 관련
     {
         if (owner < 0 || owner >= static_cast<int>(st.players.size()))
         {
-			SetError("sprite owner out of range: " + std::to_string(owner));
+            SCSIM_ASSERT_MSG(false, "sprite owner out of range: " + std::to_string(owner));
             return 0;
         }
 
         const int color = st.players[owner].color;
-        if (color < 0 || color >= 16)
-        {
-			SetError("sprite color out of range: " + std::to_string(color));
-            return 0;
-        }
-        return static_cast<uint8_t>(std::clamp(color, 0, 15));
+
+		SCSIM_ASSERT_MSG(color >= 0 && color <= kMaxPlayerColor, "sprite color out of range: " + std::to_string(color));
+
+        return static_cast<uint8_t>(std::clamp(color, 0, kMaxPlayerColor));
     }
 }
 
@@ -266,8 +318,14 @@ extern "C" {
 
     bool SCSim_LoadMap(SCSim::Context* ctx, const char* map_path,
         bool create_map_units) {
+
         if (!ctx || !map_path) {
             SetError("SCSim_LoadMap: ctx or map_path is null");
+            return false;
+        }
+        if (ctx->broken)
+        {
+            SetError("SCSim_LoadMap: context is broken by a previous failure");
             return false;
         }
         if (ctx->map_loaded) {
@@ -281,61 +339,106 @@ extern "C" {
             load.load_map_file(map_path, [&]() {
                 load.setup_info.create_no_units = !create_map_units;
                 });
-            ctx->map_loaded = true;
 
             if (player_st.game->map_height > kMaxMapHeight)
             {
                 SetError("SCSim_LoadMap: map height exceeds 8192px (256 tiles)");
+                ctx->broken = true;
                 return false;
             }
+
+            ctx->map_loaded = true;
 
             return true;
         }
         catch (const std::exception& e) {
+            ctx->broken = true;
             SetError(e.what());
         }
         catch (...) {
+            ctx->broken = true;
             SetError("SCSim_LoadMap: unknown exception");
         }
         return false;
     }
 
-    uint32_t SCSim_CreateUnit(SCSim::Context* ctx, SCSim::UnitType unit_type, SCSim::Player owner, int x, int y) {
-		if (!CheckContext(ctx, "SCSim_CreateUnit")) {
-			return SCSim::kInvalidUnitId;
-		}
-
-        if ((int32_t)unit_type < 0 || (int32_t)SCSim::UnitType::kCount <= (int32_t)unit_type) {
-            SetError("SCSim_CreateUnit: invalid unit_type");
+    uint32_t SCSim_CreateUnit(SCSim::Context* ctx, SCSim::UnitType unit_type, SCSim::Player owner, int x, int y)
+    {
+        if (!CheckContext(ctx, "SCSim_CreateUnit"))
+        {
             return SCSim::kInvalidUnitId;
         }
-        if ((int32_t)owner < 0 || (int32_t)SCSim::Player::kCount <= (int32_t)owner) {
-            SetError("SCSim_CreateUnit: invalid owner");
+        if (static_cast<int32_t>(unit_type) < 0 ||
+            static_cast<int32_t>(unit_type) >= static_cast<int32_t>(SCSim::UnitType::kCount))
+        {
+            SetError("SCSim_CreateUnit: invalid unit_type " + std::to_string(static_cast<int32_t>(unit_type)));
             return SCSim::kInvalidUnitId;
         }
-        try {
-            auto& st = ctx->sim.st();
-            bwgame::action_functions funcs(st, ctx->action_st);
-            const auto* type = funcs.get_unit_type(
-                static_cast<bwgame::UnitTypes>(unit_type));
-            
-            st.last_error = 0;  // 이전 실패의 흔적 제거
-            bwgame::unit_t* u = funcs.trigger_create_unit(type, { x, y }, (int)owner);
-            return funcs.get_unit_id_32(u).raw_value;
+        if (!CheckPlayerRange(owner, "SCSim_CreateUnit"))
+        {
+            return SCSim::kInvalidUnitId;
+        }
 
-            if (!u) {
-                const char* reason = DescribeBWError(st.last_error);
-                SetError(std::string("SCSim_CreateUnit: ") +
-                    (reason ? reason : "creation rejected by simulation"));
+        auto& st = ctx->sim.st();
+        bwgame::action_functions funcs(st, ctx->action_st);
+        const bwgame::unit_type_t* type = nullptr;
+
+        // 1단계: 타입 조회와 사전 검사. 상태를 건드리지 않으므로 실패해도 broken 아님
+        try
+        {
+            type = funcs.get_unit_type(static_cast<bwgame::UnitTypes>(unit_type));
+
+            // trigger_create_unit이 last_error 없이 조용히 nullptr을 반환하는 경로를 미리 막음
+            constexpr int kStareditPlaceable = 2;
+            if ((type->staredit_availability_flags & kStareditPlaceable) == 0)
+            {
+                SetError("SCSim_CreateUnit: unit type " + std::to_string(static_cast<int32_t>(unit_type)) +
+                    " is not placeable");
                 return SCSim::kInvalidUnitId;
             }
         }
-        catch (const std::exception& e) {
-            SetError(e.what());
+        catch (const std::exception& e)
+        {
+            SetError(std::string("SCSim_CreateUnit: ") + e.what());
+            return SCSim::kInvalidUnitId;
         }
-        catch (...) {
+        catch (...)
+        {
+            SetError("SCSim_CreateUnit: unknown exception");
+            return SCSim::kInvalidUnitId;
+        }
+
+        // 2단계: 실제 생성. 도중 예외는 절반만 진행된 상태일 수 있으므로 broken
+        try
+        {
+            st.last_error = 0;  // 이전 실패의 흔적 제거
+            bwgame::unit_t* u = funcs.trigger_create_unit(type, { x, y }, static_cast<int>(owner));
+
+            if (!u)
+            {
+                const char* reason = DescribeBWError(st.last_error);
+                if (!reason)
+                {
+                    // last_error 없는 실패: 건물 배치 불가 또는 place_completed_unit 실패(유닛은 kill_unit 처리됨)
+                    reason = funcs.ut_building(type)
+                        ? "building placement blocked or no space"
+                        : "no space to place unit";
+                }
+                SetError(std::string("SCSim_CreateUnit: ") + reason);
+                return SCSim::kInvalidUnitId;
+            }
+
+            return funcs.get_unit_id_32(u).raw_value;
+        }
+        catch (const std::exception& e)
+        {
+            SetError(std::string("SCSim_CreateUnit: ") + e.what());
+        }
+        catch (...)
+        {
             SetError("SCSim_CreateUnit: unknown exception");
         }
+
         ctx->broken = true;
         return SCSim::kInvalidUnitId;
     }
@@ -371,8 +474,10 @@ extern "C" {
 
     int32_t SCSim_Select(SCSim::Context* ctx, SCSim::Player owner, const uint32_t* unit_ids,
         int count) {
-        if (!CheckContext(ctx, "SCSim_Select")) { return -1; } 
-        if (!CheckOwnerRange(owner, "SCSim_Select")) { return -1; }
+        if (!CheckContext(ctx, "SCSim_Select")) { return -1; }
+        
+        // 촤대 Action Player = 8명
+        if (!CheckActionPlayerRange(owner, "SCSim_Select")) { return -1; }
 
         if (count < 0 || count > SCSim::kMaxSelection) {
             SetError("SCSim_Select: count must be 0~12");
@@ -399,11 +504,31 @@ extern "C" {
         }
         return -1;  // 선택 목록만 건드리므로 broken 처리 안 함
     }
-
     bool SCSim_Order(SCSim::Context* ctx, SCSim::Player owner, SCSim::OrderType order_type, int x, int y,
-        uint32_t target_unit_id, int target_unit_type, bool queue) {
-        if (!CheckContext(ctx, "SCSim_Order")) { return false; }
-		if (!CheckOwnerRange(owner, "SCSim_Order")) { return false; }
+        uint32_t target_unit_id, SCSim::UnitType target_unit_type, bool queue)
+    {
+        if (!CheckContext(ctx, "SCSim_Order"))
+        {
+            return false;
+        }
+        if (!CheckActionPlayerRange(owner, "SCSim_Order"))
+        {
+            return false;
+        }
+
+        // 범위 검사. OpenBW 예외에 맡기면 메시지가 내부 문구가 되므로 직접 거름
+        const int32_t order_value = static_cast<int32_t>(order_type);
+        if (order_value < 0 || order_value >= static_cast<int32_t>(SCSim::OrderType::kCount))
+        {
+            SetError("SCSim_Order: invalid order_type " + std::to_string(order_value));
+            return false;
+        }
+        const int32_t target_type_value = static_cast<int32_t>(target_unit_type);
+        if (target_type_value < 0 || target_type_value > static_cast<int32_t>(SCSim::UnitType::None))
+        {
+            SetError("SCSim_Order: invalid target_unit_type " + std::to_string(target_type_value));
+            return false;
+        }
 
         bwgame::action_functions funcs(ctx->sim.st(), ctx->action_st);
         const bwgame::order_type_t* order = nullptr;
@@ -411,45 +536,56 @@ extern "C" {
         const bwgame::unit_type_t* target_type = nullptr;
 
         // 1단계: 인자 해석. 상태를 건드리지 않으므로 실패해도 broken 아님
-        try {
+        try
+        {
             order = funcs.get_order_type(static_cast<bwgame::Orders>(order_type));
-            if (target_unit_id != SCSim::kInvalidUnitId) {
+
+            if (target_unit_id != SCSim::kInvalidUnitId)
+            {
                 target = funcs.get_unit(bwgame::unit_id_32(target_unit_id));
-                if (!target) {
-                    SetError("SCSim_Order: target unit not found");
+                if (!target)
+                {
+                    SetError("SCSim_Order: target unit not found " + std::to_string(target_unit_id));
                     return false;
                 }
             }
-            if (target_unit_type >= 0) {
-                target_type = funcs.get_unit_type(
-                    static_cast<bwgame::UnitTypes>(target_unit_type));
+
+            // None(228)은 OpenBW get_unit_type이 예외를 던지므로 조회하지 않음
+            if (target_unit_type != SCSim::UnitType::None)
+            {
+                target_type = funcs.get_unit_type(static_cast<bwgame::UnitTypes>(target_unit_type));
             }
         }
-        catch (const std::exception& e) {
-            SetError(e.what());
+        catch (const std::exception& e)
+        {
+            SetError(std::string("SCSim_Order: ") + e.what());
             return false;
         }
-        catch (...) {
+        catch (...)
+        {
             SetError("SCSim_Order: unknown exception");
             return false;
         }
 
         // 2단계: 실제 명령. 도중 실패 시 일부 유닛만 명령을 받았을 수 있음
-        try {
-            if (!funcs.action_order((int)owner, order, { x, y }, target, target_type, queue)) {
+        try
+        {
+            if (!funcs.action_order(static_cast<int>(owner), order, { x, y }, target, target_type, queue))
+            {
                 SetError("SCSim_Order: order rejected by simulation");
                 return false;
             }
             return true;
         }
-        catch (const std::exception& e) {
-            SetError(e.what());
+        catch (const std::exception& e)
+        {
+            SetError(std::string("SCSim_Order: ") + e.what());
         }
-        catch (...) {
+        catch (...)
+        {
             SetError("SCSim_Order: unknown exception");
         }
 
-        // 여기 오면 실패
         ctx->broken = true;
         return false;
     }
