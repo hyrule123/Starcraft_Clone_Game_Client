@@ -268,10 +268,10 @@ extern "C" {
         return last_error.c_str();
     }
 
-    bool SCSim_LoadMap(SCSim::Context* ctx, const char* map_path,
-        bool create_map_units) {
-
-        if (!ctx || !map_path) {
+    bool SCSim_LoadMap(SCSim::Context* ctx, const char* map_path, bool create_map_units)
+    {
+        if (!ctx || !map_path)
+        {
             SetError("SCSim_LoadMap: ctx or map_path is null");
             return false;
         }
@@ -280,37 +280,59 @@ extern "C" {
             SetError("SCSim_LoadMap: context is broken by a previous failure");
             return false;
         }
-        if (ctx->map_loaded) {
+        if (ctx->map_loaded)
+        {
             SetError("SCSim_LoadMap: map already loaded for this context");
             return false;
         }
-        try {
-			auto& player_st = ctx->sim.st();
+
+        try
+        {
+            auto& player_st = ctx->sim.st();
 
             bwgame::game_load_functions load(player_st);
-            load.load_map_file(map_path, [&]() {
-                load.setup_info.create_no_units = !create_map_units;
+            load.load_map_file(map_path, [&]()
+                {
+                    // DIM 청크를 읽은 직후, 타일·지역 생성 전에 호출됨
+                    // OpenBW는 크기 상한을 검사하지 않고, 256 초과 시 tile_region_index 범위 밖에 씀
+                    const size_t tile_width = player_st.game->map_tile_width;
+                    const size_t tile_height = player_st.game->map_tile_height;
+                    if (tile_width > SCSim::kMaxMapTiles || tile_height > SCSim::kMaxMapTiles)
+                    {
+                        throw std::runtime_error("map size " + std::to_string(tile_width) + "x" + std::to_string(tile_height) +
+                            " exceeds " + std::to_string(SCSim::kMaxMapTiles) + "x" + std::to_string(SCSim::kMaxMapTiles) + " tiles");
+                    }
+
+                    load.setup_info.create_no_units = !create_map_units;
                 });
 
-            if (player_st.game->map_height > kMaxMapHeight)
+            // COLR 청크는 setup_f 이후에 읽히므로 로드가 끝난 뒤 검사
+            // 범위 밖 값은 저장만 될 뿐 메모리를 손상시키지 않으므로 사후 검사로 충분
+            for (size_t i = 0; i < player_st.players.size(); ++i)
             {
-                SetError("SCSim_LoadMap: map height exceeds 8192px (256 tiles)");
-                ctx->broken = true;
-                return false;
+                const int color = player_st.players[i].color;
+                if (color < 0 || color >= SCSim::kMaxPlayerColors)
+                {
+                    SetError("SCSim_LoadMap: player " + std::to_string(i) + " color " + std::to_string(color) +
+                        " is out of 1.16.1 range (0~" + std::to_string(SCSim::kMaxPlayerColors - 1) + ")");
+                    ctx->broken = true;
+                    return false;
+                }
             }
 
             ctx->map_loaded = true;
-
             return true;
         }
-        catch (const std::exception& e) {
-            ctx->broken = true;
-            SetError(e.what());
+        catch (const std::exception& e)
+        {
+            SetError(std::string("SCSim_LoadMap: ") + e.what());
         }
-        catch (...) {
-            ctx->broken = true;
+        catch (...)
+        {
             SetError("SCSim_LoadMap: unknown exception");
         }
+
+        ctx->broken = true;
         return false;
     }
 

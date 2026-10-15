@@ -27,6 +27,9 @@ namespace SCSim
 	constexpr uint32_t kInvalidUnitId = 0;
 	constexpr size_t kMaxUnits = 1700;
 
+	constexpr size_t kMaxMapTiles = 256;		// 1.16.1 맵 최대 크기(타일), OpenBW tile_region_index도 256x256 고정
+	constexpr int32_t kMaxPlayerColors = 16;	// 1.16.1 플레이어 색상 수(tunit.pcx 16행)
+
 	enum class Player : int32_t {
 		_1 = 0,
 		_2 = 1,
