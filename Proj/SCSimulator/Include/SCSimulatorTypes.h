@@ -8,6 +8,17 @@ namespace SCSim
 {
 	struct Context;	// Forward
 
+	constexpr int32_t kMaxUnits = 1700;			// OpenBW units_container 상한
+	constexpr int32_t kMaxMapTiles = 256;		// 1.16.1 맵 최대 크기(타일), OpenBW tile_region_index도 256x256 고정
+	constexpr int32_t kMaxPlayerColors = 16;	// 1.16.1 플레이어 색상 수(tunit.pcx 16행)
+	constexpr int32_t kMaxActionPlayers = 8;	// 명령 주체 수, OpenBW action_state::selection 크기
+	constexpr int32_t kMaxSelection = 12;		// 동시 선택 상한(부대지정), OpenBW selection 원소 용량
+	constexpr int32_t kMaxSprites = 2500;		// OpenBW sprites_container 상한
+	constexpr int32_t kMaxImages = 5000;		// OpenBW images_container 상한
+
+	constexpr uint32_t kInvalidSpriteIndex = std::numeric_limits<uint32_t>::max();
+	constexpr uint32_t kInvalidUnitId = 0;
+
 	// sprite_t::flags 원본 비트 (1.16.1 배치). 아래에 없는 비트는 계약에 포함되지 않음
 	// 0x8(selected)은 OpenBW에서 설정되지 않아 항상 0 — 선택 정보로 사용 금지
 	namespace SpriteFlags
@@ -64,7 +75,7 @@ namespace SCSim
 		uint32_t flags;			// ImageFlags
 	};
 	static_assert(sizeof(ImageData) == 32);
-	constexpr uint32_t kInvalidSpriteIndex = std::numeric_limits<uint32_t>::max();
+	
 
 	struct PlayerData
 	{
@@ -84,28 +95,53 @@ namespace SCSim
 		int32_t image_count;
 	};
 
-	struct UnitData {
+	struct UnitData
+	{
 		uint32_t id;
-		int32_t  x;          // 시뮬레이션 위치(u->position)
+		int32_t  x;					// unit_t::position
 		int32_t  y;
-		uint32_t sprite_index;
-		uint32_t flags;      // SCSimUnitFlags
+		uint32_t sprite_index;		// u->sprite->index
+		uint32_t status_flags;		// unit_t::status_flags 원본 (UnitStatusFlags)
+		uint32_t sprite_flags;		// u->sprite->flags 원본 (SpriteFlags) — 숨김은 SpriteFlags::Hidden
 	};
-	static_assert(sizeof(UnitData) == 20, "UnitData layout changed. Must update FillUnit()");
+	static_assert(sizeof(UnitData) == 24);
 
-	namespace UnitFlags {
-		enum : uint32_t {
+	// unit_t::status_flags 원본 비트 (1.16.1 배치). 아래에 없는 비트는 계약에 포함되지 않음
+	// 0x8, 0x4000, 0x400000은 OpenBW에서도 의미 미상 — 사용 금지
+	namespace UnitStatusFlags
+	{
+		enum : uint32_t
+		{
 			None = 0,
-			Hidden = 1u << 0,
+			Completed = 0x1,
+			GroundedBuilding = 0x2,
+			Flying = 0x4,
+			Burrowed = 0x10,
+			InBunker = 0x20,
+			Loaded = 0x40,
+			RequiresDetector = 0x100,
+			Cloaked = 0x200,
+			Disabled = 0x400,
+			PassivelyCloaked = 0x800,
+			OrderNotInterruptible = 0x1000,
+			IscriptNoBrk = 0x2000,
+			CannotAttack = 0x8000,
+			CanTurn = 0x10000,
+			CanMove = 0x20000,
+			Collision = 0x40000,
+			Immovable = 0x80000,
+			GroundUnit = 0x100000,
+			NoCollide = 0x200000,
+			Gathering = 0x800000,
+			TurretWalking = 0x1000000,
+			Invincible = 0x4000000,
+			ReadyToAttack = 0x8000000,
+			SpeedUpgrade = 0x10000000,
+			CooldownUpgrade = 0x20000000,
+			Hallucination = 0x40000000,
+			LifetimeExpired = 0x80000000,
 		};
-	}  // namespace UnitFlags
-
-
-	constexpr uint32_t kInvalidUnitId = 0;
-	constexpr size_t kMaxUnits = 1700;
-
-	constexpr size_t kMaxMapTiles = 256;		// 1.16.1 맵 최대 크기(타일), OpenBW tile_region_index도 256x256 고정
-	constexpr int32_t kMaxPlayerColors = 16;	// 1.16.1 플레이어 색상 수(tunit.pcx 16행)
+	}
 
 	enum class Player : int32_t {
 		_1 = 0,
@@ -122,12 +158,6 @@ namespace SCSim
 		Neutral = 11,
 		kCount
 	};
-
-	constexpr int kMaxActionPlayers = 8;  // action_state::selection 크기
-	constexpr int kMaxSelection = 12;     // 선택 가능한 최대값(부대지정)
-
-	constexpr uint32_t kMaxSprites = 2500;	// OpenBW sprites_container 상한
-	constexpr uint32_t kMaxImages = 5000;	// OpenBW images_container 상한
 
 	enum class UnitType : int32_t {
 		TerranMarine = 0,

@@ -38,7 +38,7 @@ extern "C" {
 		uint32_t target_unit_id, SCSim::UnitType target_unit_type, bool queue);
 
 	// visible, hidden 상태의 모든 유닛을 배열로 반환.
-	SCSIM_API  int32_t SCSim_GetUnits(SCSim::Context* ctx, const SCSim::UnitData** out_units);
+	SCSIM_API int32_t SCSim_GetUnits(SCSim::Context* ctx, const SCSim::UnitData** out_units);
 
 	// 살아 있는 스프라이트·이미지 전체(숨김 포함)를 컨텍스트 소유 버퍼에 채움
 	// 스프라이트 순서는 정해져 있지 않음. 이미지는 스프라이트별로 OpenBW 목록 순서(앞 = 맨 위층)

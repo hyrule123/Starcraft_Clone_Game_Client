@@ -23,8 +23,8 @@ struct SCSim::Context
 
     std::array<UnitData, kMaxUnits> units{};  // GetUnits 결과 버퍼
 
-    std::array<SCSim::SpriteData, SCSim::kMaxSprites> sprite_buffer = {};
-    std::array<SCSim::ImageData, SCSim::kMaxImages> image_buffer = {};
+    std::array<SCSim::SpriteData, static_cast<size_t>(SCSim::kMaxSprites)> sprite_buffer = {};
+    std::array<SCSim::ImageData, static_cast<size_t>(SCSim::kMaxImages)> image_buffer = {};
     std::array<SCSim::PlayerData, static_cast<size_t>(SCSim::Player::kCount)> player_buffer = {};
 };
 
@@ -80,71 +80,6 @@ namespace // Error
 	}
 }  // namespace
 
-namespace //type traits
-{
-    template<typename T>
-    struct ContainerMaxSize;
-
-    template<typename T, size_t N, size_t G>
-    struct ContainerMaxSize<bwgame::object_container<T, N, G>>
-    {
-        static constexpr size_t value = N;
-    };
-
-    template<typename T>
-    struct StaticVectorCapacity;
-
-    template<typename T, size_t N>
-    struct StaticVectorCapacity<bwgame::static_vector<T, N>>
-    {
-        static constexpr size_t value = N;
-    };
-
-    static_assert(ContainerMaxSize<decltype(bwgame::state::units_container)>::value == SCSim::kMaxUnits);
-    static_assert(ContainerMaxSize<decltype(bwgame::state::sprites_container)>::value == SCSim::kMaxSprites);
-    static_assert(ContainerMaxSize<decltype(bwgame::state::images_container)>::value == SCSim::kMaxImages);
-    using SelectionArray = decltype(bwgame::action_state::selection);
-    static_assert(std::tuple_size_v<SelectionArray> == SCSim::kMaxActionPlayers);
-    static_assert(StaticVectorCapacity<SelectionArray::value_type>::value == SCSim::kMaxSelection);
-    static_assert(std::tuple_size_v<decltype(bwgame::state::players)> == static_cast<size_t>(SCSim::Player::kCount));
-
-
-    // ---- 플래그 타입 검증 ----
-    // 1) 공개 enum과 OpenBW enum의 기반 타입이 같은지
-    static_assert(std::is_same_v<
-        std::underlying_type_t<decltype(SCSim::SpriteFlags::None)>,
-        std::underlying_type_t<bwgame::sprite_t::flags_t>>);
-    static_assert(std::is_same_v<
-        std::underlying_type_t<decltype(SCSim::ImageFlags::None)>,
-        std::underlying_type_t<bwgame::image_t::flags_t>>);
-
-    // 2) 실제 복사 대상인 flags 필드가 int이고, 경계 타입(uint32_t)에 손실 없이 담기는지
-    static_assert(std::is_same_v<decltype(bwgame::sprite_t::flags), int>);
-    static_assert(std::is_same_v<decltype(bwgame::image_t::flags), int>);
-    static_assert(sizeof(int) <= sizeof(uint32_t));
-
-    // 3) 경계 구조체 필드 타입이 공개 enum 기반 타입과 같은지
-    static_assert(std::is_same_v<decltype(SCSim::SpriteData::flags),
-        std::underlying_type_t<decltype(SCSim::SpriteFlags::None)>>);
-    static_assert(std::is_same_v<decltype(SCSim::ImageData::flags),
-        std::underlying_type_t<decltype(SCSim::ImageFlags::None)>>);
-    static_assert(std::is_same_v<decltype(bwgame::sprite_t::index), size_t>);
-    static_assert(std::is_same_v<decltype(bwgame::image_t::index), size_t>);
-    static_assert(SCSim::kMaxSprites - 1 < SCSim::kInvalidSpriteIndex);
-    static_assert(SCSim::SpriteFlags::Turret == bwgame::sprite_t::flag_turret);
-    static_assert(SCSim::SpriteFlags::Hidden == bwgame::sprite_t::flag_hidden);
-    static_assert(SCSim::SpriteFlags::Burrowed == bwgame::sprite_t::flag_burrowed);
-    static_assert(SCSim::SpriteFlags::IscriptNoBrk == bwgame::sprite_t::flag_iscript_nobrk);
-
-    static_assert(SCSim::ImageFlags::HorizontallyFlipped == bwgame::image_t::flag_horizontally_flipped);
-    static_assert(SCSim::ImageFlags::YFrozen == bwgame::image_t::flag_y_frozen);
-    static_assert(SCSim::ImageFlags::HasDirectionalFrames == bwgame::image_t::flag_has_directional_frames);
-    static_assert(SCSim::ImageFlags::HasIscriptAnimations == bwgame::image_t::flag_has_iscript_animations);
-    static_assert(SCSim::ImageFlags::Clickable == bwgame::image_t::flag_clickable);
-    static_assert(SCSim::ImageFlags::Hidden == bwgame::image_t::flag_hidden);
-    static_assert(SCSim::ImageFlags::UsesSpecialOffset == bwgame::image_t::flag_uses_special_offset);
-}
-
 namespace // Snapshot
 {
     void FillImageData(const bwgame::image_t& image, SCSim::ImageData& out)
@@ -185,7 +120,8 @@ namespace {
 
 		out.sprite_index = static_cast<uint32_t>(u->sprite->index);
 
-        if (funcs.us_hidden(u)) { out.flags |= SCSim::UnitFlags::Hidden; }
+        out.status_flags = static_cast<uint32_t>(u->status_flags);
+        out.sprite_flags = static_cast<uint32_t>(u->sprite->flags);
     }
 
 }  // namespace
@@ -247,7 +183,7 @@ extern "C" {
                     // OpenBW는 크기 상한을 검사하지 않고, 256 초과 시 tile_region_index 범위 밖에 씀
                     const size_t tile_width = player_st.game->map_tile_width;
                     const size_t tile_height = player_st.game->map_tile_height;
-                    if (tile_width > SCSim::kMaxMapTiles || tile_height > SCSim::kMaxMapTiles)
+                    if (tile_width > static_cast<size_t>(SCSim::kMaxMapTiles) || tile_height > static_cast<size_t>(SCSim::kMaxMapTiles))
                     {
                         throw std::runtime_error("map size " + std::to_string(tile_width) + "x" + std::to_string(tile_height) +
                             " exceeds " + std::to_string(SCSim::kMaxMapTiles) + "x" + std::to_string(SCSim::kMaxMapTiles) + " tiles");
@@ -413,7 +349,7 @@ extern "C" {
         }
         try {
             bwgame::action_functions funcs(ctx->sim.st(), ctx->action_st);
-            std::array<bwgame::unit_t*, SCSim::kMaxSelection> units{};  // 남는 칸은 nullptr
+            std::array<bwgame::unit_t*, static_cast<size_t>(SCSim::kMaxSelection)> units{};  // 남는 칸은 nullptr
             for (int i = 0; i < count; ++i) {
                 units[i] = funcs.get_unit(bwgame::unit_id_32(unit_ids[i]));  // 무효면 nullptr
             }
@@ -651,3 +587,102 @@ extern "C" {
     }
         
 	}  // extern "C"
+
+
+
+    namespace //type traits
+    {
+        template<typename T>
+        struct ContainerMaxSize;
+
+        template<typename T, size_t N, size_t G>
+        struct ContainerMaxSize<bwgame::object_container<T, N, G>>
+        {
+            static constexpr size_t value = N;
+        };
+
+        template<typename T>
+        struct StaticVectorCapacity;
+
+        template<typename T, size_t N>
+        struct StaticVectorCapacity<bwgame::static_vector<T, N>>
+        {
+            static constexpr size_t value = N;
+        };
+
+        static_assert(ContainerMaxSize<decltype(bwgame::state::units_container)>::value == SCSim::kMaxUnits);
+        static_assert(ContainerMaxSize<decltype(bwgame::state::sprites_container)>::value == SCSim::kMaxSprites);
+        static_assert(ContainerMaxSize<decltype(bwgame::state::images_container)>::value == SCSim::kMaxImages);
+        using SelectionArray = decltype(bwgame::action_state::selection);
+        static_assert(std::tuple_size_v<SelectionArray> == SCSim::kMaxActionPlayers);
+        static_assert(StaticVectorCapacity<SelectionArray::value_type>::value == SCSim::kMaxSelection);
+        static_assert(std::tuple_size_v<decltype(bwgame::state::players)> == static_cast<size_t>(SCSim::Player::kCount));
+
+
+        // ---- 플래그 타입 검증 ----
+        // 1) 공개 enum과 OpenBW enum의 기반 타입이 같은지
+        static_assert(std::is_same_v<
+            std::underlying_type_t<decltype(SCSim::SpriteFlags::None)>,
+            std::underlying_type_t<bwgame::sprite_t::flags_t>>);
+        static_assert(std::is_same_v<
+            std::underlying_type_t<decltype(SCSim::ImageFlags::None)>,
+            std::underlying_type_t<bwgame::image_t::flags_t>>);
+
+        // 2) 실제 복사 대상인 flags 필드가 int이고, 경계 타입(uint32_t)에 손실 없이 담기는지
+        static_assert(std::is_same_v<decltype(bwgame::sprite_t::flags), int>);
+        static_assert(std::is_same_v<decltype(bwgame::image_t::flags), int>);
+        static_assert(sizeof(int) <= sizeof(uint32_t));
+
+        // 3) 경계 구조체 필드 타입이 공개 enum 기반 타입과 같은지
+        static_assert(std::is_same_v<decltype(SCSim::SpriteData::flags),
+            std::underlying_type_t<decltype(SCSim::SpriteFlags::None)>>);
+        static_assert(std::is_same_v<decltype(SCSim::ImageData::flags),
+            std::underlying_type_t<decltype(SCSim::ImageFlags::None)>>);
+        static_assert(std::is_same_v<decltype(bwgame::sprite_t::index), size_t>);
+        static_assert(std::is_same_v<decltype(bwgame::image_t::index), size_t>);
+        static_assert(static_cast<uint32_t>(SCSim::kMaxSprites) - 1 < SCSim::kInvalidSpriteIndex);
+        static_assert(SCSim::SpriteFlags::Turret == bwgame::sprite_t::flag_turret);
+        static_assert(SCSim::SpriteFlags::Hidden == bwgame::sprite_t::flag_hidden);
+        static_assert(SCSim::SpriteFlags::Burrowed == bwgame::sprite_t::flag_burrowed);
+        static_assert(SCSim::SpriteFlags::IscriptNoBrk == bwgame::sprite_t::flag_iscript_nobrk);
+
+        static_assert(SCSim::ImageFlags::HorizontallyFlipped == bwgame::image_t::flag_horizontally_flipped);
+        static_assert(SCSim::ImageFlags::YFrozen == bwgame::image_t::flag_y_frozen);
+        static_assert(SCSim::ImageFlags::HasDirectionalFrames == bwgame::image_t::flag_has_directional_frames);
+        static_assert(SCSim::ImageFlags::HasIscriptAnimations == bwgame::image_t::flag_has_iscript_animations);
+        static_assert(SCSim::ImageFlags::Clickable == bwgame::image_t::flag_clickable);
+        static_assert(SCSim::ImageFlags::Hidden == bwgame::image_t::flag_hidden);
+        static_assert(SCSim::ImageFlags::UsesSpecialOffset == bwgame::image_t::flag_uses_special_offset);
+
+        // unit_t::status_flags 원본 비트 일치 검증
+        static_assert(SCSim::UnitStatusFlags::Completed == bwgame::unit_t::status_flag_completed);
+        static_assert(SCSim::UnitStatusFlags::GroundedBuilding == bwgame::unit_t::status_flag_grounded_building);
+        static_assert(SCSim::UnitStatusFlags::Flying == bwgame::unit_t::status_flag_flying);
+        static_assert(SCSim::UnitStatusFlags::Burrowed == bwgame::unit_t::status_flag_burrowed);
+        static_assert(SCSim::UnitStatusFlags::InBunker == bwgame::unit_t::status_flag_in_bunker);
+        static_assert(SCSim::UnitStatusFlags::Loaded == bwgame::unit_t::status_flag_loaded);
+        static_assert(SCSim::UnitStatusFlags::RequiresDetector == bwgame::unit_t::status_flag_requires_detector);
+        static_assert(SCSim::UnitStatusFlags::Cloaked == bwgame::unit_t::status_flag_cloaked);
+        static_assert(SCSim::UnitStatusFlags::Disabled == bwgame::unit_t::status_flag_disabled);
+        static_assert(SCSim::UnitStatusFlags::PassivelyCloaked == bwgame::unit_t::status_flag_passively_cloaked);
+        static_assert(SCSim::UnitStatusFlags::OrderNotInterruptible == bwgame::unit_t::status_flag_order_not_interruptible);
+        static_assert(SCSim::UnitStatusFlags::IscriptNoBrk == bwgame::unit_t::status_flag_iscript_nobrk);
+        static_assert(SCSim::UnitStatusFlags::CannotAttack == bwgame::unit_t::status_flag_cannot_attack);
+        static_assert(SCSim::UnitStatusFlags::CanTurn == bwgame::unit_t::status_flag_can_turn);
+        static_assert(SCSim::UnitStatusFlags::CanMove == bwgame::unit_t::status_flag_can_move);
+        static_assert(SCSim::UnitStatusFlags::Collision == bwgame::unit_t::status_flag_collision);
+        static_assert(SCSim::UnitStatusFlags::Immovable == bwgame::unit_t::status_flag_immovable);
+        static_assert(SCSim::UnitStatusFlags::GroundUnit == bwgame::unit_t::status_flag_ground_unit);
+        static_assert(SCSim::UnitStatusFlags::NoCollide == bwgame::unit_t::status_flag_no_collide);
+        static_assert(SCSim::UnitStatusFlags::Gathering == bwgame::unit_t::status_flag_gathering);
+        static_assert(SCSim::UnitStatusFlags::TurretWalking == bwgame::unit_t::status_flag_turret_walking);
+        static_assert(SCSim::UnitStatusFlags::Invincible == bwgame::unit_t::status_flag_invincible);
+        static_assert(SCSim::UnitStatusFlags::ReadyToAttack == bwgame::unit_t::status_flag_ready_to_attack);
+        static_assert(SCSim::UnitStatusFlags::SpeedUpgrade == bwgame::unit_t::status_flag_speed_upgrade);
+        static_assert(SCSim::UnitStatusFlags::CooldownUpgrade == bwgame::unit_t::status_flag_cooldown_upgrade);
+        static_assert(SCSim::UnitStatusFlags::Hallucination == bwgame::unit_t::status_flag_hallucination);
+        static_assert(SCSim::UnitStatusFlags::LifetimeExpired == bwgame::unit_t::status_flag_lifetime_expired);
+
+        static_assert(std::is_same_v<decltype(SCSim::UnitData::sprite_flags),
+            std::underlying_type_t<decltype(SCSim::SpriteFlags::None)>>);
+    }
