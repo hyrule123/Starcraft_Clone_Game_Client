@@ -25,7 +25,7 @@ struct SCSim::Context
 
     std::array<SCSim::SpriteData, SCSim::kMaxSprites> sprite_buffer = {};
     std::array<SCSim::ImageData, SCSim::kMaxImages> image_buffer = {};
-	std::array<SCSim::PlayerData, (size_t)SCSim::Player::kCount> player_buffer = {};
+    std::array<SCSim::PlayerData, static_cast<size_t>(SCSim::Player::kCount)> player_buffer = {};
 };
 
 namespace // Error
@@ -91,12 +91,25 @@ namespace //type traits
         static constexpr size_t value = N;
     };
 
+    template<typename T>
+    struct StaticVectorCapacity;
+
+    template<typename T, size_t N>
+    struct StaticVectorCapacity<bwgame::static_vector<T, N>>
+    {
+        static constexpr size_t value = N;
+    };
+
+    static_assert(ContainerMaxSize<decltype(bwgame::state::units_container)>::value == SCSim::kMaxUnits);
     static_assert(ContainerMaxSize<decltype(bwgame::state::sprites_container)>::value == SCSim::kMaxSprites);
     static_assert(ContainerMaxSize<decltype(bwgame::state::images_container)>::value == SCSim::kMaxImages);
+    using SelectionArray = decltype(bwgame::action_state::selection);
+    static_assert(std::tuple_size_v<SelectionArray> == SCSim::kMaxActionPlayers);
+    static_assert(StaticVectorCapacity<SelectionArray::value_type>::value == SCSim::kMaxSelection);
     static_assert(std::tuple_size_v<decltype(bwgame::state::players)> == static_cast<size_t>(SCSim::Player::kCount));
 
-    // 공개 플래그 값이 OpenBW 원본 비트와 일치하는지 검증
-        // ---- 플래그 타입 검증 ----
+
+    // ---- 플래그 타입 검증 ----
     // 1) 공개 enum과 OpenBW enum의 기반 타입이 같은지
     static_assert(std::is_same_v<
         std::underlying_type_t<decltype(SCSim::SpriteFlags::None)>,
@@ -115,6 +128,9 @@ namespace //type traits
         std::underlying_type_t<decltype(SCSim::SpriteFlags::None)>>);
     static_assert(std::is_same_v<decltype(SCSim::ImageData::flags),
         std::underlying_type_t<decltype(SCSim::ImageFlags::None)>>);
+    static_assert(std::is_same_v<decltype(bwgame::sprite_t::index), size_t>);
+    static_assert(std::is_same_v<decltype(bwgame::image_t::index), size_t>);
+    static_assert(SCSim::kMaxSprites - 1 < SCSim::kInvalidSpriteIndex);
     static_assert(SCSim::SpriteFlags::Turret == bwgame::sprite_t::flag_turret);
     static_assert(SCSim::SpriteFlags::Hidden == bwgame::sprite_t::flag_hidden);
     static_assert(SCSim::SpriteFlags::Burrowed == bwgame::sprite_t::flag_burrowed);
@@ -167,7 +183,7 @@ namespace {
         out.x = u->position.x;
         out.y = u->position.y;
 
-		out.sprite_index = u->sprite ? u->sprite->index : SCSim::kInvalidSpriteIndex;
+		out.sprite_index = static_cast<uint32_t>(u->sprite->index);
 
         if (funcs.us_hidden(u)) { out.flags |= SCSim::UnitFlags::Hidden; }
     }
@@ -186,7 +202,7 @@ extern "C" {
             return new SCSim::Context(mpq_dir);
         }
         catch (const std::exception& e) {
-            SetError(e.what());
+            SetError(std::string("SCSim_Create: ") + e.what());
         }
         catch (...) {
             SetError("SCSim_Create: unknown exception");
@@ -270,7 +286,7 @@ extern "C" {
         return false;
     }
 
-    uint32_t SCSim_CreateUnit(SCSim::Context* ctx, SCSim::UnitType unit_type, SCSim::Player owner, int x, int y)
+    uint32_t SCSim_CreateUnit(SCSim::Context* ctx, SCSim::UnitType unit_type, SCSim::Player owner, int32_t x, int32_t y)
     {
         if (!CheckContext(ctx, "SCSim_CreateUnit"))
         {
@@ -362,7 +378,7 @@ extern "C" {
             return true;
         }
         catch (const std::exception& e) {
-            SetError(e.what());
+            SetError(std::string("SCSim_NextFrame: ") + e.what());
         }
         catch (...) {
             SetError("SCSim_NextFrame: unknown exception");
@@ -381,10 +397,10 @@ extern "C" {
     }
 
     int32_t SCSim_Select(SCSim::Context* ctx, SCSim::Player owner, const uint32_t* unit_ids,
-        int count) {
+        int32_t count) {
         if (!CheckContext(ctx, "SCSim_Select")) { return -1; }
         
-        // 촤대 Action Player = 8명
+        // 최대 Action Player = 8명
         if (!CheckActionPlayerRange(owner, "SCSim_Select")) { return -1; }
 
         if (count < 0 || count > SCSim::kMaxSelection) {
@@ -401,18 +417,18 @@ extern "C" {
             for (int i = 0; i < count; ++i) {
                 units[i] = funcs.get_unit(bwgame::unit_id_32(unit_ids[i]));  // 무효면 nullptr
             }
-            funcs.action_select((int)owner, units);  // nullptr은 OpenBW가 건너뜀
-            return static_cast<int32_t>(ctx->action_st.selection[(int)owner].size());
+            funcs.action_select(static_cast<int>(owner), units);  // nullptr은 OpenBW가 건너뜀
+            return static_cast<int32_t>(ctx->action_st.selection[static_cast<size_t>(owner)].size());
         }
         catch (const std::exception& e) {
-            SetError(e.what());
+            SetError(std::string("SCSim_Select: ") + e.what());
         }
         catch (...) {
             SetError("SCSim_Select: unknown exception");
         }
         return -1;  // 선택 목록만 건드리므로 broken 처리 안 함
     }
-    bool SCSim_Order(SCSim::Context* ctx, SCSim::Player owner, SCSim::OrderType order_type, int x, int y,
+    bool SCSim_Order(SCSim::Context* ctx, SCSim::Player owner, SCSim::OrderType order_type, int32_t x, int32_t y,
         uint32_t target_unit_id, SCSim::UnitType target_unit_type, bool queue)
     {
         if (!CheckContext(ctx, "SCSim_Order"))
@@ -510,18 +526,32 @@ extern "C" {
             auto& st = ctx->sim.st();
             bwgame::action_functions funcs(st, ctx->action_st);
 
+            bool overflow = false;
+
             size_t count = 0;
             auto append = [&](bwgame::unit_t* u) {
+                // 유닛 컨테이너 상한 = 버퍼 크기라 넘칠 수 없지만, 버퍼 쓰기 전에 확인
+                if (count >= ctx->units.size())
+                {
+                    overflow = true;
+                    return;
+                }
                 FillUnit(funcs, u, ctx->units[count++]);
                 };
             for (bwgame::unit_t* u : bwgame::ptr(st.visible_units)) { append(u); }
             for (bwgame::unit_t* u : bwgame::ptr(st.hidden_units)) { append(u); }
 
+            if (overflow)
+            {
+				SetError("SCSim_GetUnits: unit buffer overflow");
+				return -1;
+            }
+
             *out_units = ctx->units.data();
             return static_cast<int32_t>(count);
         }
         catch (const std::exception& e) {
-            SetError(e.what());
+            SetError(std::string("SCSim_GetUnits: ") + e.what());
         }
         catch (...) {
             SetError("SCSim_GetUnits: unknown exception");

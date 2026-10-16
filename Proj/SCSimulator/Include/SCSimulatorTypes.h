@@ -64,7 +64,7 @@ namespace SCSim
 		uint32_t flags;			// ImageFlags
 	};
 	static_assert(sizeof(ImageData) == 32);
-	constexpr uint32_t kInvalidSpriteIndex = std::numeric_limits<int32_t>::max();
+	constexpr uint32_t kInvalidSpriteIndex = std::numeric_limits<uint32_t>::max();
 
 	struct PlayerData
 	{
@@ -88,7 +88,7 @@ namespace SCSim
 		uint32_t id;
 		int32_t  x;          // 시뮬레이션 위치(u->position)
 		int32_t  y;
-		uint16_t sprite_index;
+		uint32_t sprite_index;
 		uint32_t flags;      // SCSimUnitFlags
 	};
 	static_assert(sizeof(UnitData) == 20, "UnitData layout changed. Must update FillUnit()");
