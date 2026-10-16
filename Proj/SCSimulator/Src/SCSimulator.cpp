@@ -9,54 +9,12 @@
 #include <string>
 #include <string_view>
 #include <array>
-
-// Windows.h 대신 필요한 두 함수만 선언 (OpenBW와 매크로 충돌 방지). 시그니처는 SDK와 동일
-extern "C" __declspec(dllimport) void __stdcall OutputDebugStringA(const char* output_string);
-extern "C" __declspec(dllimport) int __stdcall IsDebuggerPresent();
-namespace // Assert
-{
-    // 메시지를 출력하고, 디버거가 붙어 있으면 true
-    bool ReportAssert(const char* expr, std::string_view msg, const char* file, int line)
-    {
-        // "파일(줄): 내용" 형식이면 VS 출력 창에서 더블클릭으로 해당 줄로 이동
-        std::string text = std::string(file) + "(" + std::to_string(line) + "): SCSIM_ASSERT failed: " + expr;
-        if (!msg.empty())
-        {
-            text += " - ";
-            text += msg;
-        }
-        text += "\n";
-
-        OutputDebugStringA(text.c_str());
-        return IsDebuggerPresent() != 0;
-    }
-}  // namespace
-
-// 실패해도 진행은 계속됨. 같은 위치는 처음 한 번만 보고, msg는 실패했을 때만 평가
-#ifndef NDEBUG
-#define SCSIM_ASSERT_MSG(cond, msg) \
-	do \
-	{ \
-		static bool scsim_assert_reported_ = false; \
-		if (!(cond) && !scsim_assert_reported_) \
-		{ \
-			scsim_assert_reported_ = true; \
-			if (ReportAssert(#cond, (msg), __FILE__, __LINE__)) \
-			{ \
-				__debugbreak(); \
-			} \
-		} \
-	} while (false)
-#else
-#define SCSIM_ASSERT_MSG(cond, msg) do { (void)sizeof(cond); } while (false)
-#endif
-
-#define SCSIM_ASSERT(cond) SCSIM_ASSERT_MSG(cond, "")
+#include <tuple>
 
 // 헤더에서 전역으로 선언했으므로 정의도 전역
 struct SCSim::Context 
 {
-    explicit SCSim::Context(const char* mpq_dir) : sim(mpq_dir) {}
+    explicit Context(const char* mpq_dir) : sim(mpq_dir) {}
 
 	bwgame::game_player sim; // OpenBW game_player. 맵 로딩, 프레임 진행, 유닛 생성 등 대부분의 기능을 제공. 유저(player)를 뜻하는 게 아님!
     bwgame::action_state action_st;
@@ -67,6 +25,7 @@ struct SCSim::Context
 
     std::array<SCSim::SpriteData, SCSim::kMaxSprites> sprite_buffer = {};
     std::array<SCSim::ImageData, SCSim::kMaxImages> image_buffer = {};
+	std::array<SCSim::PlayerData, (size_t)SCSim::Player::kCount> player_buffer = {};
 };
 
 namespace // Error
@@ -124,6 +83,51 @@ namespace // Error
 
 }  // namespace
 
+namespace // Snapshot
+{
+    template<typename T>
+    struct ContainerMaxSize;
+
+    template<typename T, size_t N, size_t G>
+    struct ContainerMaxSize<bwgame::object_container<T, N, G>>
+    {
+        static constexpr size_t value = N;
+    };
+
+    static_assert(ContainerMaxSize<decltype(bwgame::state::sprites_container)>::value == SCSim::kMaxSprites);
+    static_assert(ContainerMaxSize<decltype(bwgame::state::images_container)>::value == SCSim::kMaxImages);
+    static_assert(std::tuple_size_v<decltype(bwgame::state::players)> == static_cast<size_t>(SCSim::Player::kCount));
+
+    void FillImageData(const bwgame::image_t& image, SCSim::ImageData& out)
+    {
+        out = {};
+        out.index = static_cast<uint32_t>(image.index);
+        out.sprite_index = static_cast<uint32_t>(image.sprite->index);
+        out.image_type = static_cast<uint32_t>(image.image_type->id);
+        out.frame = static_cast<uint32_t>(image.frame_index);
+        out.offset_x = image.offset.x;
+        out.offset_y = image.offset.y;
+        out.modifier = image.modifier;
+        if (image.flags & bwgame::image_t::flag_horizontally_flipped) { out.flags |= SCSim::ImageFlags::Flipped; }
+        if (image.flags & bwgame::image_t::flag_hidden) { out.flags |= SCSim::ImageFlags::Hidden; }
+    }
+
+    void FillSpriteData(const bwgame::sprite_t& sprite, uint32_t first_image, uint32_t image_count,
+        SCSim::SpriteData& out)
+    {
+        out = {};
+        out.index = static_cast<uint32_t>(sprite.index);
+        out.owner = sprite.owner;
+        out.elevation_level = sprite.elevation_level;
+        out.x = sprite.position.x;
+        out.y = sprite.position.y;
+        out.first_image = first_image;
+        out.image_count = image_count;
+        if (sprite.flags & bwgame::sprite_t::flag_hidden) { out.flags |= SCSim::SpriteFlags::Hidden; }
+        if (sprite.flags & bwgame::sprite_t::flag_turret) { out.flags |= SCSim::SpriteFlags::Turret; }
+    }
+}  // namespace
+
 namespace {
     void FillUnit(const bwgame::action_functions& funcs, const bwgame::unit_t* u,
         SCSim::UnitData& out) {
@@ -138,107 +142,6 @@ namespace {
     }
 
 }  // namespace
-
-namespace // ImageData 관련
-{
-    // ---- OpenBW 컨테이너 상한과 공개 상수 일치 검증 ----
-    template<typename T>
-    struct ContainerMaxSize;
-
-    template<typename T, size_t N, size_t G>
-    struct ContainerMaxSize<bwgame::object_container<T, N, G>>
-    {
-        static constexpr size_t value = N;
-    };
-
-    static_assert(ContainerMaxSize<decltype(bwgame::state::sprites_container)>::value == SCSim::kMaxSprites);
-    static_assert(ContainerMaxSize<decltype(bwgame::state::images_container)>::value == SCSim::kMaxImages);
-    static_assert(SCSim::kMaxImages - 1 <= UINT16_MAX);
-    static_assert(std::tuple_size_v<decltype(bwgame::action_state::selection)> == SCSim::kMaxActionPlayers);
-    static_assert(std::tuple_size_v<decltype(bwgame::action_state::control_groups)> == SCSim::kMaxActionPlayers);
-
-    // ---- depth_key 비트 배치 (하위 → 상위) ----
-    // [order 4][turret 1][mid 13][elevation 5] = 23비트
-    // mid: 지상(elevation <= 4)은 position.y, 공중은 sprite index(원작의 포인터 주소 동점 처리 대체)
-    constexpr uint32_t kOrderBits = 4;
-    constexpr uint32_t kTurretBits = 1;
-    constexpr uint32_t kMidBits = 13;
-    constexpr uint32_t kElevationBits = 5;
-
-    constexpr uint32_t kOrderShift = 0;
-    constexpr uint32_t kTurretShift = kOrderShift + kOrderBits;
-    constexpr uint32_t kMidShift = kTurretShift + kTurretBits;
-    constexpr uint32_t kElevationShift = kMidShift + kMidBits;
-
-    static_assert(kElevationShift + kElevationBits == SCSim::kDepthKeyBits);
-
-    constexpr uint32_t Mask(uint32_t bits)
-    {
-        return (1u << bits) - 1u;
-    }
-
-    static_assert(SCSim::kMaxSprites - 1 <= Mask(kMidBits));
-
-    constexpr int kGroundElevationMax = 4;	// 원작: elevation <= 4일 때만 y로 정렬
-    constexpr int kMaxMapHeight = 1 << kMidBits;	// 8192px = 256타일
-
-    // 스프라이트 단위 키 (이미지 순서 비트는 0)
-    uint32_t MakeSpriteDepthBase(const bwgame::sprite_t& sprite)
-    {
-        SCSIM_ASSERT_MSG(0 <= sprite.elevation_level && sprite.elevation_level <= static_cast<int>(Mask(kElevationBits)),
-            "Sprite elevation level out of range: " + std::to_string(sprite.elevation_level));
-
-        const uint32_t elevation = static_cast<uint32_t>(
-            std::clamp(sprite.elevation_level, 0, static_cast<int>(Mask(kElevationBits))));
-
-        uint32_t mid = 0;
-        if (sprite.elevation_level <= kGroundElevationMax)
-        {
-            // 맵 높이 <= 8192는 LoadMap에서 보장
-            mid = static_cast<uint32_t>(std::max(sprite.position.y, 0)) & Mask(kMidBits);
-        }
-        else
-        {
-            mid = static_cast<uint32_t>(sprite.index) & Mask(kMidBits);
-        }
-
-        const uint32_t turret = (sprite.flags & bwgame::sprite_t::flag_turret) ? 1u : 0u;
-
-        return (elevation << kElevationShift) | (mid << kMidShift) | (turret << kTurretShift);
-    }
-
-    // order: 스프라이트 안에서 그리는 순서 (0 = 가장 아래)
-    void FillImageData(const bwgame::image_t& image, uint32_t sprite_depth_base, uint32_t order,
-        SCSim::ImageData& out)
-    {
-		SCSIM_ASSERT_MSG(order <= Mask(kOrderBits), "image order out of range: " + std::to_string(order));
-
-        const uint32_t clamped_order = std::min(order, Mask(kOrderBits));
-
-        out.index = static_cast<uint16_t>(image.index);
-        out.sprite_index = static_cast<uint16_t>(image.sprite->index);
-        out.image_type = static_cast<uint16_t>(image.image_type->id);
-        out.frame = static_cast<uint16_t>(image.frame_index);
-        out.offset_x = static_cast<int16_t>(image.offset.x);
-        out.offset_y = static_cast<int16_t>(image.offset.y);
-        out.depth_key = sprite_depth_base | (clamped_order << kOrderShift);
-        out.modifier = static_cast<uint8_t>(image.modifier);
-        out.flags = (image.flags & bwgame::image_t::flag_horizontally_flipped)
-            ? SCSim::ImageFlags::Flipped : SCSim::ImageFlags::None;
-        out.reserved = 0;
-    }
-
-    uint8_t GetPlayerColor(const bwgame::state& st, int owner)
-    {
-        if (owner < 0 || owner >= static_cast<int>(st.players.size()))
-        {
-            SCSIM_ASSERT_MSG(false, "Sprite owner out of range: " + std::to_string(owner));
-            return 0;
-        }
-
-        return static_cast<uint8_t>(st.players[owner].color);
-    }
-}
 
 extern "C" {
 
@@ -595,112 +498,95 @@ extern "C" {
         return -1;
     }
 
-    bool SCSim_GetUnit(SCSim::Context* ctx, uint32_t unit_id, SCSim::UnitData* out_unit) {
-        if (!out_unit) {
-            SetError("SCSim_GetUnit: out_unit is null");
-            return false;
-        }
-        if (!CheckContext(ctx, "SCSim_GetUnit")) { return false; }
-        try {
-            bwgame::action_functions funcs(ctx->sim.st(), ctx->action_st);
-            const bwgame::unit_t* u = funcs.get_unit(bwgame::unit_id_32(unit_id));
-            if (!u) {
-                SetError("SCSim_GetUnit: unit not found");
-                return false;
-            }
-            FillUnit(funcs, u, *out_unit);
-            return true;
-        }
-        catch (const std::exception& e) {
-            SetError(e.what());
-        }
-        catch (...) {
-            SetError("SCSim_GetUnit: unknown exception");
-        }
-        return false;
-    }
-
-    SCSIM_API bool SCSim_GetSprites(SCSim::Context* ctx, SCSim::SpriteSnapshot* out)
+    bool SCSim_GetSprites(SCSim::Context* ctx, SCSim::SpriteSnapshot* out)
     {
         if (!CheckContext(ctx, "SCSim_GetSprites"))
         {
             return false;
         }
-
         if (out == nullptr)
         {
             SetError("SCSim_GetSprites: out is null");
             return false;
         }
+        *out = {};
 
         try
         {
-            bwgame::state& st = ctx->sim.st();
+            const bwgame::state& st = ctx->sim.st();
 
-            int32_t sprite_count = 0;
-            int32_t image_count = 0;
+            size_t sprite_count = 0;
+            size_t image_count = 0;
 
-            for (auto& line : st.sprites_on_tile_line)
+            // 살아 있는 스프라이트는 숨김 여부와 관계없이 정확히 한 타일 라인에 들어 있음
+            for (const auto& line : st.sprites_on_tile_line)
             {
-                for (bwgame::sprite_t& sprite : line)
+                for (const bwgame::sprite_t& sprite : line)
                 {
-                    if (sprite.flags & bwgame::sprite_t::flag_hidden)
+                    // 컨테이너 상한 = 버퍼 크기라 넘칠 수 없지만, 버퍼 쓰기 전에 확인
+                    if (sprite_count >= ctx->sprite_buffer.size())
                     {
-                        continue;
+                        SetError("SCSim_GetSprites: sprite buffer overflow");
+                        return false;
                     }
 
-                    const int32_t first_image = image_count;
-                    const uint32_t depth_base = MakeSpriteDepthBase(sprite);
-
-                    // 원작은 images 리스트를 역순으로 그림 → 역순 순회 순서가 곧 아래 → 위
-                    uint32_t order = 0;
-                    for (auto it = sprite.images.rbegin(); it != sprite.images.rend(); ++it)
+                    const size_t first_image = image_count;
+                    for (const bwgame::image_t& image : sprite.images)
                     {
-                        const bwgame::image_t& image = *it;
-                        if (image.flags & bwgame::image_t::flag_hidden)
+                        if (image_count >= ctx->image_buffer.size())
                         {
-                            continue;
+                            SetError("SCSim_GetSprites: image buffer overflow");
+                            return false;
                         }
-
-                        FillImageData(image, depth_base, order, ctx->image_buffer[image_count]);
+                        FillImageData(image, ctx->image_buffer[image_count]);
                         ++image_count;
-                        ++order;
                     }
 
-                    // 보이는 이미지가 없으면 스프라이트도 제외 (엔진 쪽은 Disable)
-                    if (image_count == first_image)
-                    {
-                        continue;
-                    }
-
-                    SCSim::SpriteData& sd = ctx->sprite_buffer[sprite_count];
-                    sd.index = static_cast<uint16_t>(sprite.index);
-                    sd.player_color = GetPlayerColor(st, sprite.owner);
-                    sd.reserved = 0;
-                    sd.x = sprite.position.x;
-                    sd.y = sprite.position.y;
-                    sd.first_image = static_cast<uint16_t>(first_image);
-                    sd.image_count = static_cast<uint16_t>(image_count - first_image);
+                    FillSpriteData(sprite, static_cast<uint32_t>(first_image),
+                        static_cast<uint32_t>(image_count - first_image), ctx->sprite_buffer[sprite_count]);
                     ++sprite_count;
                 }
             }
 
             out->sprites = ctx->sprite_buffer.data();
             out->images = ctx->image_buffer.data();
-            out->sprite_count = sprite_count;
-            out->image_count = image_count;
+            out->sprite_count = static_cast<int32_t>(sprite_count);
+            out->image_count = static_cast<int32_t>(image_count);
             return true;
         }
         catch (const std::exception& e)
         {
             SetError(std::string("SCSim_GetSprites: ") + e.what());
-            return false;
         }
         catch (...)
         {
             SetError("SCSim_GetSprites: unknown exception");
-            return false;
         }
+        return false;
+    }
+
+    int32_t SCSim_GetPlayers(SCSim::Context* ctx, const SCSim::PlayerData** out_players)
+    {
+        if (!out_players)
+        {
+            SetError("SCSim_GetPlayers: out_players is null");
+            return -1;
+        }
+        *out_players = nullptr;
+        if (!CheckContext(ctx, "SCSim_GetPlayers"))
+        {
+            return -1;
+        }
+
+        const auto& players = ctx->sim.st().players;
+        for (size_t i = 0; i < players.size(); ++i)
+        {
+            ctx->player_buffer[i] = {};
+            ctx->player_buffer[i].color = players[i].color;
+        }
+
+        *out_players = ctx->player_buffer.data();
+        return static_cast<int32_t>(players.size());
     }
         
 	}  // extern "C"

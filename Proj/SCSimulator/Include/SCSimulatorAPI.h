@@ -40,12 +40,13 @@ extern "C" {
 	// visible, hidden 상태의 모든 유닛을 배열로 반환.
 	SCSIM_API  int32_t SCSim_GetUnits(SCSim::Context* ctx, const SCSim::UnitData** out_units);
 
-	// id의 유닛 정보를 *out_unit에 채움. 없거나(사망/무효) 실패하면 false
-	// '숨겨진' 유닛도 조회 가능
-	SCSIM_API bool SCSim_GetUnit(SCSim::Context* ctx, uint32_t unit_id,
-		SCSim::UnitData* out_unit);
-
-	// 보이는 스프라이트·이미지 전체를 컨텍스트 소유 버퍼에 채움.
+	// 살아 있는 스프라이트·이미지 전체(숨김 포함)를 컨텍스트 소유 버퍼에 채움
+	// 스프라이트 순서는 정해져 있지 않음. 이미지는 스프라이트별로 OpenBW 목록 순서(앞 = 맨 위층)
 	// 포인터는 컨텍스트 수명 동안 유효, 내용은 다음 NextFrame / GetSprites 호출 전까지 유효
+	// 값이 경계 타입에 담기지 않으면 실패(broken 아님)
 	SCSIM_API bool SCSim_GetSprites(SCSim::Context* ctx, SCSim::SpriteSnapshot* out);
+
+	// 플레이어 12명분(Player 순서)을 컨텍스트 소유 버퍼로 반환. 실패 시 -1
+	// 포인터는 컨텍스트 수명 동안 유효, 내용은 다음 GetPlayers 호출 전까지 유효
+	SCSIM_API int32_t SCSim_GetPlayers(SCSim::Context* ctx, const SCSim::PlayerData** out_players);
 }

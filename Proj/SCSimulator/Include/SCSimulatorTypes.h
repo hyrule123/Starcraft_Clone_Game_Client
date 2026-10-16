@@ -3,9 +3,75 @@
 #include <type_traits>
 #include <limits>
 
+
 namespace SCSim
 {
 	struct Context;	// Forward
+
+	namespace SpriteFlags
+	{
+		enum : uint32_t
+		{
+			None = 0,
+			Hidden = 1u << 0,	// sprite_t::flag_hidden
+			Turret = 1u << 1,	// sprite_t::flag_turret
+		};
+	}
+
+	struct SpriteData
+	{
+		uint32_t index;				// sprite_t::index (슬롯 번호, 0도 유효)
+		int32_t  owner;				// sprite_t::owner (0~11). 색상은 SCSim_GetPlayers로 조회
+		int32_t  elevation_level;	// sprite_t::elevation_level
+		int32_t  x;					// sprite_t::position
+		int32_t  y;
+		uint32_t first_image;		// SpriteSnapshot::images 내 시작 위치
+		uint32_t image_count;		// OpenBW 목록 순서(앞 = 맨 위층)로 연속 배치. 숨김 이미지 포함
+		uint32_t flags;				// SpriteFlags
+	};
+	static_assert(sizeof(SpriteData) == 32);
+
+	namespace ImageFlags
+	{
+		enum : uint32_t
+		{
+			None = 0,
+			Flipped = 1u << 0,	// image_t::flag_horizontally_flipped
+			Hidden = 1u << 1,	// image_t::flag_hidden
+		};
+	}
+
+	struct ImageData
+	{
+		uint32_t index;			// image_t::index (슬롯 번호, 0도 유효)
+		uint32_t sprite_index;	// 소속 sprite_t::index
+		uint32_t image_type;	// image_type->id (images.dat 번호)
+		uint32_t frame;			// image_t::frame_index
+		int32_t  offset_x;		// image_t::offset (스프라이트 기준 로컬 좌표)
+		int32_t  offset_y;
+		int32_t  modifier;		// image_t::modifier
+		uint32_t flags;			// ImageFlags
+	};
+	static_assert(sizeof(ImageData) == 32);
+	constexpr uint32_t kInvalidSpriteIndex = std::numeric_limits<int32_t>::max();
+
+	struct PlayerData
+	{
+		int32_t color;			// player_t::color (LoadMap에서 0~15 보장)
+	};
+	static_assert(sizeof(PlayerData) == 4);
+
+	static_assert(std::is_trivially_copyable_v<PlayerData>&& std::is_standard_layout_v<PlayerData>);
+	static_assert(std::is_trivially_copyable_v<SpriteData>&& std::is_standard_layout_v<SpriteData>);
+	static_assert(std::is_trivially_copyable_v<ImageData>&& std::is_standard_layout_v<ImageData>);
+
+	struct SpriteSnapshot
+	{
+		const SpriteData* sprites;
+		const ImageData* images;
+		int32_t sprite_count;
+		int32_t image_count;
+	};
 
 	struct UnitData {
 		uint32_t id;
@@ -66,43 +132,7 @@ namespace SCSim
 
 	constexpr uint16_t kInvalidSpriteIndex = std::numeric_limits<uint16_t>::max();
 
-	struct SpriteData
-	{
-		uint16_t index;			// sprite_t::index (슬롯 번호, 0도 유효)
-		uint8_t  player_color;	// st.players[owner].color (0~15, tunit 행)
-		uint8_t  reserved;
-		int32_t  x;				// sprite->position
-		int32_t  y;
-		uint16_t first_image;	// SpriteSnapshot::images 내 시작 위치
-		uint16_t image_count;	// 그리는 순서(아래 → 위)로 연속 배치
-	};
-	static_assert(sizeof(SpriteData) == 16);
 
-	struct ImageData
-	{
-		uint16_t index;			// image_t::index (슬롯 번호, 0도 유효)
-		uint16_t sprite_index;	// 소속 sprite_t::index
-		uint16_t image_type;	// images.dat 번호 (GRP / Material 선택)
-		uint16_t frame;			// 최종 frame_index (텍스처 배열 슬라이스)
-		int16_t  offset_x;		// image->offset (스프라이트 기준 로컬 좌표)
-		int16_t  offset_y;
-		uint32_t depth_key;		// 클수록 위에 그려짐. 하위 kDepthKeyBits 사용
-		uint8_t  modifier;		// 그리기 방식 (현재 0/1/10만 처리)
-		uint8_t  flags;			// ImageFlags
-		uint16_t reserved;
-	};
-	static_assert(sizeof(ImageData) == 20);
-
-	struct SpriteSnapshot
-	{
-		const SpriteData* sprites;
-		const ImageData* images;
-		int32_t sprite_count;
-		int32_t image_count;
-	};
-
-	static_assert(std::is_trivially_copyable_v<SpriteData>&& std::is_standard_layout_v<SpriteData>);
-	static_assert(std::is_trivially_copyable_v<ImageData>&& std::is_standard_layout_v<ImageData>);
 
 	enum class UnitType : int32_t {
 		TerranMarine = 0,
