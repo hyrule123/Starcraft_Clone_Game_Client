@@ -8,13 +8,17 @@ namespace SCSim
 {
 	struct Context;	// Forward
 
+	// sprite_t::flags 원본 비트 (1.16.1 배치). 아래에 없는 비트는 계약에 포함되지 않음
+	// 0x8(selected)은 OpenBW에서 설정되지 않아 항상 0 — 선택 정보로 사용 금지
 	namespace SpriteFlags
 	{
 		enum : uint32_t
 		{
 			None = 0,
-			Hidden = 1u << 0,	// sprite_t::flag_hidden
-			Turret = 1u << 1,	// sprite_t::flag_turret
+			Turret = 0x10,
+			Hidden = 0x20,
+			Burrowed = 0x40,
+			IscriptNoBrk = 0x80,	// iscript nobrkcodestart~end 구간 (애니메이션 중단 불가)
 		};
 	}
 
@@ -31,13 +35,20 @@ namespace SCSim
 	};
 	static_assert(sizeof(SpriteData) == 32);
 
+	// image_t::flags 원본 비트 (1.16.1 배치). 아래에 없는 비트는 계약에 포함되지 않음
+	// 0x1(redraw)은 OpenBW에서 해제되지 않아 의미 없음 — 사용 금지
 	namespace ImageFlags
 	{
 		enum : uint32_t
 		{
 			None = 0,
-			Flipped = 1u << 0,	// image_t::flag_horizontally_flipped
-			Hidden = 1u << 1,	// image_t::flag_hidden
+			HorizontallyFlipped = 0x2,
+			YFrozen = 0x4,
+			HasDirectionalFrames = 0x8,
+			HasIscriptAnimations = 0x10,
+			Clickable = 0x20,
+			Hidden = 0x40,
+			UsesSpecialOffset = 0x80,
 		};
 	}
 
@@ -117,22 +128,6 @@ namespace SCSim
 
 	constexpr uint32_t kMaxSprites = 2500;	// OpenBW sprites_container 상한
 	constexpr uint32_t kMaxImages = 5000;	// OpenBW images_container 상한
-
-	// depth_key 유효 비트 수. 셰이더에서 2^kDepthKeyBits 기준으로 정규화
-	constexpr uint32_t kDepthKeyBits = 23;
-
-	namespace ImageFlags
-	{
-		enum : uint8_t
-		{
-			None = 0,
-			Flipped = 1u << 0,
-		};
-	}
-
-	constexpr uint16_t kInvalidSpriteIndex = std::numeric_limits<uint16_t>::max();
-
-
 
 	enum class UnitType : int32_t {
 		TerranMarine = 0,

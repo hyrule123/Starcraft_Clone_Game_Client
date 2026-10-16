@@ -78,12 +78,9 @@ namespace // Error
 		}
 		return true;
 	}
-
-
-
 }  // namespace
 
-namespace // Snapshot
+namespace //type traits
 {
     template<typename T>
     struct ContainerMaxSize;
@@ -98,6 +95,42 @@ namespace // Snapshot
     static_assert(ContainerMaxSize<decltype(bwgame::state::images_container)>::value == SCSim::kMaxImages);
     static_assert(std::tuple_size_v<decltype(bwgame::state::players)> == static_cast<size_t>(SCSim::Player::kCount));
 
+    // 공개 플래그 값이 OpenBW 원본 비트와 일치하는지 검증
+        // ---- 플래그 타입 검증 ----
+    // 1) 공개 enum과 OpenBW enum의 기반 타입이 같은지
+    static_assert(std::is_same_v<
+        std::underlying_type_t<decltype(SCSim::SpriteFlags::None)>,
+        std::underlying_type_t<bwgame::sprite_t::flags_t>>);
+    static_assert(std::is_same_v<
+        std::underlying_type_t<decltype(SCSim::ImageFlags::None)>,
+        std::underlying_type_t<bwgame::image_t::flags_t>>);
+
+    // 2) 실제 복사 대상인 flags 필드가 int이고, 경계 타입(uint32_t)에 손실 없이 담기는지
+    static_assert(std::is_same_v<decltype(bwgame::sprite_t::flags), int>);
+    static_assert(std::is_same_v<decltype(bwgame::image_t::flags), int>);
+    static_assert(sizeof(int) <= sizeof(uint32_t));
+
+    // 3) 경계 구조체 필드 타입이 공개 enum 기반 타입과 같은지
+    static_assert(std::is_same_v<decltype(SCSim::SpriteData::flags),
+        std::underlying_type_t<decltype(SCSim::SpriteFlags::None)>>);
+    static_assert(std::is_same_v<decltype(SCSim::ImageData::flags),
+        std::underlying_type_t<decltype(SCSim::ImageFlags::None)>>);
+    static_assert(SCSim::SpriteFlags::Turret == bwgame::sprite_t::flag_turret);
+    static_assert(SCSim::SpriteFlags::Hidden == bwgame::sprite_t::flag_hidden);
+    static_assert(SCSim::SpriteFlags::Burrowed == bwgame::sprite_t::flag_burrowed);
+    static_assert(SCSim::SpriteFlags::IscriptNoBrk == bwgame::sprite_t::flag_iscript_nobrk);
+
+    static_assert(SCSim::ImageFlags::HorizontallyFlipped == bwgame::image_t::flag_horizontally_flipped);
+    static_assert(SCSim::ImageFlags::YFrozen == bwgame::image_t::flag_y_frozen);
+    static_assert(SCSim::ImageFlags::HasDirectionalFrames == bwgame::image_t::flag_has_directional_frames);
+    static_assert(SCSim::ImageFlags::HasIscriptAnimations == bwgame::image_t::flag_has_iscript_animations);
+    static_assert(SCSim::ImageFlags::Clickable == bwgame::image_t::flag_clickable);
+    static_assert(SCSim::ImageFlags::Hidden == bwgame::image_t::flag_hidden);
+    static_assert(SCSim::ImageFlags::UsesSpecialOffset == bwgame::image_t::flag_uses_special_offset);
+}
+
+namespace // Snapshot
+{
     void FillImageData(const bwgame::image_t& image, SCSim::ImageData& out)
     {
         out = {};
@@ -108,8 +141,7 @@ namespace // Snapshot
         out.offset_x = image.offset.x;
         out.offset_y = image.offset.y;
         out.modifier = image.modifier;
-        if (image.flags & bwgame::image_t::flag_horizontally_flipped) { out.flags |= SCSim::ImageFlags::Flipped; }
-        if (image.flags & bwgame::image_t::flag_hidden) { out.flags |= SCSim::ImageFlags::Hidden; }
+        out.flags = static_cast<uint32_t>(image.flags);
     }
 
     void FillSpriteData(const bwgame::sprite_t& sprite, uint32_t first_image, uint32_t image_count,
@@ -123,8 +155,7 @@ namespace // Snapshot
         out.y = sprite.position.y;
         out.first_image = first_image;
         out.image_count = image_count;
-        if (sprite.flags & bwgame::sprite_t::flag_hidden) { out.flags |= SCSim::SpriteFlags::Hidden; }
-        if (sprite.flags & bwgame::sprite_t::flag_turret) { out.flags |= SCSim::SpriteFlags::Turret; }
+        out.flags = static_cast<uint32_t>(sprite.flags);
     }
 }  // namespace
 
