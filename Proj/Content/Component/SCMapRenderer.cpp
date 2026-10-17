@@ -36,34 +36,9 @@ namespace sc
 		Super::Init();
 
 		using namespace engine;
-		using namespace engine::literals;
 
-		bool result = SetMesh("Mesh_Standard2D_Rect");
-		ASSERT(result);
-
-		constexpr HashedStringView material_name = "Material_SCMap";
-		std::shared_ptr<Material> map_mtrl = ResourceManager::GetInst().Find<Material>(material_name);
-
-		if (map_mtrl == nullptr)
-		{
-			map_mtrl = EntityManager::CreateEntity<Material>();
-
-			std::shared_ptr<PipelineState> pipeline_state = EntityManager::GetInst().CreateEntity<PipelineState>();
-			pipeline_state->SetInstanceDataStride(sizeof(MapInfoCB));
-			pipeline_state->SetVertexShader("Shader/SCMapRender_VS.cso");
-			pipeline_state->SetPixelShader("Shader/SCMapRender_PS.cso");
-			pipeline_state->SetDepthStencilState("DSS_Default");
-			pipeline_state->SetRasterizerState("RSS_Solid_Back");
-			pipeline_state->SetInputLayout("InputLayout_Standard2D");
-			map_mtrl->SetPipelineState(sc::kScOpaquePass, pipeline_state);
-
-			ResourceManager::GetInst().AddResource(material_name, map_mtrl);
-		}
-		ASSERT(map_mtrl);
-		SetMaterial(0, map_mtrl);
-
-		PipelineState* pipeline_state = map_mtrl->GetPipelineState(sc::kScOpaquePass);
-		ASSERT(pipeline_state);
+		SetMesh(SCResourceManager::GetInst().GetMapMesh());
+		SetMaterial(0, SCResourceManager::GetInst().GetMapMaterial());
 
 		SetEnable(false);
 	}

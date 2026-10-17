@@ -32,8 +32,9 @@ ImagePSInput main(ImageVSInput input)
 	// 월드 좌표로 변경(x right, y up -> y 반전)
 	const float2 vtx_world = ScToWorld(vtx_sc.x, vtx_sc.y);
 	
-	//차후 depth_key 추가 필요
 	output.position = mul(float4(vtx_world, 0.0, 1.0), g_camera.view_proj);
+	
+	output.position.z = float(inst.depth_key + 1u) * kScDepthScale * output.position.w; // SC 자체 정렬 기준이 들어있는 depth_key로 변경한다.
 
 	output.frame = inst.frame;
 	output.color = GetSpriteBits(inst.flags, kSpriteColorShift, kSpriteColorBits);

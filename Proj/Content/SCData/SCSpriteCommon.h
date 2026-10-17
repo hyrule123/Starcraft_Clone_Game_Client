@@ -3,14 +3,20 @@
 #include <Engine/Core/CoreMinimal.h>
 #include <Engine/Core/Debug.h>
 
+#include <SCSimulator/Include/SCSimulatorTypes.h>
+
 #include <Content/HLSL/SCImage/SCImageCommon.hlsli>
-#include <Content/HLSL/SCSpriteDebug.hlsli>
 
 #include <cmath>
 
+namespace SCSim
+{
+    struct SpriteData;
+}
+
 namespace sc
 {
-    constexpr uint32 SpriteFlagMask(uint32 bits)
+    constexpr uint32_t Mask32(uint32_t bits)
     {
         return (1u << bits) - 1u;
     }
@@ -18,37 +24,16 @@ namespace sc
     inline uint32 PackSpriteFlags(bool flipped, uint32 player_color,
         uint32 modifier, uint32 modifier_data, uint32 lut_table)
     {
-        ASSERT(player_color <= SpriteFlagMask(kSpriteColorBits));
-        ASSERT(modifier <= SpriteFlagMask(kSpriteModifierBits));
-        ASSERT(modifier_data <= SpriteFlagMask(kSpriteModifierDataBits));
-        ASSERT(lut_table <= SpriteFlagMask(kSpriteLutBits));
+        ASSERT(player_color <= Mask32(kSpriteColorBits));
+        ASSERT(modifier <= Mask32(kSpriteModifierBits));
+        ASSERT(modifier_data <= Mask32(kSpriteModifierDataBits));
+        ASSERT(lut_table <= Mask32(kSpriteLutBits));
 
         return ((flipped ? 1u : 0u) << kSpriteFlippedShift)
             | (player_color << kSpriteColorShift)
             | (modifier << kSpriteModifierShift)
             | (modifier_data << kSpriteModifierDataShift)
             | (lut_table << kSpriteLutShift);
-    }
-
-    constexpr uint32 SpriteFlagMaskDebug(uint32 bits)
-    {
-        return (1u << bits) - 1u;
-    }
-
-    inline uint32 PackSpriteFlagsDebug(bool flipped, uint32 player_color,
-
-        uint32 modifier, uint32 modifier_data, uint32 lut_table)
-    {
-        ASSERT(player_color <= SpriteFlagMaskDebug(kSpriteColorBitsDebug));
-        ASSERT(modifier <= SpriteFlagMaskDebug(kSpriteModifierBitsDebug));
-        ASSERT(modifier_data <= SpriteFlagMaskDebug(kSpriteModifierDataBitsDebug));
-        ASSERT(lut_table <= SpriteFlagMaskDebug(kSpriteLutBitsDebug));
-
-        return ((flipped ? 1u : 0u) << kSpriteFlippedShiftDebug)
-            | (player_color << kSpriteColorShiftDebug)
-            | (modifier << kSpriteModifierShiftDebug)
-            | (modifier_data << kSpriteModifierDataShiftDebug)
-            | (lut_table << kSpriteLutShiftDebug);
     }
 
     constexpr float kSpriteDefaultZ = 0.5f;
@@ -77,5 +62,12 @@ namespace sc
         Normal,
         Shadow,
         kCount
+    };
+
+    // SyncSprites가 이미지마다 1회 구성해 전달하는 값
+    struct SCImageParam
+    {
+        uint32_t depth_key = 0;
+        uint32_t player_color = 0;
     };
 }

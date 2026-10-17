@@ -2,6 +2,7 @@
 #include <Engine/Game/Component/Renderer.h>
 
 #include <SCSimulator/Include/SCSimulatorTypes.h>
+#include <Content/SCData/SCSpriteCommon.h>
 
 namespace engine
 {
@@ -10,7 +11,6 @@ namespace engine
 
 namespace sc
 {
-
     class SCImageRenderer :
         public engine::Renderer
     {
@@ -22,13 +22,13 @@ namespace sc
         
         virtual void Awake() override;
 
-		void ApplySnapshot(const SCSim::ImageData& img_data, uint8_t player_color);
+		void ApplySnapshot(const SCSim::ImageData& img_data, const SCImageParam& img_param);
 
 		virtual void WriteInstanceData(engine::DataBlock data_block) override;
 
     private:
         SCSim::ImageData img_data_cache_ = {};
-        uint8_t player_color_ = {};
+        SCImageParam img_param_cache_ = {};
     };
 }
 

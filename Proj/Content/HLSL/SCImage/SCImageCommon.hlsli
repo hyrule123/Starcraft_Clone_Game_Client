@@ -51,6 +51,14 @@ static_assert(kSpriteColorShift + kSpriteColorBits <= kSpriteModifierShift);
 static_assert(kSpriteModifierShift + kSpriteModifierBits <= kSpriteModifierDataShift);
 static_assert(kSpriteModifierDataShift + kSpriteModifierDataBits <= kSpriteLutShift);
 static_assert(kSpriteLutShift + kSpriteLutBits <= 32);
+
+#endif
+
+// 깊이 키 → z 변환 배율 (2^-24). z = (key + 1) * kScDepthScale, 키 24비트 이내에서 정확히 표현
+#ifdef __HLSL
+static const float kScDepthScale = 1.0 / 16777216.0;
+#else
+constexpr float kScDepthScale = 1.0f / 16777216.0f;
 #endif
 
 struct ImageVSInput

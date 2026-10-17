@@ -132,9 +132,6 @@
     <ClInclude Include="GameObject\SCUnitDebug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Component\SCSpriteDebugRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SCData\SCSpriteCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -254,9 +251,6 @@
     <ClCompile Include="GameObject\SCUnitDebug.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Component\SCSpriteDebugRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Script\CameraMoveScript.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -267,6 +261,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Component\SCImageRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SCData\SCSpriteCommon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -287,8 +284,6 @@
     <FxCompile Include="HLSL\SCMapBaker_CS.hlsl" />
     <FxCompile Include="HLSL\SCMapRender_PS.hlsl" />
     <FxCompile Include="HLSL\SCMapRender_VS.hlsl" />
-    <FxCompile Include="HLSL\SCSpriteDebug_VS.hlsl" />
-    <FxCompile Include="HLSL\SCSpriteDebug_PS.hlsl" />
     <FxCompile Include="HLSL\SCImage\SCImage_VS.hlsl" />
     <FxCompile Include="HLSL\SCImage\SCImageOpaque_PS.hlsl" />
     <FxCompile Include="HLSL\SCImage\SCImageShadow_PS.hlsl" />
@@ -298,7 +293,6 @@
     <None Include="HLSL\SCMapRender.hlsli" />
     <None Include="HLSL\SCMapCommon.hlsli" />
     <None Include="HLSL\SCMapTileSet.hlsli" />
-    <None Include="HLSL\SCSpriteDebug.hlsli" />
     <None Include="HLSL\SCImage\SCImageCommon.hlsli" />
   </ItemGroup>
 </Project>

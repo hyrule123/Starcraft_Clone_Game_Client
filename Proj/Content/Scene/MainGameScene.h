@@ -32,7 +32,7 @@ namespace sc
     {
         engine::weak_handle_ptr<SCImageObj> object;
         uint32_t serial = 0;
-        uint16_t sprite_index = SCSim::kInvalidSpriteIndex;	// 현재 부모 스프라이트 슬롯 (재부모화 판정)
+        uint32_t sprite_index = SCSim::kInvalidSpriteIndex;	// 현재 부모 스프라이트 슬롯 (재부모화 판정)
     };
 
     class MainGameScene :
@@ -68,6 +68,9 @@ namespace sc
         // 스프라이트 이미지
         std::array<SpriteSlot, SCSim::kMaxSprites> sprite_slots_ = {};
         std::array<ImageSlot, SCSim::kMaxImages> image_slots_ = {};
+		std::array<SCSim::PlayerData, static_cast<size_t>(SCSim::Player::kCount)> player_data_ = {};
+        int32_t player_count_ = 0;
+
         uint32_t sprite_sync_serial_ = 0;
     };
 }

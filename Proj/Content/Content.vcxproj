@@ -248,7 +248,6 @@
     <ClInclude Include="Legacy\Script\SCUnitBehavior.h" />
     <ClInclude Include="SCData\SCTileSetPcxLUT.h" />
     <ClInclude Include="GameObject\SCUnitDebug.h" />
-    <ClInclude Include="Component\SCSpriteDebugRenderer.h" />
     <ClInclude Include="GameObject\SCSpriteObj.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Legacy\GameObject\TerranMarine.h" />
@@ -264,6 +263,7 @@
   <ItemGroup>
     <ClCompile Include="GameObject\SCImageObj.cpp" />
     <ClCompile Include="Component\SCImageRenderer.cpp" />
+    <ClCompile Include="SCData\SCSpriteCommon.cpp" />
     <ClCompile Include="Script\CameraMoveScript.cpp" />
     <ClCompile Include="SCData\MPQ\MPQFile.cpp" />
     <ClCompile Include="SCData\PCXFile.cpp" />
@@ -304,7 +304,6 @@
     <ClCompile Include="Legacy\Script\SCUnitBehavior.cpp" />
     <ClCompile Include="SCData\SCTileSetPcxLUT.cpp" />
     <ClCompile Include="GameObject\SCUnitDebug.cpp" />
-    <ClCompile Include="Component\SCSpriteDebugRenderer.cpp" />
     <ClCompile Include="GameObject\SCSpriteObj.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -361,22 +360,9 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
-    <FxCompile Include="HLSL\SCSpriteDebug_PS.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-    </FxCompile>
-    <FxCompile Include="HLSL\SCSpriteDebug_VS.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="HLSL\SCImage\SCImageCommon.hlsli" />
-    <None Include="HLSL\SCSpriteDebug.hlsli" />
     <None Include="HLSL\SCMapCommon.hlsli" />
     <None Include="HLSL\SCMapRender.hlsli" />
     <None Include="HLSL\SCMapTileSet.hlsli" />

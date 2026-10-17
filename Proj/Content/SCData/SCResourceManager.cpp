@@ -82,7 +82,19 @@ namespace sc
 		CHECK_F(result, "Failed to create TileSet GPU data");
 		sc_map_baker_ = EntityManager::CreateEntity<SCMapBakeComputePass>();
 
-		CreateOriginalMaterials();
+		std::shared_ptr<DepthStencilState> sc_depth_key_dss = EntityManager::CreateEntity<DepthStencilState>();
+		{
+			D3D11_DEPTH_STENCIL_DESC desc = {};
+			desc.DepthEnable = TRUE;
+			desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+			desc.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
+			desc.StencilEnable = FALSE;
+			bool result = sc_depth_key_dss->Create(desc);
+			CHECK_F(result, "Failed to create DepthStencilState");
+		}
+
+		CreateOriginalMaterials(sc_depth_key_dss);
+		CreateMapMaterial(sc_depth_key_dss);
 		materials_.resize(sc_image_library_.grp_count());
 		CreateMesh();
 	}
@@ -441,7 +453,7 @@ namespace sc
 		return map_data;
 	}
 
-	void SCResourceManager::CreateOriginalMaterials()
+	void SCResourceManager::CreateOriginalMaterials(std::shared_ptr<engine::DepthStencilState> sc_depth_key_dss)
 	{
 		using namespace engine;
 
@@ -481,7 +493,7 @@ namespace sc
 		normal_state->SetPixelShader("Shader/SCImageOpaque_PS.cso");
 
 		normal_state->SetInstanceDataStride(sizeof(SCImageInstance));
-		normal_state->SetDepthStencilState("DSS_Default");
+		normal_state->SetDepthStencilState(sc_depth_key_dss);
 		normal_state->SetRasterizerState(rss);
 
 		normal_material->SetPipelineState(sc::kScOpaquePass, normal_state);
@@ -566,6 +578,25 @@ namespace sc
 		constexpr uint16 indices[6] = { 0, 1, 2, 0, 2, 3 };
 		result = image_mesh_->CreateIndexBuffer(indices, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		CHECK_F(result, "Failed to create index buffer");
+	}
+
+	void SCResourceManager::CreateMapMaterial(std::shared_ptr<engine::DepthStencilState> sc_depth_key_dss)
+	{
+		using namespace engine;
+		map_mesh_ = ResourceManager::GetInst().Find<Mesh>("Mesh_Standard2D_Rect");
+		CHECK(map_mesh_);
+
+		map_material_ = EntityManager::CreateEntity<Material>();
+
+		std::shared_ptr<PipelineState> pipeline_state = EntityManager::GetInst().CreateEntity<PipelineState>();
+		pipeline_state->SetInstanceDataStride(sizeof(MapInfoCB));
+		pipeline_state->SetVertexShader("Shader/SCMapRender_VS.cso");
+		pipeline_state->SetPixelShader("Shader/SCMapRender_PS.cso");
+
+		pipeline_state->SetDepthStencilState(sc_depth_key_dss);
+		pipeline_state->SetRasterizerState("RSS_Solid_Back");
+		pipeline_state->SetInputLayout("InputLayout_Standard2D");
+		map_material_->SetPipelineState(sc::kScOpaquePass, pipeline_state);
 	}
 
 	engine::StringHashTable<std::vector<uint8>> SCResourceManager::ParseMapData(const std::vector<uint8>& map_data)

@@ -1,6 +1,8 @@
 #pragma once
 #include <Engine/Game/GameObject.h>
 
+#include <Content/SCData/SCSpriteCommon.h>
+
 #include <SCSimulator/Include/SCSimulatorAPI.h>
 
 namespace sc
@@ -19,7 +21,7 @@ namespace sc
 
 		virtual void Init() override;
 
-		void ApplySnapshot(const SCSim::ImageData& image_data, uint8_t player_color);
+		void ApplySnapshot(const SCSim::ImageData& img_data, const SCImageParam& img_param);
 
     private:
 		SCSim::ImageData image_data_ = {};

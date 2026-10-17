@@ -24,6 +24,8 @@ namespace sc
 		{
 			return (modifier == kModifierShadow) ? SCImageMaterialVariant::Shadow : SCImageMaterialVariant::Normal;
 		}
+
+
 	}
 
 	SCImageRenderer::SCImageRenderer()
@@ -40,7 +42,7 @@ namespace sc
 		// Mesh와 Material 설정은 ApplySnapshot에서 처리
 		ASSERT(IsRenderReady());
 	}
-	void SCImageRenderer::ApplySnapshot(const SCSim::ImageData& img_data, uint8_t player_color)
+	void SCImageRenderer::ApplySnapshot(const SCSim::ImageData& img_data, const SCImageParam& img_param)
 	{
 		const SCImageMaterialVariant variant = GetMaterialVariant(img_data.modifier);
 
@@ -69,7 +71,7 @@ namespace sc
 
 		// 매 싱크 덮어쓰기 — WritePerObjectData가 여기서 읽음
 		img_data_cache_ = img_data;
-		player_color_ = player_color;
+		img_param_cache_ = img_param;
 	}
 
 	void SCImageRenderer::WriteInstanceData(engine::DataBlock data_block)
@@ -79,15 +81,14 @@ namespace sc
 		// Transform 월드 위치(이미지 중심) → SC 좌표 (VS가 SC 공간에서 배치 후 월드로 변환)
 		const float3 world_pos = GetTransform()->GetWorldPosition();
 
-		const bool flipped = (img_data_cache_.flags & SCSim::ImageFlags::Flipped) != 0;
+		const bool flipped = (img_data_cache_.flags & SCSim::ImageFlags::HorizontallyFlipped) != 0;
 
 		SCImageInstance data = {};
+
 		data.sc_center_pos = WorldToScInt(world_pos.x, world_pos.y);
 		data.frame = img_data_cache_.frame;
-		data.flags = (static_cast<uint32>(flipped) << kSpriteFlippedShift)
-			| (static_cast<uint32>(player_color_) << kSpriteColorShift)
-			| (static_cast<uint32>(img_data_cache_.modifier) << kSpriteModifierShift);
-		data.depth_key = img_data_cache_.depth_key;
+		data.flags = PackSpriteFlags(flipped, img_param_cache_.player_color, static_cast<uint32_t>(img_data_cache_.modifier), 0, 0);
+		data.depth_key = img_param_cache_.depth_key;
 
 		data_block.Write(data);
 	}
