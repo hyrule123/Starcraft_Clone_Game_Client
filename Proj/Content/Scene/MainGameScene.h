@@ -66,10 +66,14 @@ namespace sc
 		uint32_t sync_serial_ = 0;
 
         // 스프라이트 이미지
+
         std::array<SpriteSlot, SCSim::kMaxSprites> sprite_slots_ = {};
         std::array<ImageSlot, SCSim::kMaxImages> image_slots_ = {};
 		std::array<SCSim::PlayerData, static_cast<size_t>(SCSim::Player::kCount)> player_data_ = {};
         int32_t player_count_ = 0;
+
+        // SyncSprites 정렬용: (정렬 키 << 32) | 스냅샷 위치
+        std::array<uint64_t, SCSim::kMaxSprites> sprite_sort_buffer_ = {};
 
         uint32_t sprite_sync_serial_ = 0;
     };

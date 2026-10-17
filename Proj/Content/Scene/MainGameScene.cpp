@@ -55,58 +55,63 @@
 
 namespace // depth key
 {
-	// ---- depth_key 비트 배치 (하위 → 상위) ----
-	// [order 4][turret 1][mid 13][elevation 5] = 23비트
-	// mid: 지상(elevation <= 4)은 position.y, 공중은 sprite index(원작의 포인터 주소 동점 처리 대체)
+	// ---- 정렬 키 (31비트, 하위 → 상위) ----
+	// [index 12][turret 1][y 13][elevation 5]
+	// 상위 19비트 = OpenBW ui::sprite_depth_order (elevation | 지상이면 y, 공중이면 0 | turret)
+	// 하위 index = 동점 처리. OpenBW는 sprite_t* 주소(힙 배치 의존)로 처리 → index 오름차순으로 결정적으로 대체
+	constexpr uint32_t kIndexBits = 12;
+	constexpr uint32_t kTurretBits = 1;
+	constexpr uint32_t kYBits = 13;
+	constexpr uint32_t kElevationBits = 5;
+	constexpr uint32_t kIndexShift = 0;
+	constexpr uint32_t kTurretShift = kIndexShift + kIndexBits;
+	constexpr uint32_t kYShift = kTurretShift + kTurretBits;
+	constexpr uint32_t kElevationShift = kYShift + kYBits;
 
-	constexpr const uint32_t kOrderBits = 4;
-	constexpr const uint32_t kTurretBits = 1;
-	constexpr const uint32_t kMidBits = 13;
-	constexpr const uint32_t kElevationBits = 5;
-	constexpr const uint32_t kOrderShift = 0;
-	constexpr const uint32_t kTurretShift = kOrderShift + kOrderBits;
-	constexpr const uint32_t kMidShift = kTurretShift + kTurretBits;
-	constexpr const uint32_t kElevationShift = kMidShift + kMidBits;
+	// ---- depth_key (16비트, 하위 → 상위) ----
+	// [order 4][rank 12]
+	// rank: 이번 싱크에서 보이는 스프라이트를 정렬 키로 정렬한 순위. 스프라이트마다 고유 → 키 동점 없음
+	// order: 스프라이트 내 이미지 순서 (클수록 위)
+	constexpr uint32_t kOrderBits = 4;
+	constexpr uint32_t kRankBits = 12;
+	constexpr uint32_t kOrderShift = 0;
+	constexpr uint32_t kRankShift = kOrderShift + kOrderBits;
 
-	constexpr int kGroundElevationMax = 4;	// 원작: elevation <= 4일 때만 y로 정렬
+	constexpr int32_t kGroundElevationMax = 4;	// 원작: elevation <= 4일 때만 y로 정렬
 
-	static_assert(SCSim::kMaxSprites - 1 <= sc::Mask32(kMidBits));
+	static_assert(kElevationShift + kElevationBits <= 32, "정렬 키가 32비트를 넘음");
+	static_assert(kRankShift + kRankBits <= 24, "+1 오프셋 포함 float(2^-24 정규화)로 정확히 표현 가능해야 함");
+	static_assert(static_cast<uint32_t>(SCSim::kMaxSprites) <= (1u << kIndexBits));
+	static_assert(static_cast<uint32_t>(SCSim::kMaxSprites) <= (1u << kRankBits));
+	static_assert(static_cast<uint32_t>(SCSim::kMaxMapTiles) * 32u <= (1u << kYBits));
 
-	static_assert(kOrderBits + kTurretBits + kMidBits + kElevationBits == 23, "Depth key changed.");
-
-	uint32_t MakeDepthBase(const SCSim::SpriteData& sprt_data)
+	uint32_t MakeSortKey(const SCSim::SpriteData& sprt_data)
 	{
 		ASSERT(sprt_data.elevation_level >= 0 && static_cast<uint32_t>(sprt_data.elevation_level) <= sc::Mask32(kElevationBits));
+		ASSERT(sprt_data.index < static_cast<uint32_t>(SCSim::kMaxSprites));
 
-		// Release에서 범위를 벗어나도 키가 23비트를 넘지 않도록 마스킹
+		// Release에서 범위를 벗어나도 다른 필드를 침범하지 않도록 마스킹
 		const uint32_t elevation = static_cast<uint32_t>(sprt_data.elevation_level) & sc::Mask32(kElevationBits);
 
-		uint32_t mid = 0;
+		uint32_t y = 0;
 		if (sprt_data.elevation_level <= kGroundElevationMax)
 		{
 			// 맵 높이 <= 8192는 LoadMap에서 보장
-			// 지상 unit은 y sorting
-			mid = static_cast<uint32_t>(std::max(sprt_data.y, 0)) & sc::Mask32(kMidBits);
-		}
-		else
-		{
-			// 공중 유닛은 index 기준으로 sorting(원작에서는 memory 주소로 소팅하여 fighting 방지)
-			mid = static_cast<uint32_t>(sprt_data.index) & sc::Mask32(kMidBits);
+			y = static_cast<uint32_t>(std::max(sprt_data.y, 0)) & sc::Mask32(kYBits);
 		}
 
 		const uint32_t turret = (sprt_data.flags & SCSim::SpriteFlags::Turret) ? 1u : 0u;
+		const uint32_t index = sprt_data.index & sc::Mask32(kIndexBits);
 
-		return (elevation << kElevationShift) | (mid << kMidShift) | (turret << kTurretShift);
+		return (elevation << kElevationShift) | (y << kYShift) | (turret << kTurretShift) | (index << kIndexShift);
 	}
 
-	uint32_t MakeDepthKey(uint32_t depth_base, uint32_t order)
+	uint32_t MakeDepthKey(uint32_t rank, uint32_t order)
 	{
+		ASSERT(rank <= sc::Mask32(kRankBits));
 		ASSERT(order <= sc::Mask32(kOrderBits));
 
-		constexpr uint32_t kOrderMask = sc::Mask32(kOrderBits) << kOrderShift;
-		ASSERT_F((depth_base & kOrderMask) == 0, "Order 자리는 비워져있어야 합니다.");
-
-		return depth_base | ((order & sc::Mask32(kOrderBits)) << kOrderShift);
+		return ((rank & sc::Mask32(kRankBits)) << kRankShift) | ((order & sc::Mask32(kOrderBits)) << kOrderShift);
 	}
 }
 
@@ -457,6 +462,8 @@ namespace sc
 
 		++sprite_sync_serial_;
 
+		// 1) 보이는 스프라이트를 원작 그리기 순서로 정렬
+		uint32_t visible_count = 0;
 		for (int32_t i = 0; i < snapshot.sprite_count; ++i)
 		{
 			const SCSim::SpriteData& sprt_data = snapshot.sprites[i];
@@ -467,13 +474,26 @@ namespace sc
 				continue;
 			}
 
+			ASSERT(visible_count < sprite_sort_buffer_.size());
+
+			// index를 정렬 조건에 추가해서 동점 제거
+			sprite_sort_buffer_[visible_count] = (static_cast<uint64_t>(MakeSortKey(sprt_data)) << 32) | static_cast<uint32_t>(i);
+			++visible_count;
+		}
+		std::sort(sprite_sort_buffer_.begin(), sprite_sort_buffer_.begin() + visible_count);
+
+		// 2) 정렬 순서대로 처리. 루프 카운터가 곧 rank (먼저 = 아래)
+		for (uint32_t rank = 0; rank < visible_count; ++rank)
+		{
+			const uint32_t snapshot_pos = static_cast<uint32_t>(sprite_sort_buffer_[rank] & 0xFFFFFFFFull);
+			const SCSim::SpriteData& sprt_data = snapshot.sprites[snapshot_pos];
+
 			ASSERT(sprt_data.index < sprite_slots_.size());
 			ASSERT(sprt_data.owner >= 0 && static_cast<size_t>(sprt_data.owner) < player_data_.size());
 
 			SpriteSlot& sprt_slot = sprite_slots_[sprt_data.index];	// 슬롯 번호로 조회 (sparse)
 
 			const uint32_t player_color_idx = static_cast<uint32_t>(player_data_[sprt_data.owner].color);
-			const uint32_t depth_base = MakeDepthBase(sprt_data);
 
 			SCSpriteObj* sprt_obj = sprt_slot.object.get();
 			if (sprt_obj == nullptr)
@@ -521,7 +541,7 @@ namespace sc
 					img_obj->GetTransform()->SetParent(sprt_obj->GetTransform());
 				}
 
-				const SCImageParam img_param = { .depth_key = MakeDepthKey(depth_base, order), .player_color = player_color_idx };
+				const SCImageParam img_param = { .depth_key = MakeDepthKey(rank, order), .player_color = player_color_idx };
 
 				// 매 프레임 바뀌기 때문에 ApplySnapshot을 항상 호출해줘야 함
 				img_obj->ApplySnapshot(img_data, img_param);
