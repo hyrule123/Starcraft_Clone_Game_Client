@@ -11,6 +11,8 @@ namespace engine
 
 namespace sc
 {
+    struct ImageDef;
+
     class SCImageRenderer :
         public engine::Renderer
     {
@@ -29,6 +31,7 @@ namespace sc
     private:
         SCSim::ImageData img_data_cache_ = {};
         SCImageParam img_param_cache_ = {};
+        const ImageDef* img_def_cache_ = {};
     };
 }
 

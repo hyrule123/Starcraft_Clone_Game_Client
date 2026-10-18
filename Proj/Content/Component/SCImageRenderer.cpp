@@ -13,10 +13,16 @@
 
 #include <Engine/Game/Component/Transform.h>
 
+#include <type_traits>
 
 namespace sc
 {
 	static_assert(kImageFlagHorizontallyFlipped == SCSim::ImageFlags::HorizontallyFlipped);
+	static_assert(std::is_same_v<decltype(SCImageInstance::image_flags), decltype(SCSim::ImageData::flags)>);
+	static_assert(std::is_same_v<decltype(SCImageInstance::modifier), decltype(SCSim::ImageData::modifier)>);
+	static_assert(std::is_same_v<decltype(SCImageInstance::modifier_data1), decltype(SCSim::ImageData::modifier_data1)>);
+	static_assert(std::is_same_v<decltype(SCImageInstance::player_color_idx), decltype(SCImageParam::player_color_idx)>);
+	static_assert(sizeof(decltype(SCImageInstance::remapping)) >= sizeof(decltype(ImageDef::remapping)));
 
 	namespace
 	{
@@ -48,11 +54,19 @@ namespace sc
 	{
 		const SCImageMaterialVariant variant = GetMaterialVariant(img_data.modifier);
 
+		const bool is_image_type_changed = (img_data.image_type != img_data_cache_.image_type);
+
+		if ((img_def_cache_ == nullptr) || is_image_type_changed)
+		{
+			const ImageDef& img_def = SCResourceManager::GetInst().GetSCImageLibrary().GetImageDef(img_data.image_type);
+			img_def_cache_ = &img_def;
+		}
+
 		// 판정 기준은 렌더러의 실제 상태:
 		// Material이 없거나(첫 설정 — image_type 0도 유효하므로 캐시 비교만으로는 부족),
 		// 이미지 타입 또는 Material 종류(일반/그림자)가 바뀌었을 때만 교체
 		const bool needs_material = (GetMaterial(0) == nullptr)
-			|| (img_data.image_type != img_data_cache_.image_type)
+			|| is_image_type_changed
 			|| (variant != GetMaterialVariant(img_data_cache_.modifier));
 
 		if (needs_material)
@@ -85,22 +99,19 @@ namespace sc
 		// Transform 월드 위치(이미지 중심) → SC 좌표 (VS가 SC 공간에서 배치 후 월드로 변환)
 		const float3 world_pos = GetTransform()->GetWorldPosition();
 
-		const bool flipped = (img_data_cache_.flags & SCSim::ImageFlags::HorizontallyFlipped) != 0;
-
 		SCImageInstance data = {};
 
 		data.sc_center_pos = WorldToScInt(world_pos.x, world_pos.y);
 		data.frame = img_data_cache_.frame;
 		data.depth_key = img_param_cache_.depth_key;
-
-		static_assert(sizeof(decltype(data.image_flags)) == sizeof(img_data_cache_.flags));
 		data.image_flags = img_data_cache_.flags;
 		data.modifier = img_data_cache_.modifier;
 		data.modifier_data1 = img_data_cache_.modifier_data1;
 		data.player_color_idx = img_param_cache_.player_color_idx;
 		
-		const ImageDef& img_def = SCResourceManager::GetInst().GetSCImageLibrary().GetImageDef(img_data_cache_.image_type);
-		data.remapping = img_def.remapping;
+		ASSERT(img_def_cache_);
+		// uint8 → uint
+		data.remapping = static_cast<uint>(img_def_cache_->remapping);
 
 		data_block.Write(data);
 	}
