@@ -18,7 +18,7 @@ ImagePSInput main(ImageVSInput input)
 	const int half_h = int(height >> 1);
 	
 	// 반전은 로컬 좌표를 뒤집어서 처리 (정점 감김 순서 유지)
-	const bool flipped = GetSpriteBits(inst.flags, kSpriteFlippedShift, kSpriteFlippedBits) != 0;
+	const bool flipped = inst.image_flags & kImageFlagHorizontallyFlipped;
 	const float u = flipped ? float(1 - corner.x) : float(corner.x);
 	output.local = float2(u, corner.y) * float2(width, height);
 	
@@ -37,6 +37,6 @@ ImagePSInput main(ImageVSInput input)
 	output.position.z = float(inst.depth_key + 1u) * kScDepthScale * output.position.w; // SC 자체 정렬 기준이 들어있는 depth_key로 변경한다.
 
 	output.frame = inst.frame;
-	output.color = GetSpriteBits(inst.flags, kSpriteColorShift, kSpriteColorBits);
+	output.color_idx = inst.player_color_idx;
 	return output;
 }

@@ -21,21 +21,6 @@ namespace sc
         return (1u << bits) - 1u;
     }
 
-    inline uint32_t PackSpriteFlags(bool flipped, uint32_t player_color,
-        uint32_t modifier, uint32_t modifier_data, uint32_t lut_table)
-    {
-        ASSERT(player_color <= Mask32(kSpriteColorBits));
-        ASSERT(modifier <= Mask32(kSpriteModifierBits));
-        ASSERT(modifier_data <= Mask32(kSpriteModifierDataBits));
-        ASSERT(lut_table <= Mask32(kSpriteLutBits));
-
-        return ((flipped ? 1u : 0u) << kSpriteFlippedShift)
-            | (player_color << kSpriteColorShift)
-            | (modifier << kSpriteModifierShift)
-            | (modifier_data << kSpriteModifierDataShift)
-            | (lut_table << kSpriteLutShift);
-    }
-
     constexpr float kSpriteDefaultZ = 0.5f;
 
 	// SC 좌표계 (+x right, +y down) -> World 좌표계 (+x right, +y up)

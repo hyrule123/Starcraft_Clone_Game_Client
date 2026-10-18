@@ -16,6 +16,8 @@
 
 namespace sc
 {
+	static_assert(kImageFlagHorizontallyFlipped == SCSim::ImageFlags::HorizontallyFlipped);
+
 	namespace
 	{
 		constexpr uint8_t kModifierShadow = 10;
@@ -89,8 +91,16 @@ namespace sc
 
 		data.sc_center_pos = WorldToScInt(world_pos.x, world_pos.y);
 		data.frame = img_data_cache_.frame;
-		data.flags = PackSpriteFlags(flipped, img_param_cache_.player_color_idx, static_cast<uint32_t>(img_data_cache_.modifier), 0, 0);
 		data.depth_key = img_param_cache_.depth_key;
+
+		static_assert(sizeof(decltype(data.image_flags)) == sizeof(img_data_cache_.flags));
+		data.image_flags = img_data_cache_.flags;
+		data.modifier = img_data_cache_.modifier;
+		data.modifier_data1 = img_data_cache_.modifier_data1;
+		data.player_color_idx = img_param_cache_.player_color_idx;
+		
+		const ImageDef& img_def = SCResourceManager::GetInst().GetSCImageLibrary().GetImageDef(img_data_cache_.image_type);
+		data.remapping = img_def.remapping;
 
 		data_block.Write(data);
 	}

@@ -17,19 +17,17 @@ struct SCImageInstance
 {
 	int2 sc_center_pos; // SC 좌표계 기준 캔버스 중앙 위치
 	uint frame; // Texture2DArray 슬라이스
-	uint flags; // 기존 비트 배치 그대로(비트 배치는 아래 주석 참고)
 	
 	// 깊이 키. VS에서 z = (depth_key + 1) * 2^-24 로 변환해 SV_Position.z에 덮어씀 (+1: 맵이 z = 0 사용)
 	// 범위 0 ~ 16777215 (24비트) — 이 범위에서 float32로 오차 없이 표현됨
 	// 현재 16비트 사용: [rank 12 (상위)][order 4 (하위)], 생성은 MainGameScene의 MakeDepthKey 참고
 	uint depth_key; 
 	
-	// flags 비트 배치
-	// [0]      반전
-	// [1..4]   플레이어 색 번호 (0~15)
-	// [8..15]  modifier (효과 패스용, 지금은 0)
-	// [16..23] modifier_data1 (효과 패스용)
-	// [24..27] LUT 테이블 번호 (효과 패스용)
+	uint image_flags;	// SCSim::ImageFlags 원본
+	int modifier;		// image_t::modifier
+	int modifier_data1; // image_t::modifier_data1
+	uint player_color_idx; // players[owner].color (0~15)
+	uint remapping;		// ImageDef::remapping (light LUT 번호, modifier 9용)
 };
 
 #ifdef __HLSL
@@ -37,35 +35,20 @@ struct SCImageInstance
 #else
 #define SC_CONST constexpr
 #endif
-SC_CONST uint kSpriteFlippedShift = 0;
-SC_CONST uint kSpriteFlippedBits = 1;
-SC_CONST uint kSpriteColorShift = 1;
-SC_CONST uint kSpriteColorBits = 4;
-SC_CONST uint kSpriteModifierShift = 8;
-SC_CONST uint kSpriteModifierBits = 8;
-SC_CONST uint kSpriteModifierDataShift = 16;
-SC_CONST uint kSpriteModifierDataBits = 8;
-SC_CONST uint kSpriteLutShift = 24;
-SC_CONST uint kSpriteLutBits = 4;
 
 SC_CONST uint kShadowDarkRow = 18; // OpenBW 하드 코딩된 항목
 SC_CONST uint kPcxLutTableWidth = 256;
 SC_CONST uint kPcxLutDarkOffset = 0;
+// 깊이 키 → z 변환 배율 (2^-24). z = (key + 1) * kScDepthScale, 키 24비트 이내에서 정확히 표현
+SC_CONST float kScDepthScale = 1.0f / 16777216.0f;
 
+SC_CONST uint kImageFlagHorizontallyFlipped = 0x2;	// C++ (SCImageRenderer) 쪽에서 검증
 
 #ifdef __cplusplus
 // 구간이 겹치지 않는지 컴파일 시 확인
-static_assert(sizeof(SCImageInstance) == 20, "SCImageInstance is not 20 bytes");
-static_assert(kSpriteFlippedShift + kSpriteFlippedBits <= kSpriteColorShift);
-static_assert(kSpriteColorShift + kSpriteColorBits <= kSpriteModifierShift);
-static_assert(kSpriteModifierShift + kSpriteModifierBits <= kSpriteModifierDataShift);
-static_assert(kSpriteModifierDataShift + kSpriteModifierDataBits <= kSpriteLutShift);
-static_assert(kSpriteLutShift + kSpriteLutBits <= 32);
+static_assert(sizeof(SCImageInstance) == 36, "SCImageInstance is not 36 bytes");
 
 #endif
-
-// 깊이 키 → z 변환 배율 (2^-24). z = (key + 1) * kScDepthScale, 키 24비트 이내에서 정확히 표현
-SC_CONST float kScDepthScale = 1.0f / 16777216.0f;
 
 struct ImageVSInput
 {
@@ -83,18 +66,13 @@ struct ImagePSInput
 	float4 position : SV_Position;
 	float2 local : TEXCOORD0; // 캔버스 내 로컬 좌표 (보간)
 	nointerpolation uint frame : FRAME; // 슬라이스 번호
-	nointerpolation uint color : PLAYER_COLOR; // tunit 행 번호 (0~15)
+	nointerpolation uint color_idx : PLAYER_COLOR; // tunit 행 번호 (0~15)
 };
 
 Texture2DArray<uint2> g_grp_sprite : register(REG_T_SC_GRP_SPRITE);
 Buffer<uint> g_tunit : register(REG_T_SC_TUNIT); // R8_UINT, 128개
 Buffer<float4> g_wpe : register(REG_T_SC_WPE_PALETTE); // R8G8B8A8_UNORM, 256개
 Buffer<uint> g_pcx_tileset_lut : register(REG_T_SC_PCX_TILESET_LUT); // R8_UINT
-
-uint GetSpriteBits(uint flags, uint shift, uint bits)
-{
-	return (flags >> shift) & ((1u << bits) - 1u);
-}
 
 float2 ScToWorld(float sc_x, float sc_y)
 {
