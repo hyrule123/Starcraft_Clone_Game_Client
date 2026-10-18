@@ -147,6 +147,9 @@
     <ClInclude Include="Component\SCImageRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SCData\SCEffectPass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -264,6 +267,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SCData\SCSpriteCommon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SCData\SCEffectPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
