@@ -29,12 +29,6 @@
 
 namespace
 {
-	constexpr uint8_t kModifierShadow = 10;
-
-	sc::SCImageMaterialVariant GetMaterialVariant(uint8_t modifier)
-	{
-		return (modifier == kModifierShadow) ? sc::SCImageMaterialVariant::Shadow : sc::SCImageMaterialVariant::Normal;
-	}
 }
 
 namespace sc
@@ -160,7 +154,7 @@ namespace sc
 		if (!rss->Create(rsDesc)) { CHECK(false); }
 
 #pragma region NORMAL PIPELINE
-		std::shared_ptr<Material>& normal_material = orig_materials_[(size_t)SCImageMaterialVariant::Normal];
+		std::shared_ptr<Material>& normal_material = orig_materials_[(size_t)SCImageMaterialVariant::Opaque];
 		ASSERT(normal_material == nullptr);		// 중복 호출 방지
 		normal_material = EntityManager::CreateEntity<Material>();
 		
@@ -173,18 +167,18 @@ namespace sc
 		normal_state->SetDepthStencilState(depth_key_write_dss_);
 		normal_state->SetRasterizerState(rss);
 
-		normal_material->SetPipelineState(sc::kScOpaquePass, normal_state);
+		normal_material->SetPipelineState(sc::kSCOpaquePassID, normal_state);
 #pragma endregion NORMAL PIPELINE
 
 #pragma region SHADOW PIPELINE
-		std::shared_ptr<Material>& shadow_material = orig_materials_[(size_t)SCImageMaterialVariant::Shadow];
+		std::shared_ptr<Material>& shadow_material = orig_materials_[(size_t)SCImageMaterialVariant::Effect];
 		ASSERT(shadow_material == nullptr);		// 중복 호출 방지
 		shadow_material = EntityManager::CreateEntity<Material>();
 
 		std::shared_ptr<PipelineState> shadow_state = EntityManager::CreateEntity<PipelineState>();
 		shadow_state->SetInputLayout(il);
 		shadow_state->SetVertexShader(vs);
-		shadow_state->SetPixelShader("Shader/SCImageShadow_PS.cso");
+		shadow_state->SetPixelShader("Shader/SCImageEffect_PS.cso");
 		shadow_state->SetInstanceDataStride(sizeof(SCImageInstance));
 		shadow_state->SetRasterizerState(rss);
 		shadow_state->SetDepthStencilState(depth_key_test_dss_);
@@ -236,7 +230,7 @@ namespace sc
 		pipeline_state->SetDepthStencilState(depth_key_write_dss_);
 		pipeline_state->SetRasterizerState("RSS_Solid_Back");
 		pipeline_state->SetInputLayout("InputLayout_Standard2D");
-		map_material_->SetPipelineState(sc::kScOpaquePass, pipeline_state);
+		map_material_->SetPipelineState(sc::kSCOpaquePassID, pipeline_state);
 	}
 
 	std::shared_ptr<engine::Material> SCResourceManager::GetImageMaterial(uint32_t image_type, SCImageMaterialVariant variant)

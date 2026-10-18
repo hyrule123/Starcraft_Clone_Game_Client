@@ -18,6 +18,8 @@
 namespace sc
 {
 	static_assert(kImageFlagHorizontallyFlipped == SCSim::ImageFlags::HorizontallyFlipped);
+	static_assert(kModifierShadow == static_cast<int32_t>(SCSim::ImageModifier::Shadow));
+
 	static_assert(std::is_same_v<decltype(SCImageInstance::image_flags), decltype(SCSim::ImageData::flags)>);
 	static_assert(std::is_same_v<decltype(SCImageInstance::modifier), decltype(SCSim::ImageData::modifier)>);
 	static_assert(std::is_same_v<decltype(SCImageInstance::modifier_data1), decltype(SCSim::ImageData::modifier_data1)>);
@@ -26,14 +28,10 @@ namespace sc
 
 	namespace
 	{
-		constexpr uint8_t kModifierShadow = 10;
-
-		SCImageMaterialVariant GetMaterialVariant(uint8_t modifier)
+		SCImageMaterialVariant GetMaterialVariant(int32_t modifier)
 		{
-			return (modifier == kModifierShadow) ? SCImageMaterialVariant::Shadow : SCImageMaterialVariant::Normal;
+			return (modifier == static_cast<int32_t>(SCSim::ImageModifier::Shadow)) ? SCImageMaterialVariant::Effect : SCImageMaterialVariant::Opaque;
 		}
-
-
 	}
 
 	SCImageRenderer::SCImageRenderer()

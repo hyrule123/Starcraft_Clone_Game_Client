@@ -295,7 +295,7 @@
     <FxCompile Include="HLSL\SCMapRender_VS.hlsl" />
     <FxCompile Include="HLSL\SCImage\SCImage_VS.hlsl" />
     <FxCompile Include="HLSL\SCImage\SCImageOpaque_PS.hlsl" />
-    <FxCompile Include="HLSL\SCImage\SCImageShadow_PS.hlsl" />
+    <FxCompile Include="HLSL\SCImage\SCImageEffect_PS.hlsl" />
     <FxCompile Include="HLSL\SCBlit_PS.hlsl" />
   </ItemGroup>
   <ItemGroup>

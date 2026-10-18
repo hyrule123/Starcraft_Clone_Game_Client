@@ -2,9 +2,9 @@
 
 StructuredBuffer<SCImageInstance> g_image_instances : register(REG_T_INSTANCE_BUFFER);
 
-ImagePSInput main(ImageVSInput input)
+ImageVSOutput main(ImageVSInput input)
 {
-	ImagePSInput output;
+	ImageVSOutput output;
 
 	const SCImageInstance inst = g_image_instances[input.instance_id];
 
@@ -36,6 +36,9 @@ ImagePSInput main(ImageVSInput input)
 	
 	output.position.z = float(inst.depth_key + 1u) * kScDepthScale * output.position.w; // SC 자체 정렬 기준이 들어있는 depth_key로 변경한다.
 
+	output.modifier = inst.modifier;
+	output.modifier_data1 = inst.modifier_data1;
+	output.remapping = inst.remapping;
 	output.frame = inst.frame;
 	output.color_idx = inst.player_color_idx;
 	return output;

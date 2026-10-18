@@ -44,8 +44,8 @@ namespace sc
 	// Modifier 값에 따른 Material Variant
     enum class SCImageMaterialVariant
     {
-        Normal,
-        Shadow,
+        Opaque,
+        Effect,
         kCount
     };
 

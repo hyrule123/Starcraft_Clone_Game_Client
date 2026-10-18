@@ -43,6 +43,7 @@ SC_CONST uint kPcxLutDarkOffset = 0;
 SC_CONST float kScDepthScale = 1.0f / 16777216.0f;
 
 SC_CONST uint kImageFlagHorizontallyFlipped = 0x2;	// C++ (SCImageRenderer) 쪽에서 검증
+SC_CONST int kModifierShadow = 10; // image_t::modifier 값
 
 #ifdef __cplusplus
 // 구간이 겹치지 않는지 컴파일 시 확인
@@ -61,11 +62,14 @@ struct ImageVSInput
 };
 
 #ifdef __HLSL
-struct ImagePSInput
+struct ImageVSOutput
 {
 	float4 position : SV_Position;
 	float2 local : TEXCOORD0; // 캔버스 내 로컬 좌표 (보간)
 	nointerpolation uint frame : FRAME; // 슬라이스 번호
+	nointerpolation int modifier : MODIFIER; // image_t::modifier
+	nointerpolation int modifier_data1 : MODIFIER_DATA1; // image_t::modifier_data1
+	nointerpolation uint remapping : REMAPPING;
 	nointerpolation uint color_idx : PLAYER_COLOR; // tunit 행 번호 (0~15)
 };
 

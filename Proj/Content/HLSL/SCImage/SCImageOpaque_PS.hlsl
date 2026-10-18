@@ -2,7 +2,7 @@
 
 
 
-uint main(ImagePSInput input) : SV_TARGET
+uint main(ImageVSOutput input) : SV_TARGET
 {
 	const int2 texel = int2(floor(input.local));
 	const uint2 sampled = g_grp_sprite.Load(int4(texel, input.frame, 0));

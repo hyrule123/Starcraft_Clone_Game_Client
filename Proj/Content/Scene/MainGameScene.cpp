@@ -334,7 +334,7 @@ namespace sc
 		sc_rendertarget_group->SetDepthStencilTarget(sc_dst);
 
 		// Sc Opaque Pass
-		std::unique_ptr<MeshRenderPass> sc_opaque = EntityManager::CreateEntity<MeshRenderPass>(kScOpaquePass, MeshRenderPass::SortPolicy::State);
+		std::unique_ptr<MeshRenderPass> sc_opaque = EntityManager::CreateEntity<MeshRenderPass>(kSCOpaquePassID, MeshRenderPass::SortPolicy::State);
 
 		ClearSettings clear_setting = {};
 		clear_setting.flags = ClearTarget::Color | ClearTarget::DepthStencil;
@@ -347,7 +347,7 @@ namespace sc
 		RenderManager::GetInst().RegisterRenderPass(std::move(sc_opaque));
 
 		// SC Effect Pass
-		std::unique_ptr<SCEffectPass> sc_effect_pass = EntityManager::CreateEntity<SCEffectPass>(sc::kSCEffectPassID, MeshRenderPass::SortPolicy::Custom);
+		std::unique_ptr<SCEffectPass> sc_effect_pass = EntityManager::CreateEntity<SCEffectPass>(kSCEffectPassID, MeshRenderPass::SortPolicy::Custom);
 		sc_effect_pass->SetWPETargets(sc_rt, sc_dst);
 		RenderManager::GetInst().RegisterRenderPass(std::move(sc_effect_pass));
 
@@ -385,7 +385,7 @@ namespace sc
 			RenderManager::GetInst().SetMainViewClearSettings(clear_setting);
 		}
 
-		std::vector<render_pass::ID> sc_pass_order = { kScOpaquePass, sc::kSCEffectPassID, kScBlitPass, render_pass::ID::Present };
+		std::vector<render_pass::ID> sc_pass_order = { kSCOpaquePassID, sc::kSCEffectPassID, kScBlitPass, render_pass::ID::Present };
 #if ENABLE_DEBUG_DRAW
 		sc_pass_order.push_back(render_pass::ID::DebugDraw);
 #endif
