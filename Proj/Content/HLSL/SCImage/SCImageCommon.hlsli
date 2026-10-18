@@ -87,6 +87,15 @@ float2 ScToWorld(int sc_x, int sc_y)
 	return float2(float(sc_x), float(-sc_y));
 }
 
+uint ApplyPlayerColor(uint index, uint color_idx)
+{
+	if (index >= 8 && index < 16)
+	{
+		index = g_tunit[color_idx * 8 + (index - 8)];
+	}
+	return index;
+}
+
 #endif//__HLSL
 
 #endif//HLSL_SC_IMAGE_COMMON

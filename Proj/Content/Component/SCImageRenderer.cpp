@@ -30,7 +30,21 @@ namespace sc
 	{
 		SCImageMaterialVariant GetMaterialVariant(int32_t modifier)
 		{
-			return (modifier == static_cast<int32_t>(SCSim::ImageModifier::Shadow)) ? SCImageMaterialVariant::Effect : SCImageMaterialVariant::Opaque;
+			using SCSim::ImageModifier;
+
+			switch (static_cast<ImageModifier>(modifier))
+			{
+			case ImageModifier::Normal:
+			case ImageModifier::NormalNoHallu:
+			case ImageModifier::WarpTexture:	// 보류: 당분간 일반 그리기
+				return SCImageMaterialVariant::Opaque;
+
+			default:	// old를 읽는 효과 + 미구현/미지원 값 (Effect PS default = 일반 그리기)
+				break;
+			}
+
+			// default
+			return SCImageMaterialVariant::Effect;
 		}
 	}
 

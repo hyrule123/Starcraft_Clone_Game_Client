@@ -221,6 +221,19 @@ namespace sc
 			}
 		}
 
+		{
+			constexpr int32_t kTestCount = 10;
+			constexpr int32_t kBaseX = 2048;
+			constexpr int32_t kBaseY = 2048;
+
+			for (int32_t i = 0; i < kTestCount; ++i)
+			{
+				uint32_t test_id = SCSim::kInvalidUnitId;
+				test_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::ProtossDarkTemplar, SCSim::Player::_3, kBaseX, kBaseY);
+				CHECK_F(test_id != SCSim::kInvalidUnitId, "SCSim_CreateUnit failed: {}", SCSim_GetLastError());
+			}
+		}
+
 		//SCUnitDebug* u = AddGameObject<SCUnitDebug>();
 		//CHECK(u);
 

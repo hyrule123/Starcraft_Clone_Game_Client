@@ -15,7 +15,7 @@ uint main(ImageVSOutput input) : SV_TARGET
 	uint index = sampled.x;
 	if (index >= 8 && index < 16)
 	{
-		index = g_tunit[input.color_idx * 8 + (index - 8)];
+		index = ApplyPlayerColor(index, input.color_idx);
 	}
 
 	return index;

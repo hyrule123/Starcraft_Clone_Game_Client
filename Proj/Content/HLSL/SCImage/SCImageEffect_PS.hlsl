@@ -24,13 +24,9 @@ void main(ImageVSOutput input)
 		}
 		default:
 		{
-			const uint2 pixel = uint2(input.position.xy);
-			const uint old = g_sc_index_rt[pixel];
-			g_sc_index_rt[pixel] = g_pcx_tileset_lut[kPcxLutDarkOffset + kShadowDarkRow * kPcxLutTableWidth + old];
-			// 기타 효과
+			uint index = sampled.x;
+			g_sc_index_rt[uint2(input.position.xy)] = ApplyPlayerColor(index, input.color_idx);
 			break;
 		}
 	}
-	
-
 }
