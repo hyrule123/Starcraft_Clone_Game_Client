@@ -72,6 +72,8 @@ namespace sc
 		// 매 싱크 덮어쓰기 — WritePerObjectData가 여기서 읽음
 		img_data_cache_ = img_data;
 		img_param_cache_ = img_param;
+
+		SetCustomSortKey(img_param.depth_key);
 	}
 
 	void SCImageRenderer::WriteInstanceData(engine::DataBlock data_block)

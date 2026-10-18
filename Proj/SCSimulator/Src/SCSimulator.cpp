@@ -93,6 +93,7 @@ namespace // Snapshot
         out.offset_y = image.offset.y;
         out.modifier = image.modifier;
         out.flags = static_cast<uint32_t>(image.flags);
+		out.modifier_data1 = image.modifier_data1;
     }
 
     void FillSpriteData(const bwgame::sprite_t& sprite, uint32_t first_image, uint32_t image_count,

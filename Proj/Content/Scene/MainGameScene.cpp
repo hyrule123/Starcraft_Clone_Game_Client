@@ -346,8 +346,8 @@ namespace sc
 
 		RenderManager::GetInst().RegisterRenderPass(std::move(sc_opaque));
 
-
-		std::unique_ptr<SCEffectPass> sc_effect_pass = EntityManager::CreateEntity<SCEffectPass>(sc::kSCEffectPassID, MeshRenderPass::SortPolicy::State);
+		// SC Effect Pass
+		std::unique_ptr<SCEffectPass> sc_effect_pass = EntityManager::CreateEntity<SCEffectPass>(sc::kSCEffectPassID, MeshRenderPass::SortPolicy::Custom);
 		sc_effect_pass->SetWPETargets(sc_rt, sc_dst);
 		RenderManager::GetInst().RegisterRenderPass(std::move(sc_effect_pass));
 
@@ -393,25 +393,6 @@ namespace sc
 
 		GetCollisionSystem2D()->SetCellSize(sc::kCellSize);
 		SetCollisionMask(0, 0, true);
-
-		// 맵 데이터 이미지로 저장하는 코드
-		/*
-		bool load_result = map_loader.LoadMapDataCPU(map_path);
-
-		std::shared_ptr<Texture2D> map_tex = map_loader.GetMapTexture();
-
-		map_tex->SaveToFile(ResourceManager::GetInst().GetResourceDir() / L"MapTexture.png");
-
-		GameObject* map_obj = AddGameObject<GameObject>();
-		map_obj->SetName("MapObject");
-		SpriteRenderer* renderer = map_obj->AddComponent<SpriteRenderer>();
-		std::shared_ptr<Material> map_mtrl = renderer->GetMaterial()->Clone();
-		map_mtrl->SetTexture(map_tex, 0);
-		renderer->SetMaterial(map_mtrl);
-
-		map_obj->GetTransform()->SetLocalPosition({ 0.0f, 0.0f, 100.0f });
-		map_obj->GetTransform()->SetLocalScale({(float)map_tex->GetWidth(), (float)map_tex->GetHeight(), 1.0f});
-		*/
 	}
 	void MainGameScene::SyncUnits()
 	{

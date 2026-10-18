@@ -73,8 +73,9 @@ namespace SCSim
 		int32_t  offset_y;
 		int32_t  modifier;		// image_t::modifier
 		uint32_t flags;			// ImageFlags
+		int32_t modifier_data1;	// image_t::modifier_data1 상태에 따른 색상 변화 플래그
 	};
-	static_assert(sizeof(ImageData) == 32);
+	static_assert(sizeof(ImageData) == 36);
 	
 
 	struct PlayerData
