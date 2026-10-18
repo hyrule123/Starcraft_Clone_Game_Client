@@ -160,7 +160,7 @@ namespace sc
 
 		{
 			// Map Loading
-			SCResourceManager& map_loader = SCResourceManager::GetInst();
+			SCMapLoader& map_loader = SCResourceManager::GetInst().GetMapLoader();
 
 			bool result = true;
 			std::shared_ptr<Texture2D> map_tex;
@@ -170,7 +170,7 @@ namespace sc
 			//ASSERT(result);
 
 			//GPU
-			auto sc_map = map_loader.LoadMapDataGPU(map_path);
+			std::unique_ptr<SCMap> sc_map = map_loader.LoadMapGPU(map_path);
 
 			//Save Map Texture to File
 			//map_path = ResourceManager::GetInst().GetResourceDir();
@@ -216,7 +216,7 @@ namespace sc
 			for (int32_t i = 0; i < kTestCount; ++i)
 			{
 				uint32_t test_id = SCSim::kInvalidUnitId;
-				test_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranWraith, SCSim::Player::_1, kBaseX, kBaseY);
+				test_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranWraith, SCSim::Player::_2, kBaseX, kBaseY);
 				CHECK_F(test_id != SCSim::kInvalidUnitId, "SCSim_CreateUnit failed: {}", SCSim_GetLastError());
 			}
 		}

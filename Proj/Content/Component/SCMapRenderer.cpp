@@ -146,12 +146,12 @@ namespace sc
 		
 		mtrl->SetTexture(ShaderStage::Pixel, REG_T_MAP_TEXTURE, sc_map_->texture);
 
-		auto& per_pass_table = RenderManager::GetInst().GetPerFrameBindingTable();
-		per_pass_table.RemoveShaderResource(REG_T_SC_WPE_PALETTE);
-		per_pass_table.AddShaderResource(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_SC_WPE_PALETTE, sc_map_->wpe_color_palettes);
+		auto& per_frame_table = RenderManager::GetInst().GetPerFrameBindingTable();
+		per_frame_table.RemoveShaderResource(REG_T_SC_WPE_PALETTE);
+		per_frame_table.AddShaderResource(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_SC_WPE_PALETTE, sc_map_->wpe_color_palettes);
 
-		per_pass_table.RemoveShaderResource(REG_T_SC_PCX_TILESET_LUT);
-		per_pass_table.AddShaderResource(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_SC_PCX_TILESET_LUT, sc_map_->pcx_tileset_LUT);
+		per_frame_table.RemoveShaderResource(REG_T_SC_PCX_TILESET_LUT);
+		per_frame_table.AddShaderResource(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_SC_PCX_TILESET_LUT, sc_map_->pcx_tileset_LUT);
 
 		needs_scale_matching_ = true;
 		SetEnable(true);

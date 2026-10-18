@@ -218,6 +218,7 @@
     <ClInclude Include="GameObject\SCImageObj.h" />
     <ClInclude Include="Component\SCImageRenderer.h" />
     <ClInclude Include="SCData\SCEffectPass.h" />
+    <ClInclude Include="SCData\SCMapLoader.h" />
     <ClInclude Include="Script\CameraMoveScript.h" />
     <ClInclude Include="SCData\MPQ\MPQFile.h" />
     <ClInclude Include="SCData\PCXFile.h" />
@@ -265,6 +266,7 @@
     <ClCompile Include="GameObject\SCImageObj.cpp" />
     <ClCompile Include="Component\SCImageRenderer.cpp" />
     <ClCompile Include="SCData\SCEffectPass.cpp" />
+    <ClCompile Include="SCData\SCMapLoader.cpp" />
     <ClCompile Include="Script\CameraMoveScript.cpp" />
     <ClCompile Include="SCData\MPQ\MPQFile.cpp" />
     <ClCompile Include="SCData\PCXFile.cpp" />
