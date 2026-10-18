@@ -103,7 +103,7 @@ namespace sc
 		using namespace engine;
 
 		MapInfoCB map_info_cb = {};
-		map_info_cb.megatile_size = { (int32)sc_map_->megatile_width, (int32)sc_map_->megatile_height };
+		map_info_cb.megatile_size = { (int32_t)sc_map_->megatile_width, (int32_t)sc_map_->megatile_height };
 		map_info_cb.world_mat = GetTransform()->GetWorldMatrix();
 
 		data_block.Write(map_info_cb);

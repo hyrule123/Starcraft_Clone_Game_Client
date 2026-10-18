@@ -21,8 +21,8 @@ namespace sc
         return (1u << bits) - 1u;
     }
 
-    inline uint32 PackSpriteFlags(bool flipped, uint32 player_color,
-        uint32 modifier, uint32 modifier_data, uint32 lut_table)
+    inline uint32_t PackSpriteFlags(bool flipped, uint32_t player_color,
+        uint32_t modifier, uint32_t modifier_data, uint32_t lut_table)
     {
         ASSERT(player_color <= Mask32(kSpriteColorBits));
         ASSERT(modifier <= Mask32(kSpriteModifierBits));
@@ -43,7 +43,7 @@ namespace sc
     {
 		return float2(sc_x, -sc_y);
     }
-    inline constexpr float2 ScIntToWorld(int32 sc_x, int32 sc_y)
+    inline constexpr float2 ScIntToWorld(int32_t sc_x, int32_t sc_y)
     {
 		return ScToWorld(static_cast<float>(sc_x), static_cast<float>(sc_y));
     }
@@ -53,7 +53,7 @@ namespace sc
 	}
 	inline int2 WorldToScInt(float world_x, float world_y)
 	{
-		return int2(static_cast<int32>(std::lround(world_x)), static_cast<int32>(std::lround(-world_y)));
+		return int2(static_cast<int32_t>(std::lround(world_x)), static_cast<int32_t>(std::lround(-world_y)));
 	}
 
 	// Modifier 값에 따른 Material Variant

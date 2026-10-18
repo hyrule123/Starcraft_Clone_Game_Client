@@ -13,7 +13,7 @@ namespace sc
     // 효과 테이블 번호. RT1에 기록하는 "효과 종류"와 같은 값을 사용
     // light 계열 순서는 OpenBW light_names와 동일
     // (OpenBW draw_alpha(4, ...)의 4 = light 배열 기준 trans50 → 여기서는 kTrans50 = 5)
-    enum class PcxLUT : uint8
+    enum class PcxLUT : uint8_t
     {
         Dark = 0,
         OFire,
@@ -31,15 +31,15 @@ namespace sc
     class SCTileSetPcxLUT
     {
     public:
-		using ElemType = uint8;
+		using ElemType = uint8_t;
 
-        static constexpr uint32 kTableWidth = 256;
-        static constexpr uint32 kTableCount = static_cast<uint32>(PcxLUT::kCount);
+        static constexpr uint32_t kTableWidth = 256;
+        static constexpr uint32_t kTableCount = static_cast<uint32_t>(PcxLUT::kCount);
 
         struct TableRange
         {
-            uint32 offset = 0;  // data() 내 시작 위치 (바이트)
-            uint32 rows = 0;    // 행 수 (light 계열은 소스 값 - 1이 행 번호)
+            uint32_t offset = 0;  // data() 내 시작 위치 (바이트)
+            uint32_t rows = 0;    // 행 수 (light 계열은 소스 값 - 1이 행 번호)
         };
 
         SCTileSetPcxLUT();

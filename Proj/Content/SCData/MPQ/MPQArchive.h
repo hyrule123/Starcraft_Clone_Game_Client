@@ -15,7 +15,7 @@ namespace sc
 		bool HasInnerFile(const std::filesystem::path& mpq_inner_file_path) const;
 		[[nodiscard]] MPQFile OpenInnerFile(const std::filesystem::path& mpq_inner_file_path) const;
 
-		template  <typename T = uint8> requires std::is_trivially_copyable_v<T>
+		template  <typename T = uint8_t> requires std::is_trivially_copyable_v<T>
 		[[nodiscard]] std::optional<std::vector<T>> ReadInnerFile(const std::filesystem::path& mpq_inner_file_path) const
 		{
 			MPQFile file = OpenInnerFile(mpq_inner_file_path);
@@ -26,7 +26,7 @@ namespace sc
 			return file.ReadAll<T>();
 		}
 
-		template <typename T = uint8> requires std::is_trivially_copyable_v<T>
+		template <typename T = uint8_t> requires std::is_trivially_copyable_v<T>
 		[[nodiscard]] bool ReadInnerFile(const std::filesystem::path& mpq_inner_file_path, std::vector<T>& out_data) const
 		{
 			out_data.clear();

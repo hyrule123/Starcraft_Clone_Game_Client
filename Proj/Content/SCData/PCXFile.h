@@ -14,17 +14,17 @@ namespace sc
         PcxFile() = default;
 
         // 원본 바이트를 보관하지 않고 로드 시 전부 디코딩하므로 span으로 받음
-        bool Load(std::span<const uint8> bytes);
+        bool Load(std::span<const uint8_t> bytes);
 
-        uint32 width() const { return width_; }
-        uint32 height() const { return height_; }
+        uint32_t width() const { return width_; }
+        uint32_t height() const { return height_; }
 
         // width × height, 행 우선, 여백 없음
-        std::span<const uint8> pixels() const { return pixels_; }
+        std::span<const uint8_t> pixels() const { return pixels_; }
 
     private:
-        std::vector<uint8> pixels_;
-        uint32 width_ = 0;
-        uint32 height_ = 0;
+        std::vector<uint8_t> pixels_;
+        uint32_t width_ = 0;
+        uint32_t height_ = 0;
     };
 }

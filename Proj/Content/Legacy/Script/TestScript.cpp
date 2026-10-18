@@ -79,7 +79,7 @@ namespace sc
 
 			if (InputManager::GetInst().GetKeyDown(KeyCode::kC))
 			{
-				static uint32 layer = 0;
+				static uint32_t layer = 0;
 				layer = (target_obj->GetLayer() + 1) % kMaxLayers;
 				target_obj->SetLayer(layer);
 

@@ -18,19 +18,19 @@ namespace sc
 {
 	namespace
 	{
-		using ChunkTable = engine::StringHashTable<std::vector<uint8>>;
+		using ChunkTable = engine::StringHashTable<std::vector<uint8_t>>;
 
 		// .chk 청크를 순차 순회하며 [이름 4][길이 4][데이터] 단위로 테이블에 저장. 같은 청크는 뒤가 이김
-		ChunkTable ParseMapData(const std::vector<uint8>& map_data)
+		ChunkTable ParseMapData(const std::vector<uint8_t>& map_data)
 		{
 			ChunkTable map_data_table;
 
-			int64 cursor = 0;
+			int64_t cursor = 0;
 
 			constexpr size_t kMaxIterations = 1000000; // 안전장치: 무한루프 방지
 			for (size_t i = 0; i < kMaxIterations; ++i)
 			{
-				if (cursor + 8 > (int64)map_data.size())
+				if (cursor + 8 > (int64_t)map_data.size())
 				{
 					break;
 				}
@@ -39,7 +39,7 @@ namespace sc
 				std::string_view type_name(reinterpret_cast<const char*>(&map_data[cursor]), ChunkIDByteStride);
 
 				// data length는 음수가 될 수 있다. (커서를 앞으로 보냄)
-				int32 data_length;
+				int32_t data_length;
 				memcpy(&data_length, &map_data[cursor + ChunkIDByteStride], sizeof(data_length));
 				if (data_length < 0)
 				{
@@ -47,9 +47,9 @@ namespace sc
 					break;
 				}
 
-				const int64 next_cursor = cursor + (int64)ChunkIDByteStride * 2ll + (int64)data_length;
+				const int64_t next_cursor = cursor + (int64_t)ChunkIDByteStride * 2ll + (int64_t)data_length;
 
-				if (0 <= next_cursor && next_cursor <= (int64)map_data.size())
+				if (0 <= next_cursor && next_cursor <= (int64_t)map_data.size())
 				{
 					if (map_data_table.find(type_name) != map_data_table.end())
 					{
@@ -61,9 +61,9 @@ namespace sc
 					// 데이터 길이가 양수일 경우 데이터를 읽어준다
 					if (data_length > 0)
 					{
-						auto start = map_data.begin() + cursor + (int64)ChunkIDByteStride * 2;
+						auto start = map_data.begin() + cursor + (int64_t)ChunkIDByteStride * 2;
 						auto end = start + data_length;
-						map_data_table[type_name] = std::vector<uint8>(start, end);
+						map_data_table[type_name] = std::vector<uint8_t>(start, end);
 					}
 
 					cursor = next_cursor;
@@ -78,27 +78,27 @@ namespace sc
 		}
 
 		// DIM. 실패 시 {0, 0}
-		std::array<uint32, 2> GetMegaTileCount(const ChunkTable& map_data_table)
+		std::array<uint32_t, 2> GetMegaTileCount(const ChunkTable& map_data_table)
 		{
-			auto it = map_data_table.find(SCChunkTypeName[(uint32)SCChunkType::kMapSize]);
+			auto it = map_data_table.find(SCChunkTypeName[(uint32_t)SCChunkType::kMapSize]);
 			if (it == map_data_table.end())
 			{
 				ERR_MSG("DIM chunk not found in map data.");
 				return {};
 			}
 
-			const std::vector<uint8>& dim_data = it->second;
+			const std::vector<uint8_t>& dim_data = it->second;
 			if (dim_data.size() < 4)
 			{
 				ERR_MSG("DIM chunk data must exceed 4 bytes.");
 				return {};
 			}
 
-			uint16 width = 0;
-			uint16 height = 0;
+			uint16_t width = 0;
+			uint16_t height = 0;
 
-			memcpy(&width, dim_data.data(), sizeof(uint16));
-			memcpy(&height, dim_data.data() + sizeof(uint16), sizeof(uint16));
+			memcpy(&width, dim_data.data(), sizeof(uint16_t));
+			memcpy(&height, dim_data.data() + sizeof(uint16_t), sizeof(uint16_t));
 
 			if (!(1 <= width && width <= 256 && 1 <= height && height <= 256))
 			{
@@ -106,22 +106,22 @@ namespace sc
 				return {};
 			}
 
-			return { (uint32)width, (uint32)height };
+			return { (uint32_t)width, (uint32_t)height };
 		}
 
 		// ERA. 실패 시 TileSetType::kCount
 		TileSetType GetTerrainType(const ChunkTable& map_data_table)
 		{
-			static_assert((int32)TileSetType::kCount == 8, "TileSetType::kCount must be 8.");
+			static_assert((int32_t)TileSetType::kCount == 8, "TileSetType::kCount must be 8.");
 
-			auto it = map_data_table.find(SCChunkTypeName[(uint32)SCChunkType::kTerrain]);
+			auto it = map_data_table.find(SCChunkTypeName[(uint32_t)SCChunkType::kTerrain]);
 			if (it == map_data_table.end())
 			{
 				ERR_MSG("ERA chunk not found in map data.");
 				return TileSetType::kCount;
 			}
 
-			const std::vector<uint8>& era_data = it->second;
+			const std::vector<uint8_t>& era_data = it->second;
 			if (era_data.size() < 2)
 			{
 				ERR_MSG("ERA chunk data must at least 2 bytes.");
@@ -129,21 +129,21 @@ namespace sc
 			}
 
 			// 유효 비트는 하위 3비트 (0~7)
-			constexpr uint8 kTerrainMask = 0b00000111;
+			constexpr uint8_t kTerrainMask = 0b00000111;
 			return static_cast<TileSetType>(era_data[0] & kTerrainMask);
 		}
 
 		// UNIT. 청크가 없으면 빈 vector (맵에 배치 유닛이 없어도 정상)
 		std::vector<UnitData> GetUnitData(const ChunkTable& map_data_table)
 		{
-			auto it = map_data_table.find(SCChunkTypeName[(uint32)SCChunkType::kUnitPlacement]);
+			auto it = map_data_table.find(SCChunkTypeName[(uint32_t)SCChunkType::kUnitPlacement]);
 			if (it == map_data_table.end())
 			{
 				ERR_MSG("UNIT chunk not found in map data.");
 				return {};
 			}
 
-			const std::vector<uint8>& unit_data_chunk = it->second;
+			const std::vector<uint8_t>& unit_data_chunk = it->second;
 
 			// UnitData 구조체는 36바이트 단위
 			const size_t num_data = unit_data_chunk.size() / sizeof(UnitData);
@@ -159,16 +159,16 @@ namespace sc
 		}
 
 		// MTXM. DIM 크기로 버퍼를 잡고 청크 길이만큼만 복사 (모자란 부분은 null tile). 청크가 없으면 빈 vector
-		std::vector<MTXM> GetMTXM(const ChunkTable& map_data_table, uint32 megatile_width, uint32 megatile_height)
+		std::vector<MTXM> GetMTXM(const ChunkTable& map_data_table, uint32_t megatile_width, uint32_t megatile_height)
 		{
-			auto it = map_data_table.find(SCChunkTypeName[(uint32)SCChunkType::kTileMapAtlas]);
+			auto it = map_data_table.find(SCChunkTypeName[(uint32_t)SCChunkType::kTileMapAtlas]);
 			if (it == map_data_table.end())
 			{
 				ERR_MSG("MTXM chunk not found in map data.");
 				return {};
 			}
 
-			const std::vector<uint8>& mtxm_data = it->second;
+			const std::vector<uint8_t>& mtxm_data = it->second;
 
 			std::vector<MTXM> mtxms((size_t)megatile_width * (size_t)megatile_height);
 
@@ -237,51 +237,51 @@ namespace sc
 		// 픽셀 색 정보 컨테이너 할당
 		const size_t pixel_width = (size_t)map_data.megatile_width * (size_t)32;
 		const size_t pixel_height = (size_t)map_data.megatile_height * (size_t)32;
-		std::vector<uint8> WPE_idx(pixel_width * pixel_height);
+		std::vector<uint8_t> WPE_idx(pixel_width * pixel_height);
 
 		// 채워넣기
-		for (uint32 ty = 0; ty < map_data.megatile_height; ++ty)
+		for (uint32_t ty = 0; ty < map_data.megatile_height; ++ty)
 		{
-			for (uint32 tx = 0; tx < map_data.megatile_width; ++tx)
+			for (uint32_t tx = 0; tx < map_data.megatile_width; ++tx)
 			{
 				// 1. MTXM에서 타일 정보 가져오기
-				const uint16 v = map_data.mtxm[ty * map_data.megatile_width + tx];
+				const uint16_t v = map_data.mtxm[ty * map_data.megatile_width + tx];
 
 				// CV5 인덱스
-				const uint32 group = MTXMGroup(v);
+				const uint32_t group = MTXMGroup(v);
 
 				// CV5 내 타일 인덱스 (0 ~ 15)
-				const uint32 tile = MTXMTile(v);
+				const uint32_t tile = MTXMTile(v);
 
 				// 널 타일 → 검정
 				if (group >= tileset.cv5.size()) { continue; }
 
 				// CV5[group]의 CV5_megatiles[tile]
-				const uint16 mega = tileset.cv5[group].megatiles[tile];
+				const uint16_t mega = tileset.cv5[group].megatiles[tile];
 				if (mega >= tileset.vx4.size()) { continue; }
 
 				// 메가타일 안의 미니타일 4*4 참조
-				for (uint32 m = 0; m < 16; ++m)
+				for (uint32_t m = 0; m < 16; ++m)
 				{
 					// VX4에서 VR4 참조 및 반전 여부 확인
-					const uint16 ref = tileset.vx4[mega].minitiles[m];
-					const uint16 vr4_id = VX4Ref(ref);
+					const uint16_t ref = tileset.vx4[mega].minitiles[m];
+					const uint16_t vr4_id = VX4Ref(ref);
 					const bool   flipped = VX4Flipped(ref);
 					if (vr4_id >= tileset.vr4.size()) { continue; }
 
-					const uint32 mx = (m % 4) * 8;
-					const uint32 my = (m / 4) * 8;
+					const uint32_t mx = (m % 4) * 8;
+					const uint32_t my = (m / 4) * 8;
 
-					for (uint32 py = 0; py < 8; ++py)
+					for (uint32_t py = 0; py < 8; ++py)
 					{
-						for (uint32 px = 0; px < 8; ++px)
+						for (uint32_t px = 0; px < 8; ++px)
 						{
 							// VR4에서 WPE 색인 가져오기
-							const uint8 idx = tileset.vr4[vr4_id].pixels[py][flipped ? 7 - px : px];
+							const uint8_t idx = tileset.vr4[vr4_id].pixels[py][flipped ? 7 - px : px];
 
 							// 최종 픽셀 좌표 계산
-							const uint32 x = tx * 32 + mx + px;
-							const uint32 y = ty * 32 + my + py;
+							const uint32_t x = tx * 32 + mx + px;
+							const uint32_t y = ty * 32 + my + py;
 
 							WPE_idx[y * pixel_width + x] = idx;
 						}
@@ -303,7 +303,7 @@ namespace sc
 
 		D3D11_SUBRESOURCE_DATA init_data = {};
 		init_data.pSysMem = WPE_idx.data();
-		init_data.SysMemPitch = (uint32)(sizeof(uint8)) * (uint32)pixel_width;      // 바이트 단위
+		init_data.SysMemPitch = (uint32_t)(sizeof(uint8_t)) * (uint32_t)pixel_width;      // 바이트 단위
 
 		std::unique_ptr<SCMap> result_map = std::make_unique<SCMap>();
 		result_map->texture = EntityManager::CreateEntity<Texture2D>();
@@ -383,7 +383,7 @@ namespace sc
 				}
 			};
 
-		std::vector<uint16> megatile_data;
+		std::vector<uint16_t> megatile_data;
 		bool result = false;
 
 		for (size_t tileset_i = 0; tileset_i < tileset_gpu_buffers_.size(); ++tileset_i)
@@ -411,13 +411,13 @@ namespace sc
 			}
 
 			tileset_gpu.CV5_megatiles = EntityManager::CreateEntity<TypedBuffer>();
-			std::span<const uint16> megatile_span = megatile_data;
+			std::span<const uint16_t> megatile_span = megatile_data;
 			result = tileset_gpu.CV5_megatiles->CreateImmutableBuffer(DXGI_FORMAT_R16_UINT, megatile_span);
 			if (!result) { clear_tilesets(); return false; }
 #pragma endregion CV5 - Megatile
 
 #pragma region VX4 - Minitile
-			static_assert(sizeof(VX4) == sizeof(uint16) * minitiles_per_VX4);
+			static_assert(sizeof(VX4) == sizeof(uint16_t) * minitiles_per_VX4);
 			if (tileset.vx4.empty())
 			{
 				ERR_MSG("VX4 data is empty for tileset index");
@@ -425,7 +425,7 @@ namespace sc
 				return false;
 			}
 			tileset_gpu.VX4_minitiles = EntityManager::CreateEntity<TypedBuffer>();
-			result = tileset_gpu.VX4_minitiles->CreateImmutableBuffer(DXGI_FORMAT_R16_UINT, sizeof(VX4::Elem), tileset.vx4.data(), (uint32)(tileset.vx4.size() * minitiles_per_VX4));
+			result = tileset_gpu.VX4_minitiles->CreateImmutableBuffer(DXGI_FORMAT_R16_UINT, sizeof(VX4::Elem), tileset.vx4.data(), (uint32_t)(tileset.vx4.size() * minitiles_per_VX4));
 			if (!result) { clear_tilesets(); return false; }
 #pragma endregion VX4 - Minitile
 
@@ -437,7 +437,7 @@ namespace sc
 				return false;
 			}
 			tileset_gpu.VR4_minitile_wpe_indices = EntityManager::CreateEntity<TypedBuffer>();
-			result = tileset_gpu.VR4_minitile_wpe_indices->CreateImmutableBuffer(DXGI_FORMAT_R8_UINT, sizeof(VR4::Elem), tileset.vr4.data(), (uint32)(tileset.vr4.size() * minile_pixel_count));
+			result = tileset_gpu.VR4_minitile_wpe_indices->CreateImmutableBuffer(DXGI_FORMAT_R8_UINT, sizeof(VR4::Elem), tileset.vr4.data(), (uint32_t)(tileset.vr4.size() * minile_pixel_count));
 			if (!result) { clear_tilesets(); return false; }
 #pragma endregion VR4 - Minitile WPE index
 
@@ -491,7 +491,7 @@ namespace sc
 		map_data.map_data_table = ParseMapData(map_data.map_raw_bytes);
 
 		// 맵 사이즈
-		const std::array<uint32, 2> megatile_count = GetMegaTileCount(map_data.map_data_table);
+		const std::array<uint32_t, 2> megatile_count = GetMegaTileCount(map_data.map_data_table);
 		if (megatile_count[0] == 0 || megatile_count[1] == 0)
 		{
 			return std::nullopt;

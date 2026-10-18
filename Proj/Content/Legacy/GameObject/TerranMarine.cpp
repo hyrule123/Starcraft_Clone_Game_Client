@@ -28,7 +28,7 @@
 
 namespace sc
 {
-	constexpr uint32 n_row = 14u, n_col = 17u;
+	constexpr uint32_t n_row = 14u, n_col = 17u;
 	constexpr float tick_time = 23.81f;
 	constexpr size_t sprite_direction_count = 9u;
 
@@ -89,11 +89,11 @@ namespace sc
 			res_mgr.AddResource("Marine_SpriteAnimation", anim_);
 			anim_->SetSprite(marine_sprite);
 			
-			std::vector<uint32> frames = {};
+			std::vector<uint32_t> frames = {};
 			std::vector<SpriteAnimClip::Frame> frame_with_time = {};
 
 			//총 9개 direction
-			for (uint32 i = 0; i < sprite_direction_count; ++i)
+			for (uint32_t i = 0; i < sprite_direction_count; ++i)
 			{
 				//Idle
 				std::unique_ptr<SpriteAnimClip> idle_clip = std::make_unique<SpriteAnimClip>();
@@ -110,9 +110,9 @@ namespace sc
 				//Attack Windup
 				std::unique_ptr<SpriteAnimClip> attack_windup = std::make_unique<SpriteAnimClip>();
 				frames.clear();
-				for (uint32 j = 0; j < 3; ++j)
+				for (uint32_t j = 0; j < 3; ++j)
 				{
-					uint32 frame = i + n_col * j;
+					uint32_t frame = i + n_col * j;
 					frames.push_back(frame);
 				}
 				attack_windup->AddFrames(frames, 0.2f);
@@ -142,11 +142,11 @@ namespace sc
 				//Move
 				std::unique_ptr<SpriteAnimClip> move_clip = std::make_unique<SpriteAnimClip>();
 
-				uint32 start_frame = 68u + (i * 2);
+				uint32_t start_frame = 68u + (i * 2);
 				frames.clear();
-				for (uint32 j = 0; j < 9; ++j)
+				for (uint32_t j = 0; j < 9; ++j)
 				{
-					uint32 frame = start_frame + n_col * j;
+					uint32_t frame = start_frame + n_col * j;
 					frames.push_back(frame);
 				}
 
@@ -155,7 +155,7 @@ namespace sc
 				move_clip->SetLoop(true);
 				HashedString move_clip_name = "Move_" + std::to_string(i);
 
-				move_clip->SetFrameNotifyName((uint32)(frames.size() - 1), "MoveEnd");
+				move_clip->SetFrameNotifyName((uint32_t)(frames.size() - 1), "MoveEnd");
 
 				move_clips_per_direction_.push_back(move_clip.get());	//AnimationHandler에서 사용하기 위해서 raw pointer를 저장
 				anim_->AddAnimationClip(move_clip_name, std::move(move_clip));
@@ -164,8 +164,8 @@ namespace sc
 			//Death
 			std::unique_ptr<SpriteAnimClip> death_clip = std::make_unique<SpriteAnimClip>();
 			frames.clear();
-			uint32 frame_start = n_col * (n_row - 1);
-			for (uint32 i = 0; i < 8; ++i)
+			uint32_t frame_start = n_col * (n_row - 1);
+			for (uint32_t i = 0; i < 8; ++i)
 			{
 				frames.push_back(frame_start + i);
 			}

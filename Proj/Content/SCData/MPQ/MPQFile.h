@@ -39,7 +39,7 @@ namespace sc
 		// 파일 전체를 T 배열로 읽음 (레코드가 연속된 AoS 파일 전용, images.dat 같은 SoA 파일은 불가)
 		// 크기 0인 파일, 크기가 sizeof(T)의 배수가 아닌 파일은 실패
 		// 실패 시 out_data는 항상 비워짐
-		template <typename T = uint8> requires std::is_trivially_copyable_v<T>
+		template <typename T = uint8_t> requires std::is_trivially_copyable_v<T>
 		[[nodiscard]] bool ReadAll(std::vector<T>& out_data) const
 		{
 			out_data.clear();
@@ -70,7 +70,7 @@ namespace sc
 		}
 
 		// 실패 시 빈 vector (ReadAll(out_data)와 같은 실패 조건)
-		template <typename T = uint8> requires std::is_trivially_copyable_v<T>
+		template <typename T = uint8_t> requires std::is_trivially_copyable_v<T>
 		std::optional<std::vector<T>> ReadAll() const
 		{
 			std::vector<T> out_data;

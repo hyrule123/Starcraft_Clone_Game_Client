@@ -42,21 +42,21 @@ namespace sc
 	constexpr size_t megatiles_per_group = 16;
 	struct CV5
 	{
-		uint16 terrain_type;      // 0=미사용, 1=두다드, 2+=지형/가장자리
-		uint16 flags;
+		uint16_t terrain_type;      // 0=미사용, 1=두다드, 2+=지형/가장자리
+		uint16_t flags;
 
-		uint16 edge_left;         // 인접 가능한 타일 타입
-		uint16 edge_up;
-		uint16 edge_right;
-		uint16 edge_down;
+		uint16_t edge_left;         // 인접 가능한 타일 타입
+		uint16_t edge_up;
+		uint16_t edge_right;
+		uint16_t edge_down;
 
-		uint16 piece_left;        // 항상 0
-		uint16 piece_up;          // 다중 타일 블록 판정
-		uint16 piece_right;       // 항상 0
-		uint16 piece_down;
+		uint16_t piece_left;        // 항상 0
+		uint16_t piece_up;          // 다중 타일 블록 판정
+		uint16_t piece_right;       // 항상 0
+		uint16_t piece_down;
 
 		// VX4 / VF4 megatile lookup table.
-		std::array<uint16, megatiles_per_group> megatiles; // VX4/VF4 인덱스
+		std::array<uint16_t, megatiles_per_group> megatiles; // VX4/VF4 인덱스
 	};
 	static_assert(sizeof(CV5) == 52, "CV5 must be 52 bytes");
 
@@ -70,11 +70,11 @@ namespace sc
 	constexpr size_t minitiles_per_VX4 = 16;
 	struct VX4
 	{
-		using Elem = uint16;
+		using Elem = uint16_t;
 		std::array<Elem, minitiles_per_VX4> minitiles;
 	};
 	static_assert(sizeof(VX4) == 32, "VX4 must be 32 bytes");
-	constexpr uint16 VX4Ref(VX4::Elem v) { return v >> 1; }
+	constexpr uint16_t VX4Ref(VX4::Elem v) { return v >> 1; }
 	constexpr bool   VX4Flipped(VX4::Elem v) { return (v & 0b0000'0000'0000'0001) != 0; }
 
 	// -------------------------------------------------------------------
@@ -83,18 +83,18 @@ namespace sc
 	// -------------------------------------------------------------------
 	struct VF4
 	{
-		using Elem = uint16;
+		using Elem = uint16_t;
 		std::array<Elem, 16> minitile_flags;
 	};
 	static_assert(sizeof(VF4) == 32, "VF4 must be 32 bytes");
 
 	namespace VF4Flag
 	{
-		constexpr uint16 kWalkable = 1 << 0;
-		constexpr uint16 kMid = 1 << 1;
-		constexpr uint16 kHigh = 1 << 2;   // Mid, High 둘 다 0이면 Low
-		constexpr uint16 kBlocksView = 1 << 3;
-		constexpr uint16 kRamp = 1 << 4;
+		constexpr uint16_t kWalkable = 1 << 0;
+		constexpr uint16_t kMid = 1 << 1;
+		constexpr uint16_t kHigh = 1 << 2;   // Mid, High 둘 다 0이면 Low
+		constexpr uint16_t kBlocksView = 1 << 3;
+		constexpr uint16_t kRamp = 1 << 4;
 	}
 
 	// -------------------------------------------------------------------
@@ -106,7 +106,7 @@ namespace sc
 	constexpr size_t minile_pixel_count = minile_pixel_nrow * minile_pixel_ncol;
 	struct VR4
 	{
-		using Elem = uint8;
+		using Elem = uint8_t;
 		std::array<std::array<Elem, minile_pixel_ncol>, minile_pixel_nrow> pixels;        // [y][x]
 	};
 	static_assert(sizeof(VR4) == 64, "VR4 must be 64 bytes");
@@ -119,7 +119,7 @@ namespace sc
 	// -------------------------------------------------------------------
 	struct WPE
 	{
-		uint8 r, g, b, unused;    // unused는 알파가 아님 (항상 0)
+		uint8_t r, g, b, unused;    // unused는 알파가 아님 (항상 0)
 	};
 	static_assert(sizeof(WPE) == 4, "WPE must be 4 bytes");
 
@@ -139,7 +139,7 @@ namespace sc
 	};
 
 	//스타크래프트 맵 데이터 속 "ERA" 안에 들어있는 정보 
-	enum class TileSetType : uint32
+	enum class TileSetType : uint32_t
 	{
 		kBadlands = 0x00,
 		kSpace_platform = 0x01,
@@ -173,23 +173,23 @@ namespace sc
 		kEND
 	};
 
-	constexpr uint32 ChunkIDByteStride = 4u;
+	constexpr uint32_t ChunkIDByteStride = 4u;
 
 	// 글자 수가 적을 경우 '띄어쓰기' 포함
-	// 길이는 '4' 고정 -> uint32 등으로 캐스팅해서 비교 가능
-	constexpr std::string_view SCChunkTypeName[(uint32)SCChunkType::kEND] = {
+	// 길이는 '4' 고정 -> uint32_t 등으로 캐스팅해서 비교 가능
+	constexpr std::string_view SCChunkTypeName[(uint32_t)SCChunkType::kEND] = {
 	"ERA ", "DIM ", "MTXM", "UNIT"
 	};
 
-	constexpr uint32 ChunkID(const std::string_view s)
+	constexpr uint32_t ChunkID(const std::string_view s)
 	{
 		if (s.size() != 4) throw "4 chars required";
 
-		return (uint32)(uint8)s[0] | ((uint32)(uint8)s[1] << 8)
-			| ((uint32)(uint8)s[2] << 16) | ((uint32)(uint8)s[3] << 24);
+		return (uint32_t)(uint8_t)s[0] | ((uint32_t)(uint8_t)s[1] << 8)
+			| ((uint32_t)(uint8_t)s[2] << 16) | ((uint32_t)(uint8_t)s[3] << 24);
 	}
 
-	constexpr std::string IDToChunkName(const uint32 id)
+	constexpr std::string IDToChunkName(const uint32_t id)
 	{
 		std::string ret;
 		ret.resize(4);
@@ -202,8 +202,8 @@ namespace sc
 		return ret;
 	}
 
-	// 4글자 char -> uint32로 변환
-	constexpr uint32 map_data_type_name_IDs[(uint32)SCChunkType::kEND] = {
+	// 4글자 char -> uint32_t로 변환
+	constexpr uint32_t map_data_type_name_IDs[(uint32_t)SCChunkType::kEND] = {
 		ChunkID(SCChunkTypeName[0]),
 		ChunkID(SCChunkTypeName[1]),
 		ChunkID(SCChunkTypeName[2]),
@@ -213,26 +213,26 @@ namespace sc
 #pragma pack(push, 1)
 	struct UnitData
 	{
-		uint32 unit_info;
-		uint16 pos_x;
-		uint16 pos_y;
-		uint16 id;          //유닛 ID
-		uint16 linked_unit_flag;         //애드온, 나이더스 커널 등 연결된 유닛 유무
-		uint16 property;    //유닛 속성(아래 참고 - 아직 사용하지는 않음)
+		uint32_t unit_info;
+		uint16_t pos_x;
+		uint16_t pos_y;
+		uint16_t id;          //유닛 ID
+		uint16_t linked_unit_flag;         //애드온, 나이더스 커널 등 연결된 유닛 유무
+		uint16_t property;    //유닛 속성(아래 참고 - 아직 사용하지는 않음)
 
-		uint16 upgradable_property;  //유닛의 상태변화에 적용가능한 속성(체력통 증가, 마나통 증가 등등) - 사용 X
+		uint16_t upgradable_property;  //유닛의 상태변화에 적용가능한 속성(체력통 증가, 마나통 증가 등등) - 사용 X
 
-		uint8 owner;
-		uint8 hp_percent;
-		uint8 shield_percent;
-		uint8 energy_percent;
+		uint8_t owner;
+		uint8_t hp_percent;
+		uint8_t shield_percent;
+		uint8_t energy_percent;
 
-		uint32 resources;
-		uint16 num_unit_in_container;
+		uint32_t resources;
+		uint16_t num_unit_in_container;
 
-		uint16 unit_state_flag;
-		uint32 unused;
-		uint32 linked_unit_class_inst; //연결된 유닛(애드온, 나이더스 커널)의 인스턴스 정보
+		uint16_t unit_state_flag;
+		uint32_t unused;
+		uint32_t linked_unit_class_inst; //연결된 유닛(애드온, 나이더스 커널)의 인스턴스 정보
 	};
 #pragma pack(pop)
 	static_assert(sizeof(UnitData) == 36, "UnitData size must be 36 bytes.");
@@ -270,24 +270,24 @@ namespace sc
 */
 
 // MTXM : 좌상단으로부터 한 칸씩 메가타일의 인덱스가 적혀있음.
-	using MTXM = uint16;
+	using MTXM = uint16_t;
 
-	struct RGBA { uint8 r, g, b, a; };
+	struct RGBA { uint8_t r, g, b, a; };
 
-	constexpr uint32 MTXMGroup(uint16 v) { return (v & 0b0111'1111'1111'0000) >> 4; }
-	constexpr uint32 MTXMTile(uint16 v) { return  v & 0b0000'0000'0000'1111; }
+	constexpr uint32_t MTXMGroup(uint16_t v) { return (v & 0b0111'1111'1111'0000) >> 4; }
+	constexpr uint32_t MTXMTile(uint16_t v) { return  v & 0b0000'0000'0000'1111; }
 
 	// 최종 결과물
 	struct SCMap
 	{
 		TileSetType terrain_type = TileSetType::kCount;
-		uint32 megatile_width = 0;
-		uint32 megatile_height = 0;
+		uint32_t megatile_width = 0;
+		uint32_t megatile_height = 0;
 		
 		std::vector<UnitData> unit_data = {};
 
 		// 결과물
-		std::shared_ptr<engine::Texture2D> texture = {};	// uint8 texture
+		std::shared_ptr<engine::Texture2D> texture = {};	// uint8_t texture
 
 		// WPE 색상 팔레트
 		std::shared_ptr<engine::TypedBuffer> wpe_color_palettes = {};
@@ -297,11 +297,11 @@ namespace sc
 	struct SCMapLoadingData
 	{
 		TileSetType terrain_type = TileSetType::kCount;
-		uint32 megatile_width = 0;
-		uint32 megatile_height = 0;
+		uint32_t megatile_width = 0;
+		uint32_t megatile_height = 0;
 
-		std::vector<uint8> map_raw_bytes = {};
-		engine::StringHashTable<std::vector<uint8>> map_data_table = {};
+		std::vector<uint8_t> map_raw_bytes = {};
+		engine::StringHashTable<std::vector<uint8_t>> map_data_table = {};
 
 		std::vector<MTXM> mtxm = {};
 		std::vector<UnitData> unit_data = {};

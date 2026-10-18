@@ -29,8 +29,8 @@ namespace sc
             "green",
         };
 
-        constexpr uint32 kDarkRows = 32;
-        constexpr uint32 kDarkIdentityRow = 31;  // OpenBW가 로드 후 항등 테이블로 덮어쓰는 행
+        constexpr uint32_t kDarkRows = 32;
+        constexpr uint32_t kDarkIdentityRow = 31;  // OpenBW가 로드 후 항등 테이블로 덮어쓰는 행
     }
 
     SCTileSetPcxLUT::SCTileSetPcxLUT()
@@ -41,15 +41,15 @@ namespace sc
 
     bool SCTileSetPcxLUT::Init(const MPQFileSystem& fs, std::string_view tileset_name)
     {
-        std::vector<uint8> data;
+        std::vector<uint8_t> data;
         std::array<TableRange, kTableCount> ranges{};
 
-        for (uint32 i = 0; i < kTableCount; ++i)
+        for (uint32_t i = 0; i < kTableCount; ++i)
         {
             const std::string path = std::format("tileset\\{}\\{}.pcx", tileset_name, kTableFileNames[i]);
 
 			MPQFile file = fs.OpenFile(path);
-            const std::optional<std::vector<uint8>> bytes = fs.ReadFile(path);
+            const std::optional<std::vector<uint8_t>> bytes = fs.ReadFile(path);
             if (!bytes.has_value())
             {
                 return false;  // ReadFile이 이미 알림
@@ -68,27 +68,27 @@ namespace sc
                 return false;
             }
 
-            const bool is_dark = (i == static_cast<uint32>(PcxLUT::Dark));
+            const bool is_dark = (i == static_cast<uint32_t>(PcxLUT::Dark));
             if (is_dark && pcx.height() != kDarkRows)
             {
                 ERR_MSG("SCTileSetPcxLUT: dark.pcx는 256x32여야 함 {} ({}x{})", path, pcx.width(), pcx.height());
                 return false;
             }
 
-            const uint32 offset = static_cast<uint32>(data.size());
+            const uint32_t offset = static_cast<uint32_t>(data.size());
             ranges[i].offset = offset;
             ranges[i].rows = pcx.height();
 
-            const std::span<const uint8> pixels = pcx.pixels();
+            const std::span<const uint8_t> pixels = pcx.pixels();
             data.insert(data.end(), pixels.begin(), pixels.end());
 
             // OpenBW와 동일: dark 31번 행을 항등 테이블(x → x)로 덮어씀
             if (is_dark)
             {
-                uint8* row = data.data() + offset + kDarkIdentityRow * kTableWidth;
-                for (uint32 x = 0; x < kTableWidth; ++x)
+                uint8_t* row = data.data() + offset + kDarkIdentityRow * kTableWidth;
+                for (uint32_t x = 0; x < kTableWidth; ++x)
                 {
-                    row[x] = static_cast<uint8>(x);
+                    row[x] = static_cast<uint8_t>(x);
                 }
             }
 
@@ -108,7 +108,7 @@ namespace sc
 
     const SCTileSetPcxLUT::TableRange& SCTileSetPcxLUT::range(PcxLUT table) const
     {
-        const uint32 index = static_cast<uint32>(table);
+        const uint32_t index = static_cast<uint32_t>(table);
         ASSERT(index < kTableCount);
         return ranges_[index];
     }

@@ -13,29 +13,29 @@ namespace sc
         constexpr size_t kHeaderSize = 128;
 
         // 헤더 필드 오프셋
-        constexpr size_t kOffsetManufacturer = 0;   // uint8, 0x0A
-        constexpr size_t kOffsetEncoding = 2;       // uint8, 1 = RLE
-        constexpr size_t kOffsetBitsPerPixel = 3;   // uint8
-        constexpr size_t kOffsetXMin = 4;           // uint16
-        constexpr size_t kOffsetYMin = 6;           // uint16
-        constexpr size_t kOffsetXMax = 8;           // uint16
-        constexpr size_t kOffsetYMax = 10;          // uint16
-        constexpr size_t kOffsetPlanes = 65;        // uint8
-        constexpr size_t kOffsetBytesPerLine = 66;  // uint16
+        constexpr size_t kOffsetManufacturer = 0;   // uint8_t, 0x0A
+        constexpr size_t kOffsetEncoding = 2;       // uint8_t, 1 = RLE
+        constexpr size_t kOffsetBitsPerPixel = 3;   // uint8_t
+        constexpr size_t kOffsetXMin = 4;           // uint16_t
+        constexpr size_t kOffsetYMin = 6;           // uint16_t
+        constexpr size_t kOffsetXMax = 8;           // uint16_t
+        constexpr size_t kOffsetYMax = 10;          // uint16_t
+        constexpr size_t kOffsetPlanes = 65;        // uint8_t
+        constexpr size_t kOffsetBytesPerLine = 66;  // uint16_t
 
-        constexpr uint8 kManufacturer = 0x0A;
-        constexpr uint8 kRunFlag = 0xC0;   // 상위 두 비트가 11이면 반복 런
-        constexpr uint8 kRunMask = 0x3F;
+        constexpr uint8_t kManufacturer = 0x0A;
+        constexpr uint8_t kRunFlag = 0xC0;   // 상위 두 비트가 11이면 반복 런
+        constexpr uint8_t kRunMask = 0x3F;
 
-        uint16 ReadU16(const uint8* p)
+        uint16_t ReadU16(const uint8_t* p)
         {
-            uint16 value;
+            uint16_t value;
             std::memcpy(&value, p, sizeof(value));  // 리틀 엔디언 전제 (Windows 전용)
             return value;
         }
     }
 
-    bool PcxFile::Load(std::span<const uint8> bytes)
+    bool PcxFile::Load(std::span<const uint8_t> bytes)
     {
         if (bytes.size() < kHeaderSize)
         {
@@ -43,7 +43,7 @@ namespace sc
             return false;
         }
 
-        const uint8* header = bytes.data();
+        const uint8_t* header = bytes.data();
 
         if (header[kOffsetManufacturer] != kManufacturer)
         {
@@ -58,10 +58,10 @@ namespace sc
             return false;
         }
 
-        const uint16 x_min = ReadU16(header + kOffsetXMin);
-        const uint16 y_min = ReadU16(header + kOffsetYMin);
-        const uint16 x_max = ReadU16(header + kOffsetXMax);
-        const uint16 y_max = ReadU16(header + kOffsetYMax);
+        const uint16_t x_min = ReadU16(header + kOffsetXMin);
+        const uint16_t y_min = ReadU16(header + kOffsetYMin);
+        const uint16_t x_max = ReadU16(header + kOffsetXMax);
+        const uint16_t y_max = ReadU16(header + kOffsetYMax);
 
         if (x_min != 0 || y_min != 0 || x_max < x_min || y_max < y_min)
         {
@@ -69,24 +69,24 @@ namespace sc
             return false;
         }
 
-        const uint32 width = static_cast<uint32>(x_max) + 1;
-        const uint32 height = static_cast<uint32>(y_max) + 1;
+        const uint32_t width = static_cast<uint32_t>(x_max) + 1;
+        const uint32_t height = static_cast<uint32_t>(y_max) + 1;
 
         // 행 끝 여백이 있는 파일은 지원하지 않음 (OpenBW와 동일, 스타크래프트 데이터에는 없음)
-        const uint16 bytes_per_line = ReadU16(header + kOffsetBytesPerLine);
+        const uint16_t bytes_per_line = ReadU16(header + kOffsetBytesPerLine);
         if (bytes_per_line != width)
         {
             ERR_MSG("PCX: 행 여백 미지원 (bytes_per_line {}, width {})", bytes_per_line, width);
             return false;
         }
 
-        std::vector<uint8> pixels(static_cast<size_t>(width) * height);
+        std::vector<uint8_t> pixels(static_cast<size_t>(width) * height);
 
         // RLE는 행 경계와 무관하게 연속 스트림으로 디코딩 (여백이 없으므로 동일)
-        const uint8* src = bytes.data() + kHeaderSize;
-        const uint8* const src_end = bytes.data() + bytes.size();
-        uint8* dst = pixels.data();
-        uint8* const dst_end = pixels.data() + pixels.size();
+        const uint8_t* src = bytes.data() + kHeaderSize;
+        const uint8_t* const src_end = bytes.data() + bytes.size();
+        uint8_t* dst = pixels.data();
+        uint8_t* const dst_end = pixels.data() + pixels.size();
 
         while (dst < dst_end)
         {
@@ -96,7 +96,7 @@ namespace sc
                 return false;
             }
 
-            const uint8 control = *src++;
+            const uint8_t control = *src++;
             if ((control & kRunFlag) == kRunFlag)
             {
                 if (src >= src_end)
@@ -105,7 +105,7 @@ namespace sc
                     return false;
                 }
 
-                const uint8 value = *src++;
+                const uint8_t value = *src++;
                 const size_t remaining = static_cast<size_t>(dst_end - dst);
                 const size_t count = std::min<size_t>(control & kRunMask, remaining);
                 std::memset(dst, value, count);

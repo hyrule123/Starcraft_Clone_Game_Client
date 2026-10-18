@@ -29,13 +29,13 @@ namespace sc
         // 첫 실패에서 중단하고 false 반환 (원인은 하위 계층이 ERR_MSG로 알림)
         bool Init(const MPQFileSystem& fs);
 
-        const ImageDef& GetImageDef(uint32 image_type) const;
+        const ImageDef& GetImageDef(uint32_t image_type) const;
 
-        uint32 grp_count() const { return static_cast<uint32>(manifest_.sources.size()); }
+        uint32_t grp_count() const { return static_cast<uint32_t>(manifest_.sources.size()); }
 
         // GRP가 없는 이미지 타입이면 nullptr
         // 반환 포인터는 이 라이브러리가 살아있는 동안 유효 (비소유)
-        std::shared_ptr<engine::Texture2DArray> GetTexture(uint32 image_type) const;
+        std::shared_ptr<engine::Texture2DArray> GetTexture(uint32_t image_type) const;
 
     private:
         ImageDefTable defs_ = {};

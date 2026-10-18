@@ -17,7 +17,7 @@ namespace sc
 
         [[nodiscard]] MPQFile OpenFile(const std::filesystem::path& inner_path) const;
 
-		template <typename T = uint8> requires std::is_trivially_copyable_v<T>
+		template <typename T = uint8_t> requires std::is_trivially_copyable_v<T>
 		[[nodiscard]] std::optional<std::vector<T>> ReadFile(const std::filesystem::path& inner_path) const
 		{
 			MPQFile file = OpenFile(inner_path);
@@ -28,7 +28,7 @@ namespace sc
 			return file.ReadAll<T>();
 		}
 
-		template  <typename T = uint8> requires std::is_trivially_copyable_v<T>
+		template  <typename T = uint8_t> requires std::is_trivially_copyable_v<T>
 		[[nodiscard]] bool ReadFile(const std::filesystem::path& inner_path, std::vector<T>& out_data) const
 		{
 			out_data.clear();

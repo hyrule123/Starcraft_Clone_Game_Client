@@ -7,8 +7,8 @@
 
 namespace sc
 {
-	constexpr uint32 kResolutionWidth = 640;
-	constexpr uint32 kResolutionHeight = 480;
+	constexpr uint32_t kResolutionWidth = 640;
+	constexpr uint32_t kResolutionHeight = 480;
 
 	constexpr float2 kCellSize = float2(32.0f * 2.0f, 32.0f * 2.0f);	//CollisionSystem2D에서 사용하는 Cell Size
 

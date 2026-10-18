@@ -319,7 +319,7 @@ namespace sc
 		color_desc.create_srv = true;
 		color_desc.create_uav = true;
 		color_desc.format = DXGI_FORMAT_R32_UINT;
-		color_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32)sc::kResolutionWidth, .height = (uint32)sc::kResolutionHeight, .scale = 1.0f };
+		color_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32_t)sc::kResolutionWidth, .height = (uint32_t)sc::kResolutionHeight, .scale = 1.0f };
 
 		std::shared_ptr<RenderTarget> sc_rt = rt_pool.AcquireColor("ScWpeRenderTarget", color_desc);
 
@@ -327,7 +327,7 @@ namespace sc
 
 		DepthTargetDesc depth_desc = {};
 		depth_desc.format = DXGI_FORMAT_D32_FLOAT;
-		depth_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32)sc::kResolutionWidth, .height = (uint32)sc::kResolutionHeight, .scale = 1.0f };
+		depth_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32_t)sc::kResolutionWidth, .height = (uint32_t)sc::kResolutionHeight, .scale = 1.0f };
 		std::shared_ptr<DepthStencilTarget> sc_dst = rt_pool.AcquireDepth("ScWpeDepthTarget", depth_desc);
 
 		sc_rendertarget_group->SetRenderTargets({sc_rt, });
@@ -357,11 +357,11 @@ namespace sc
 			color_desc.create_srv = true;
 			color_desc.create_uav = false;
 			color_desc.format = DXGI_FORMAT_R8G8B8A8_UNORM;
-			color_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32)sc::kResolutionWidth, .height = (uint32)sc::kResolutionHeight, .scale = 1.0f };
+			color_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32_t)sc::kResolutionWidth, .height = (uint32_t)sc::kResolutionHeight, .scale = 1.0f };
 
 			DepthTargetDesc depth_desc = {};
 			depth_desc.format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-			depth_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32)sc::kResolutionWidth, .height = (uint32)sc::kResolutionHeight, .scale = 1.0f };
+			depth_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32_t)sc::kResolutionWidth, .height = (uint32_t)sc::kResolutionHeight, .scale = 1.0f };
 
 			std::shared_ptr<RenderTargetGroup> sc_color_rtg = EntityManager::CreateEntity<RenderTargetGroup>();
 			sc_color_rtg->SetRenderTargets({ rt_pool.AcquireColor("ScColorRenderTarget", color_desc), });

@@ -215,7 +215,7 @@ namespace sc
 		bool result = image_mesh_->CreateVertexBuffer<ImageVSInput>(vertices, local_bounds); // YES
 		CHECK_F(result, "Failed to create vertex buffer");
 
-		constexpr uint16 indices[6] = { 0, 1, 2, 0, 2, 3 };
+		constexpr uint16_t indices[6] = { 0, 1, 2, 0, 2, 3 };
 		result = image_mesh_->CreateIndexBuffer(indices, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		CHECK_F(result, "Failed to create index buffer");
 	}
@@ -239,7 +239,7 @@ namespace sc
 		map_material_->SetPipelineState(sc::kScOpaquePass, pipeline_state);
 	}
 
-	std::shared_ptr<engine::Material> SCResourceManager::GetImageMaterial(uint32 image_type, SCImageMaterialVariant variant)
+	std::shared_ptr<engine::Material> SCResourceManager::GetImageMaterial(uint32_t image_type, SCImageMaterialVariant variant)
 	{
 		using namespace engine;
 

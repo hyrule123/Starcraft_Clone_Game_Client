@@ -63,7 +63,7 @@ namespace sc
 		auto context = GraphicsDevice::GetInst().GetContext();
 
 		MapInfoCB map_info_cb = {};
-		map_info_cb.megatile_size = { (int32)map_data.megatile_width, (int32)map_data.megatile_height };
+		map_info_cb.megatile_size = { (int32_t)map_data.megatile_width, (int32_t)map_data.megatile_height };
 		
 		if (map_info_buffer_ == nullptr)
 		{

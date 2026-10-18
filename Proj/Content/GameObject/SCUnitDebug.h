@@ -16,12 +16,12 @@ namespace sc
 
         virtual void Init() override;
 
-		void SetUnitId(uint32 unit_id) { unit_id_ = unit_id; }
+		void SetUnitId(uint32_t unit_id) { unit_id_ = unit_id; }
 		void InvalidateUnitId() { unit_id_ = SCSim::kInvalidUnitId; }
-		uint32 GetUnitId() const { return unit_id_; }
+		uint32_t GetUnitId() const { return unit_id_; }
 
     private:
-        uint32 unit_id_ = SCSim::kInvalidUnitId;
+        uint32_t unit_id_ = SCSim::kInvalidUnitId;
     };
 }
 

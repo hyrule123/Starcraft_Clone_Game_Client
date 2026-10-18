@@ -51,10 +51,10 @@ namespace engine
 		//	anim_->SetSprite(medic_sprite);
 
 		//	std::unique_ptr<SpriteAnimClip> clip = std::make_unique<SpriteAnimClip>();
-		//	std::vector<uint32> frames = {};
-		//	for (uint32 i = 0; i < 9; ++i)
+		//	std::vector<uint32_t> frames = {};
+		//	for (uint32_t i = 0; i < 9; ++i)
 		//	{
-		//		uint32 frame = 68u + 17u * i;
+		//		uint32_t frame = 68u + 17u * i;
 		//		frames.push_back(frame);
 		//	}
 		//	clip->AddFrames(frames, 0.75f);
