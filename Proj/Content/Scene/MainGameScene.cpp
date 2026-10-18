@@ -551,7 +551,7 @@ namespace sc
 					img_obj->GetTransform()->SetParent(sprt_obj->GetTransform());
 				}
 
-				const SCImageParam img_param = { .depth_key = MakeDepthKey(rank, order), .player_color = player_color_idx };
+				const SCImageParam img_param = { .depth_key = MakeDepthKey(rank, order), .player_color_idx = player_color_idx };
 
 				// 매 프레임 바뀌기 때문에 ApplySnapshot을 항상 호출해줘야 함
 				img_obj->ApplySnapshot(img_data, img_param);

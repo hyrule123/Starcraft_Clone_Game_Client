@@ -67,7 +67,11 @@ namespace sc
     // SyncSprites가 이미지마다 1회 구성해 전달하는 값
     struct SCImageParam
     {
+        // SCImageCommon.hlsli의 depth_key에 그대로 사용하는 변수. 설명은 해당 항목의 주석 참고
         uint32_t depth_key = 0;
-        uint32_t player_color = 0;
+
+        // 플레이어 색 번호 (0~15). owner가 아니라 players[owner].color 값.
+        // GRP 원본 인덱스 8~15를 tunit[player_color_idx * 8 + (index - 8)]로 치환하는 데 사용.
+        uint32_t player_color_idx = 0;
     };
 }

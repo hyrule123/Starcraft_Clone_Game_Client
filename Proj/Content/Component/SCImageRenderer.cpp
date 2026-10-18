@@ -87,7 +87,7 @@ namespace sc
 
 		data.sc_center_pos = WorldToScInt(world_pos.x, world_pos.y);
 		data.frame = img_data_cache_.frame;
-		data.flags = PackSpriteFlags(flipped, img_param_cache_.player_color, static_cast<uint32_t>(img_data_cache_.modifier), 0, 0);
+		data.flags = PackSpriteFlags(flipped, img_param_cache_.player_color_idx, static_cast<uint32_t>(img_data_cache_.modifier), 0, 0);
 		data.depth_key = img_param_cache_.depth_key;
 
 		data_block.Write(data);

@@ -88,7 +88,7 @@ namespace sc
 		materials_.resize(sc_image_library_.grp_count());
 		CreateMesh();
 	}
-	std::shared_ptr<engine::Material> SCResourceManager::GetMapMaterial() const
+	std::shared_ptr<engine::Material> SCResourceManager::GetNewMapMaterial() const
 	{
 		return map_material_->Clone();
 	}

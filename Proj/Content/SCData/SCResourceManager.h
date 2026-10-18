@@ -59,7 +59,7 @@ namespace sc
 		std::shared_ptr<engine::Mesh> GetImageMesh() const { return image_mesh_; }
 
 		std::shared_ptr<engine::Mesh> GetMapMesh() const { return map_mesh_; }
-		std::shared_ptr<engine::Material> GetMapMaterial() const;
+		std::shared_ptr<engine::Material> GetNewMapMaterial() const;
 
 	private:
 		bool LoadTilesetData(const MPQFileSystem& mpq_file_system);

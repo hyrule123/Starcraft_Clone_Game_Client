@@ -18,7 +18,11 @@ struct SCImageInstance
 	int2 sc_center_pos; // SC 좌표계 기준 캔버스 중앙 위치
 	uint frame; // Texture2DArray 슬라이스
 	uint flags; // 기존 비트 배치 그대로(비트 배치는 아래 주석 참고)
-	uint depth_key; // 하위 23비트 사용
+	
+	// 깊이 키. VS에서 z = (depth_key + 1) * 2^-24 로 변환해 SV_Position.z에 덮어씀 (+1: 맵이 z = 0 사용)
+	// 범위 0 ~ 16777215 (24비트) — 이 범위에서 float32로 오차 없이 표현됨
+	// 현재 16비트 사용: [rank 12 (상위)][order 4 (하위)], 생성은 MainGameScene의 MakeDepthKey 참고
+	uint depth_key; 
 	
 	// flags 비트 배치
 	// [0]      반전

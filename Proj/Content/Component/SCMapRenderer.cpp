@@ -38,7 +38,7 @@ namespace sc
 		using namespace engine;
 
 		SetMesh(SCResourceManager::GetInst().GetMapMesh());
-		SetMaterial(0, SCResourceManager::GetInst().GetMapMaterial());
+		SetMaterial(0, SCResourceManager::GetInst().GetNewMapMaterial());
 
 		SetEnable(false);
 	}
