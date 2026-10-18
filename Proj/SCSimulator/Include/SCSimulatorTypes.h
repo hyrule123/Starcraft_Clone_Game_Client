@@ -19,6 +19,30 @@ namespace SCSim
 	constexpr uint32_t kInvalidSpriteIndex = std::numeric_limits<uint32_t>::max();
 	constexpr uint32_t kInvalidUnitId = 0;
 
+	// image_t::modifier (images.dat "draw function"). 비트 플래그가 아닌 단일 상태값.
+	// 이름은 커뮤니티 명칭(PyMS 등) 기준, 괄호는 OpenBW 렌더러의 실제 처리
+	enum class ImageModifier : int32_t
+	{
+		Normal = 0,
+		NormalNoHallu = 1,   // 0과 동일하게 그림
+		Cloaking = 2,   // 은폐 중 (trans50 + 밝기 선택)
+		Cloaked = 3,   // 은폐 (trans50)
+		Decloaking = 4,   // 은폐 해제 중 (2와 같은 그리기)
+		EnemyCloaking = 5,   // OpenBW 렌더러 미지원
+		EnemyCloaked = 6,   // OpenBW 렌더러 미지원
+		EnemyDecloaking = 7,   // OpenBW 렌더러 미지원
+		Distortion = 8,   // EMP 등 왜곡
+		Remapping = 9,   // images.dat remapping LUT
+		Shadow = 10,
+		HpBar = 11,  // OpenBW 렌더러 미지원
+		WarpTexture = 12,
+		SelectionCircle = 13,  // OpenBW 렌더러 미지원
+		PlayerColor = 14,  // 생성 시 data1 = owner. OpenBW 렌더러 미지원
+		UpdateRect = 15,  // OpenBW 렌더러 미지원
+		Hallucination = 16,  // OpenBW 렌더러 미지원
+		WarpFlash = 17,
+	};
+
 	// sprite_t::flags 원본 비트 (1.16.1 배치). 아래에 없는 비트는 계약에 포함되지 않음
 	// 0x8(selected)은 OpenBW에서 설정되지 않아 항상 0 — 선택 정보로 사용 금지
 	namespace SpriteFlags
