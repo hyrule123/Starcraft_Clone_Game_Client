@@ -32,6 +32,7 @@ namespace sc
     {
     public:
 		using ElemType = uint8;
+
         static constexpr uint32 kTableWidth = 256;
         static constexpr uint32 kTableCount = static_cast<uint32>(PcxLUT::kCount);
 

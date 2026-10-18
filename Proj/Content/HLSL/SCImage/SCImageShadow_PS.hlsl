@@ -1,6 +1,9 @@
 #include <Content/HLSL/SCImage/SCImageCommon.hlsli>
 
-uint main(ImagePSInput input) : SV_TARGET
+RasterizerOrderedTexture2D<uint> g_sc_index_rt : register(REG_U_SC_WPE_TO_ROV_SLOT);
+
+[earlydepthstencil]
+void main(ImagePSInput input)
 {
 	const int2 texel = int2(floor(input.local));
 	const uint2 sampled = g_grp_sprite.Load(int4(texel, input.frame, 0));
@@ -9,14 +12,8 @@ uint main(ImagePSInput input) : SV_TARGET
 	{
 		discard; // 커버리지 0 = 투명
 	}
-
-	uint index = sampled.x;
-	if (index >= 8 && index < 16)
-	{
-		index = g_tunit[input.color * 8 + (index - 8)];
-	}
-
-	return index;
-    // WPE 네 번째 바이트는 패딩이라 알파로 쓰지 않음
-	//return float4(g_wpe[index].rgb, 1.0);
+	
+	const uint2 pixel = uint2(input.position.xy);
+	const uint old = g_sc_index_rt[pixel];
+	g_sc_index_rt[pixel] = g_pcx_tileset_lut[kPcxLutDarkOffset + kShadowDarkRow * kPcxLutTableWidth + old];
 }

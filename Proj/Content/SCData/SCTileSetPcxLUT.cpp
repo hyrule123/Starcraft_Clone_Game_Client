@@ -3,12 +3,17 @@
 
 #include <Content/SCData/PCXFile.h>
 
+#include <Content/HLSL/SCImage/SCImageCommon.hlsli>
+
 #include <Engine/Core/Debug.h>
 
 #include <format>
 
 namespace sc
 {
+	static_assert(kPcxLutTableWidth == SCTileSetPcxLUT::kTableWidth, 
+        "SCImageCommon.hlsli의 kPcxLutTableWidth와 SCTileSetPcxLUT::kTableWidth가 일치하지 않음");
+
     namespace
     {
         // PcxLUT 순서와 반드시 일치
@@ -86,6 +91,8 @@ namespace sc
                     row[x] = static_cast<uint8>(x);
                 }
             }
+
+            ASSERT(range(PcxLUT::Dark).offset == kPcxLutDarkOffset);
         }
 
         DEBUG_LOG("SCTileSetPcxLUT [{}]: dark {} / ofire {} / gfire {} / bfire {} / bexpl {} / trans50 {} / red {} / green {} rows, total {} bytes",

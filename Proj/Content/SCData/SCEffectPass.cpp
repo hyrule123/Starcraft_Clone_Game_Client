@@ -4,7 +4,7 @@
 #include <Engine/Resource/GPU/Buffer/RenderTarget.h>
 #include <Engine/Resource/GPU/Buffer/DepthStencilTarget.h>
 
-
+#include <Content/HLSL/SCImage/SCImageCommon.hlsli>
 
 namespace sc
 {
@@ -15,6 +15,7 @@ namespace sc
 
 	SCEffectPass::~SCEffectPass()
 	{}
+
 	void SCEffectPass::SetWPETargets(std::shared_ptr<engine::RenderTarget> rt, std::shared_ptr<engine::DepthStencilTarget> dst)
 	{
 		CHECK(rt && dst);
@@ -33,7 +34,7 @@ namespace sc
 		ID3D11DepthStencilView* wpe_depth_dsv = wpe_depth_target_->GetRawDepthStencilView();
 		
 		// ROV만 바인딩함
-		ctx.dc->OMSetRenderTargetsAndUnorderedAccessViews(0, nullptr, wpe_depth_dsv, 0, 1, &wpe_idx_uav, nullptr);
+		ctx.dc->OMSetRenderTargetsAndUnorderedAccessViews(0, nullptr, wpe_depth_dsv, REG_U_SC_WPE_TO_ROV_SLOT.Get(), 1, &wpe_idx_uav, nullptr);
 
 		D3D11_VIEWPORT viewport = {};
 		viewport.Width = static_cast<FLOAT>(wpe_render_target_->GetWidth());
@@ -51,6 +52,6 @@ namespace sc
 		constexpr ID3D11DepthStencilView* null_dsv = nullptr;
 
 		// ROV만 해제함
-		ctx.dc->OMSetRenderTargetsAndUnorderedAccessViews(0, nullptr, null_dsv, 0, 1, &null_uav, nullptr);
+		ctx.dc->OMSetRenderTargetsAndUnorderedAccessViews(0, nullptr, null_dsv, REG_U_SC_WPE_TO_ROV_SLOT.Get(), 1, &null_uav, nullptr);
 	}
 }

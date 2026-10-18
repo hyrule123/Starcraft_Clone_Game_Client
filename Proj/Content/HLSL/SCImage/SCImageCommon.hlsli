@@ -10,6 +10,7 @@
 #define REG_T_SC_TUNIT			REG_T_PER_FRAME_5
 #define REG_T_SC_WPE_PALETTE	REG_T_PER_FRAME_6
 #define REG_T_SC_PCX_TILESET_LUT	REG_T_PER_FRAME_7
+#define REG_U_SC_WPE_TO_ROV_SLOT REG_U(0)
 
 // C++ / HLSL 공유
 struct SCImageInstance
@@ -28,20 +29,25 @@ struct SCImageInstance
 };
 
 #ifdef __HLSL
-#define SC_CONST static const uint
+#define SC_CONST static const
 #else
-#define SC_CONST constexpr uint
+#define SC_CONST constexpr
 #endif
-SC_CONST kSpriteFlippedShift = 0;
-SC_CONST kSpriteFlippedBits = 1;
-SC_CONST kSpriteColorShift = 1;
-SC_CONST kSpriteColorBits = 4;
-SC_CONST kSpriteModifierShift = 8;
-SC_CONST kSpriteModifierBits = 8;
-SC_CONST kSpriteModifierDataShift = 16;
-SC_CONST kSpriteModifierDataBits = 8;
-SC_CONST kSpriteLutShift = 24;
-SC_CONST kSpriteLutBits = 4;
+SC_CONST uint kSpriteFlippedShift = 0;
+SC_CONST uint kSpriteFlippedBits = 1;
+SC_CONST uint kSpriteColorShift = 1;
+SC_CONST uint kSpriteColorBits = 4;
+SC_CONST uint kSpriteModifierShift = 8;
+SC_CONST uint kSpriteModifierBits = 8;
+SC_CONST uint kSpriteModifierDataShift = 16;
+SC_CONST uint kSpriteModifierDataBits = 8;
+SC_CONST uint kSpriteLutShift = 24;
+SC_CONST uint kSpriteLutBits = 4;
+
+SC_CONST uint kShadowDarkRow = 18; // OpenBW 하드 코딩된 항목
+SC_CONST uint kPcxLutTableWidth = 256;
+SC_CONST uint kPcxLutDarkOffset = 0;
+
 
 #ifdef __cplusplus
 // 구간이 겹치지 않는지 컴파일 시 확인
@@ -55,11 +61,7 @@ static_assert(kSpriteLutShift + kSpriteLutBits <= 32);
 #endif
 
 // 깊이 키 → z 변환 배율 (2^-24). z = (key + 1) * kScDepthScale, 키 24비트 이내에서 정확히 표현
-#ifdef __HLSL
-static const float kScDepthScale = 1.0 / 16777216.0;
-#else
-constexpr float kScDepthScale = 1.0f / 16777216.0f;
-#endif
+SC_CONST float kScDepthScale = 1.0f / 16777216.0f;
 
 struct ImageVSInput
 {

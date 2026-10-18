@@ -518,8 +518,8 @@ namespace sc
 			// 1. 깊이(Depth) 테스트 설정(ON + 쓰기 off)
 			// ------------------------------------------------------------------
 			desc.DepthEnable = TRUE;                           // 깊이 테스트 ON.
-			desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // 깊이 버퍼에 쓰지 않음. (반투명 그림자만 그리므로)
-			desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;                       // 깊이 테스트는 LESS로 설정. (기본값)
+			desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // 깊이 버퍼에 쓰지 않음. (반투명 / 이펙트 처리)
+			desc.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;   // 깊이 테스트는 GreaterEqual로 설정. - SC 전용 깊이 값 비교 예정
 
 			// ------------------------------------------------------------------
 			// 2. 스텐실(Stencil) 테스트 설정(OFF)
@@ -530,26 +530,8 @@ namespace sc
 		}
 		shadow_state->SetDepthStencilState(dss);
 
-		std::shared_ptr<BlendState> multiply_bs = EntityManager::CreateEntity<BlendState>();
-		{
-			D3D11_BLEND_DESC desc = {};
-			desc.RenderTarget[0].BlendEnable = TRUE;
-			// 결과 = 그림자 출력 × 기존 화면색
-			// 0.5 넣으면 기존 색의 0.5배를 곱함(어두워짐)
-			desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ZERO;
-			desc.RenderTarget[0].DestBlend = D3D11_BLEND_SRC_COLOR;
-			desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-			desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
-			desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
-			desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-			desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-			result = multiply_bs->Create(desc);
-			CHECK_F(result, "Failed to create multiply BlendState");
-		}
-		shadow_state->SetBlendState(multiply_bs);
-		
-		DEBUG_LOG("SCImage Shadow ID 바꿔야함");
-		shadow_material->SetPipelineState(engine::render_pass::ID::ForwardBlend, shadow_state);
+
+		shadow_material->SetPipelineState(kSCEffectPassID, shadow_state);
 #pragma endregion SHADOW PIPELINE
 	}
 
