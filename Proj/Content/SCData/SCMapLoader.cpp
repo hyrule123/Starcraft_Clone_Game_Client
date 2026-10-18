@@ -16,6 +16,12 @@
 
 namespace sc
 {
+	// TileSet Offset 범위 검증
+	static_assert(sizeof(SCTileSetPcxLUT::TableRange) == sizeof(uint32_t) * 2);
+	static_assert(offsetof(SCTileSetPcxLUT::TableRange, offset) == 0);                 // 셰이더 .x
+	static_assert(offsetof(SCTileSetPcxLUT::TableRange, rows) == sizeof(uint32_t));    // 셰이더 .y
+	static_assert(std::is_trivially_copyable_v<SCTileSetPcxLUT::TableRange>);
+
 	namespace
 	{
 		using ChunkTable = engine::StringHashTable<std::vector<uint8_t>>;
@@ -463,6 +469,15 @@ namespace sc
 				std::span<const SCTileSetPcxLUT::ElemType> pcx_lut_span = tileset.pcx_lut->data();
 				result = pcx_lut_gpu->CreateImmutableBuffer(DXGI_FORMAT_R8_UINT, pcx_lut_span);
 				if (!result) { clear_tilesets(); return false; }
+
+				
+				std::shared_ptr<TypedBuffer>& pcx_lut_offset_gpu = tileset_gpu.PCX_tileset_LUT_offsets;
+				pcx_lut_offset_gpu = EntityManager::CreateEntity<TypedBuffer>();
+
+				std::span<const SCTileSetPcxLUT::TableRange> pcx_lut_offset_span = tileset.pcx_lut->ranges();
+
+				result = pcx_lut_offset_gpu->CreateImmutableBuffer(DXGI_FORMAT_R32G32_UINT, pcx_lut_offset_span);
+				if (!result) { clear_tilesets(); return false; }
 			}
 #pragma endregion PCX - Tileset LUT
 		}
@@ -535,5 +550,6 @@ namespace sc
 		out_map.unit_data = std::move(map_data.unit_data);
 		out_map.wpe_color_palettes = tileset_gpu.WPE_color_palettes;
 		out_map.pcx_tileset_LUT = tileset_gpu.PCX_tileset_LUT;
+		out_map.pcx_tileset_LUT_offsets = tileset_gpu.PCX_tileset_LUT_offsets;
 	}
 }

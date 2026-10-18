@@ -19,6 +19,7 @@ namespace sc
 {
 	static_assert(kImageFlagHorizontallyFlipped == SCSim::ImageFlags::HorizontallyFlipped);
 	static_assert(kModifierShadow == static_cast<int32_t>(SCSim::ImageModifier::Shadow));
+	static_assert(kModifierCloaked == static_cast<int32_t>(SCSim::ImageModifier::Cloaked));
 
 	static_assert(std::is_same_v<decltype(SCImageInstance::image_flags), decltype(SCSim::ImageData::flags)>);
 	static_assert(std::is_same_v<decltype(SCImageInstance::modifier), decltype(SCSim::ImageData::modifier)>);

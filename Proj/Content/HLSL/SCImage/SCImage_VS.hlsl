@@ -40,6 +40,6 @@ ImageVSOutput main(ImageVSInput input)
 	output.modifier_data1 = inst.modifier_data1;
 	output.remapping = inst.remapping;
 	output.frame = inst.frame;
-	output.color_idx = inst.player_color_idx;
+	output.player_color_idx = inst.player_color_idx;
 	return output;
 }

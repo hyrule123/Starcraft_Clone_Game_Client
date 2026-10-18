@@ -291,7 +291,10 @@ namespace sc
 
 		// WPE 색상 팔레트
 		std::shared_ptr<engine::TypedBuffer> wpe_color_palettes = {};
+
+		// modifier별 팔레트 룩업 테이블 묶음과 묶음별 색인 오프셋
 		std::shared_ptr<engine::TypedBuffer> pcx_tileset_LUT = {};
+		std::shared_ptr<engine::TypedBuffer> pcx_tileset_LUT_offsets = {};
 	};
 
 	struct SCMapLoadingData
@@ -317,7 +320,7 @@ namespace sc
 		std::shared_ptr<engine::TypedBuffer> VR4_minitile_wpe_indices = {}; // from VR4
 		std::shared_ptr<engine::TypedBuffer> WPE_color_palettes = {}; // from WPE, std::shared_ptr - 렌더링할 때 필요
 		std::shared_ptr<engine::TypedBuffer> PCX_tileset_LUT = {}; // from SCTileSetPcxLUT, std::shared_ptr - 렌더링할 때 필요
-		std::shared_ptr<engine::ConstantBuffer> PCX_tileset_LUT_offsets = {}; // from SCTileSetPcxLUT, std::shared_ptr - 렌더링할 때 필요
+		std::shared_ptr<engine::TypedBuffer> PCX_tileset_LUT_offsets = {}; // from SCTileSetPcxLUT, std::shared_ptr - 렌더링할 때 필요
 	};
 
 }

@@ -16,7 +16,7 @@ namespace sc
     enum class PcxLUT : uint8_t
     {
         Dark = 0,
-        OFire,
+        Ofire,
         Gfire,
         Bfire,
         Bexpl,
@@ -50,6 +50,7 @@ namespace sc
         bool Init(const MPQFileSystem& fs, std::string_view tileset_name);
 
         std::span<const ElemType> data() const { return data_; }
+		std::span<const TableRange> ranges() const { return ranges_; }
         const TableRange& range(PcxLUT table) const;
 
     private:

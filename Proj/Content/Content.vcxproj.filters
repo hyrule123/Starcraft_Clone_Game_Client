@@ -303,5 +303,6 @@
     <None Include="HLSL\SCMapCommon.hlsli" />
     <None Include="HLSL\SCMapTileSet.hlsli" />
     <None Include="HLSL\SCImage\SCImageCommon.hlsli" />
+    <None Include="HLSL\SCCommon.hlsli" />
   </ItemGroup>
 </Project>

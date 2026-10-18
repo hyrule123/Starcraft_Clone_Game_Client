@@ -5,11 +5,12 @@
 #include <Engine/HLSL/Camera.hlsli>
 #include <Engine/HLSL/CommonSampler.hlsli>
 #include <Engine/HLSL/RenderPass.hlsli>
+#include <Content/HLSL/SCCommon.hlsli>
 
 #define REG_T_SC_GRP_SPRITE REG_T_PER_MATERIAL_0
-#define REG_T_SC_TUNIT			REG_T_PER_FRAME_5
-#define REG_T_SC_WPE_PALETTE	REG_T_PER_FRAME_6
+
 #define REG_T_SC_PCX_TILESET_LUT	REG_T_PER_FRAME_7
+#define REG_T_SC_PCX_TILESET_LUT_OFFSETS REG_T_PER_FRAME_8
 #define REG_U_SC_WPE_TO_ROV_SLOT REG_U(0)
 
 // C++ / HLSL 공유
@@ -38,12 +39,22 @@ struct SCImageInstance
 
 SC_CONST uint kShadowDarkRow = 18; // OpenBW 하드 코딩된 항목
 SC_CONST uint kPcxLutTableWidth = 256;
-SC_CONST uint kPcxLutDarkOffset = 0;
 // 깊이 키 → z 변환 배율 (2^-24). z = (key + 1) * kScDepthScale, 키 24비트 이내에서 정확히 표현
 SC_CONST float kScDepthScale = 1.0f / 16777216.0f;
 
 SC_CONST uint kImageFlagHorizontallyFlipped = 0x2;	// C++ (SCImageRenderer) 쪽에서 검증
 SC_CONST int kModifierShadow = 10; // image_t::modifier 값
+SC_CONST int kModifierCloaked = 3;
+
+SC_CONST uint kPcxLutDarkIdx = 0;
+SC_CONST uint kPcxLutOfireIdx = 1;
+SC_CONST uint kPcxLutGfireIdx = 2;
+SC_CONST uint kPcxLutBfireIdx = 3;
+SC_CONST uint kPcxLutBexplIdx = 4;
+SC_CONST uint kPcxLutTrans50Idx = 5;
+SC_CONST uint kPcxLutRedIdx = 6;
+SC_CONST uint kPcxLutGreenIdx = 7;
+SC_CONST uint kPcxLutCount = 8;
 
 #ifdef __cplusplus
 // 구간이 겹치지 않는지 컴파일 시 확인
@@ -70,13 +81,12 @@ struct ImageVSOutput
 	nointerpolation int modifier : MODIFIER; // image_t::modifier
 	nointerpolation int modifier_data1 : MODIFIER_DATA1; // image_t::modifier_data1
 	nointerpolation uint remapping : REMAPPING;
-	nointerpolation uint color_idx : PLAYER_COLOR; // tunit 행 번호 (0~15)
+	nointerpolation uint player_color_idx : PLAYER_COLOR; // tunit 행 번호 (0~15)
 };
 
 Texture2DArray<uint2> g_grp_sprite : register(REG_T_SC_GRP_SPRITE);
 Buffer<uint> g_tunit : register(REG_T_SC_TUNIT); // R8_UINT, 128개
 Buffer<float4> g_wpe : register(REG_T_SC_WPE_PALETTE); // R8G8B8A8_UNORM, 256개
-Buffer<uint> g_pcx_tileset_lut : register(REG_T_SC_PCX_TILESET_LUT); // R8_UINT
 
 float2 ScToWorld(float sc_x, float sc_y)
 {

@@ -14,6 +14,17 @@ namespace sc
 	static_assert(kPcxLutTableWidth == SCTileSetPcxLUT::kTableWidth, 
         "SCImageCommon.hlsli의 kPcxLutTableWidth와 SCTileSetPcxLUT::kTableWidth가 일치하지 않음");
 
+	// HLSL - C++ 상수 검증
+    static_assert(kPcxLutDarkIdx == static_cast<uint32_t>(PcxLUT::Dark));
+    static_assert(kPcxLutOfireIdx == static_cast<uint32_t>(PcxLUT::Ofire));
+    static_assert(kPcxLutGfireIdx == static_cast<uint32_t>(PcxLUT::Gfire));
+    static_assert(kPcxLutBfireIdx == static_cast<uint32_t>(PcxLUT::Bfire));
+    static_assert(kPcxLutBexplIdx == static_cast<uint32_t>(PcxLUT::Bexpl));
+    static_assert(kPcxLutTrans50Idx== static_cast<uint32_t>(PcxLUT::Trans50));
+    static_assert(kPcxLutRedIdx == static_cast<uint32_t>(PcxLUT::Red));
+    static_assert(kPcxLutGreenIdx == static_cast<uint32_t>(PcxLUT::Green));
+    static_assert(kPcxLutCount == static_cast<uint32_t>(PcxLUT::kCount));
+
     namespace
     {
         // PcxLUT 순서와 반드시 일치
@@ -92,7 +103,7 @@ namespace sc
                 }
             }
 
-            ASSERT(range(PcxLUT::Dark).offset == kPcxLutDarkOffset);
+            //ASSERT(range(PcxLUT::Dark).offset == kPcxLutDarkOffset);
         }
 
         DEBUG_LOG("SCTileSetPcxLUT [{}]: dark {} / ofire {} / gfire {} / bfire {} / bexpl {} / trans50 {} / red {} / green {} rows, total {} bytes",
