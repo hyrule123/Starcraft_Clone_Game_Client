@@ -59,16 +59,17 @@ namespace sc
 		std::shared_ptr<engine::Mesh> GetImageMesh() const { return image_mesh_; }
 
 		std::shared_ptr<engine::Mesh> GetMapMesh() const { return map_mesh_; }
-		std::shared_ptr<engine::Material> GetMapMaterial() const { return map_material_; }
+		std::shared_ptr<engine::Material> GetMapMaterial() const;
 
 	private:
 		bool LoadTilesetData(const MPQFileSystem& mpq_file_system);
 		bool CreateTileSetGPUData(const std::array<TileSetData, (size_t)TileSetType::kCount>& tileset_data);
 		SCMapLoadingData LoadMapLoadingData(const std::filesystem::path& map_path);
 
-		void CreateOriginalMaterials(std::shared_ptr<engine::DepthStencilState> sc_depth_key_dss);
+		void CreateDepthStencilStates();
+		void CreateOriginalMaterials();
 		void CreateMesh();
-		void CreateMapMaterial(std::shared_ptr<engine::DepthStencilState> sc_depth_key_dss);
+		void CreateMapMaterial();
 
 		engine::StringHashTable<std::vector<uint8>> ParseMapData(const std::vector<uint8>& map_data);
 
@@ -99,6 +100,10 @@ namespace sc
 		std::array<TileSetDataGPU, (size_t)TileSetType::kCount> tileset_gpu_buffers_ = {};
 
 		// GPU
+		std::shared_ptr<engine::DepthStencilState> depth_key_write_dss_ = {};
+		std::shared_ptr<engine::DepthStencilState> depth_key_test_dss_ = {};
+
+
 		std::unique_ptr<SCMapBakeComputePass> sc_map_baker_ = {};
 
 		std::shared_ptr<engine::Mesh> map_mesh_ = {};

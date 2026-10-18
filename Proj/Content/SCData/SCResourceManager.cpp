@@ -82,22 +82,17 @@ namespace sc
 		CHECK_F(result, "Failed to create TileSet GPU data");
 		sc_map_baker_ = EntityManager::CreateEntity<SCMapBakeComputePass>();
 
-		std::shared_ptr<DepthStencilState> sc_depth_key_dss = EntityManager::CreateEntity<DepthStencilState>();
-		{
-			D3D11_DEPTH_STENCIL_DESC desc = {};
-			desc.DepthEnable = TRUE;
-			desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-			desc.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
-			desc.StencilEnable = FALSE;
-			bool result = sc_depth_key_dss->Create(desc);
-			CHECK_F(result, "Failed to create DepthStencilState");
-		}
-
-		CreateOriginalMaterials(sc_depth_key_dss);
-		CreateMapMaterial(sc_depth_key_dss);
+		CreateDepthStencilStates();
+		CreateOriginalMaterials();
+		CreateMapMaterial();
 		materials_.resize(sc_image_library_.grp_count());
 		CreateMesh();
 	}
+	std::shared_ptr<engine::Material> SCResourceManager::GetMapMaterial() const
+	{
+		return map_material_->Clone();
+	}
+
 	bool SCResourceManager::LoadTilesetData(const MPQFileSystem& mpq_file_system)
 	{
 		CHECK(has_initialized_);
@@ -453,7 +448,41 @@ namespace sc
 		return map_data;
 	}
 
-	void SCResourceManager::CreateOriginalMaterials(std::shared_ptr<engine::DepthStencilState> sc_depth_key_dss)
+	void SCResourceManager::CreateDepthStencilStates()
+	{
+		using namespace engine;
+
+		auto GetCommonDesc = []() -> D3D11_DEPTH_STENCIL_DESC
+			{
+				D3D11_DEPTH_STENCIL_DESC desc = {};
+				desc.DepthEnable = TRUE;
+				desc.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
+				desc.StencilEnable = FALSE;
+				return desc;
+			};
+
+		depth_key_write_dss_ = EntityManager::CreateEntity<DepthStencilState>();
+		{
+			D3D11_DEPTH_STENCIL_DESC desc = GetCommonDesc();
+
+			desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+
+			bool result = depth_key_write_dss_->Create(desc);
+			CHECK_F(result, "Failed to create DepthStencilState");
+		}
+
+		depth_key_test_dss_ = EntityManager::CreateEntity<DepthStencilState>();
+		{
+			D3D11_DEPTH_STENCIL_DESC desc = GetCommonDesc();
+
+			desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // 깊이 버퍼에 쓰지 않음. (반투명 / 이펙트 처리)
+
+			bool result = depth_key_test_dss_->Create(desc);
+			CHECK_F(result, "Failed to create DepthStencilState");
+		}
+	}
+
+	void SCResourceManager::CreateOriginalMaterials()
 	{
 		using namespace engine;
 
@@ -493,7 +522,7 @@ namespace sc
 		normal_state->SetPixelShader("Shader/SCImageOpaque_PS.cso");
 
 		normal_state->SetInstanceDataStride(sizeof(SCImageInstance));
-		normal_state->SetDepthStencilState(sc_depth_key_dss);
+		normal_state->SetDepthStencilState(depth_key_write_dss_);
 		normal_state->SetRasterizerState(rss);
 
 		normal_material->SetPipelineState(sc::kScOpaquePass, normal_state);
@@ -510,26 +539,7 @@ namespace sc
 		shadow_state->SetPixelShader("Shader/SCImageShadow_PS.cso");
 		shadow_state->SetInstanceDataStride(sizeof(SCImageInstance));
 		shadow_state->SetRasterizerState(rss);
-		
-		std::shared_ptr<DepthStencilState> dss = EntityManager::CreateEntity<DepthStencilState>();
-		{
-			D3D11_DEPTH_STENCIL_DESC desc = {};
-			// ------------------------------------------------------------------
-			// 1. 깊이(Depth) 테스트 설정(ON + 쓰기 off)
-			// ------------------------------------------------------------------
-			desc.DepthEnable = TRUE;                           // 깊이 테스트 ON.
-			desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // 깊이 버퍼에 쓰지 않음. (반투명 / 이펙트 처리)
-			desc.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;   // 깊이 테스트는 GreaterEqual로 설정. - SC 전용 깊이 값 비교 예정
-
-			// ------------------------------------------------------------------
-			// 2. 스텐실(Stencil) 테스트 설정(OFF)
-			// ------------------------------------------------------------------
-			desc.StencilEnable = FALSE;                        // 스텐실 테스트를 끕니다.
-			result = dss->Create(desc);
-			CHECK_F(result, "Failed to create DepthStencilState");
-		}
-		shadow_state->SetDepthStencilState(dss);
-
+		shadow_state->SetDepthStencilState(depth_key_test_dss_);
 
 		shadow_material->SetPipelineState(kSCEffectPassID, shadow_state);
 #pragma endregion SHADOW PIPELINE
@@ -562,7 +572,7 @@ namespace sc
 		CHECK_F(result, "Failed to create index buffer");
 	}
 
-	void SCResourceManager::CreateMapMaterial(std::shared_ptr<engine::DepthStencilState> sc_depth_key_dss)
+	void SCResourceManager::CreateMapMaterial()
 	{
 		using namespace engine;
 		map_mesh_ = ResourceManager::GetInst().Find<Mesh>("Mesh_Standard2D_Rect");
@@ -575,11 +585,13 @@ namespace sc
 		pipeline_state->SetVertexShader("Shader/SCMapRender_VS.cso");
 		pipeline_state->SetPixelShader("Shader/SCMapRender_PS.cso");
 
-		pipeline_state->SetDepthStencilState(sc_depth_key_dss);
+		pipeline_state->SetDepthStencilState(depth_key_write_dss_);
 		pipeline_state->SetRasterizerState("RSS_Solid_Back");
 		pipeline_state->SetInputLayout("InputLayout_Standard2D");
 		map_material_->SetPipelineState(sc::kScOpaquePass, pipeline_state);
 	}
+
+
 
 	engine::StringHashTable<std::vector<uint8>> SCResourceManager::ParseMapData(const std::vector<uint8>& map_data)
 	{

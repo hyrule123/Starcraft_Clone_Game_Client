@@ -266,9 +266,6 @@
     <ClCompile Include="Component\SCImageRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SCData\SCSpriteCommon.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SCData\SCEffectPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
