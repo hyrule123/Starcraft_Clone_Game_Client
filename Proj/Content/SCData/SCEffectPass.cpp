@@ -31,10 +31,9 @@ namespace sc
 
 		ID3D11UnorderedAccessView* wpe_idx_uav = wpe_render_target_->GetRawUAV();
 		ID3D11DepthStencilView* wpe_depth_dsv = wpe_depth_target_->GetRawDepthStencilView();
-		constexpr UINT initial_counts = 0;
 		
 		// ROV만 바인딩함
-		ctx.dc->OMSetRenderTargetsAndUnorderedAccessViews(0, nullptr, wpe_depth_dsv, 0, 1, &wpe_idx_uav, &initial_counts);
+		ctx.dc->OMSetRenderTargetsAndUnorderedAccessViews(0, nullptr, wpe_depth_dsv, 0, 1, &wpe_idx_uav, nullptr);
 
 		D3D11_VIEWPORT viewport = {};
 		viewport.Width = static_cast<FLOAT>(wpe_render_target_->GetWidth());

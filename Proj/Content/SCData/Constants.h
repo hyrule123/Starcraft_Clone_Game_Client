@@ -27,7 +27,7 @@ namespace sc
 	}
 
 	constexpr ::engine::render_pass::ID kScOpaquePass = ::engine::render_pass::ID::Custom0;
-	constexpr ::engine::render_pass::ID kSCEffectPass = ::engine::render_pass::ID::Custom1;
+	constexpr ::engine::render_pass::ID kSCEffectPassID = ::engine::render_pass::ID::Custom1;
 	constexpr ::engine::render_pass::ID kScBlitPass = ::engine::render_pass::ID::Custom2;
 
 }

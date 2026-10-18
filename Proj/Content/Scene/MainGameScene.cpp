@@ -46,6 +46,7 @@
 #include <Content/SCData/SCTileSetPcxLUT.h>
 #include <Content/SCData/SCResourceManager.h>
 #include <Content/SCData/SCMapBakeComputePass.h>
+#include <Content/SCData/SCEffectPass.h>
 
 #include <Content/GameObject/SCSpriteObj.h>
 #include <Content/GameObject/SCImageObj.h>
@@ -340,6 +341,11 @@ namespace sc
 
 		RenderManager::GetInst().RegisterRenderPass(std::move(sc_opaque));
 
+
+		std::unique_ptr<SCEffectPass> sc_effect_pass = EntityManager::CreateEntity<SCEffectPass>(sc::kSCEffectPassID, MeshRenderPass::SortPolicy::State);
+		sc_effect_pass->SetWPETargets(sc_rt, sc_dst);
+		RenderManager::GetInst().RegisterRenderPass(std::move(sc_effect_pass));
+
 		// Sc Blit Pass
 		{
 			color_desc = {};
@@ -374,12 +380,11 @@ namespace sc
 			RenderManager::GetInst().SetMainViewClearSettings(clear_setting);
 		}
 
-		std::vector<render_pass::ID> sc_pass_order = { kScOpaquePass, kScBlitPass, render_pass::ID::Present };
+		std::vector<render_pass::ID> sc_pass_order = { kScOpaquePass, sc::kSCEffectPassID, kScBlitPass, render_pass::ID::Present };
 #if ENABLE_DEBUG_DRAW
 		sc_pass_order.push_back(render_pass::ID::DebugDraw);
 #endif
 		RenderManager::GetInst().SetRenderPassOrder(std::move(sc_pass_order));
-
 
 		GetCollisionSystem2D()->SetCellSize(sc::kCellSize);
 		SetCollisionMask(0, 0, true);
