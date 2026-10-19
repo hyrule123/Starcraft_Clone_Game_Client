@@ -4,6 +4,8 @@ RasterizerOrderedTexture2D<uint> g_sc_index_rt : register(REG_U_SC_WPE_TO_ROV_SL
 Buffer<uint> g_pcx_tileset_lut : register(REG_T_SC_PCX_TILESET_LUT); // R8_UINT
 Buffer<uint2> g_pcx_lut_ranges : register(REG_T_SC_PCX_TILESET_LUT_OFFSETS); // x = offset, y = rows
 
+Buffer<uint> g_color_fade_selector : register(REG_T_SC_CLOAK_FADE_SELECTOR); // R8_UINT
+
 // 원시 조회: table의 row행, old열
 uint PcxLookup(uint table, uint row, uint old)
 {
@@ -47,24 +49,40 @@ void main(ImageVSOutput input)
 	switch(input.modifier)
 	{
 		case kModifierShadow:	// 그림자
-		{
-			g_sc_index_rt[pixel] = PcxLookup(kPcxLutDarkIdx, kShadowDarkRow, old);
-			break;
-		}
-		case kModifierCloaked: // 은폐
-		{
-			// 텍스처에서 샘플링된 색(index)에 플레이어 색상 적용
-			const uint src = ApplyPlayerColor(sampled.x, input.player_color_idx);
+			{
+				g_sc_index_rt[pixel] = PcxLookup(kPcxLutDarkIdx, kShadowDarkRow, old);
+				break;
+			}
+		
+		// 둘은 코드가 동일(방향만 다름)
+		case kModifierCloaking: // 은폐 중
+		case kModifierDecloaking: // 은폐 해제 중
+			{
+				// 텍스처에서 샘플링된 색(index)에 플레이어 색상 적용
+				const uint src = ApplyPlayerColor(sampled.x, input.player_color_idx);
+				const uint blended = PcxLookupLight(kPcxLutTrans50Idx, src, old);
+				
+				// 사용 기준 판별은 '적용 전 색상' 기준
+				const bool is_cloaked = g_color_fade_selector[sampled.x] <= (uint) input.modifier_data1;
 			
-			// 샘플링된 색을 50% 투명 변환 테이블을 통해 변환, ROV에 기록
-			g_sc_index_rt[pixel] = PcxLookupLight(kPcxLutTrans50Idx, src, old);
-			break;
-		}
+				g_sc_index_rt[pixel] = is_cloaked ? blended : src;
+				break;
+			}
+		
+		case kModifierCloaked: // 은폐
+			{
+				// 텍스처에서 샘플링된 색(index)에 플레이어 색상 적용
+				const uint src = ApplyPlayerColor(sampled.x, input.player_color_idx);
+
+				// 샘플링된 색을 50% 투명 변환 테이블을 통해 변환, ROV에 기록
+				g_sc_index_rt[pixel] = PcxLookupLight(kPcxLutTrans50Idx, src, old);
+				break;
+			}
 		
 		default:
-		{
-			g_sc_index_rt[pixel] = ApplyPlayerColor(sampled.x, input.player_color_idx);
-			break;
-		}
+			{
+				g_sc_index_rt[pixel] = ApplyPlayerColor(sampled.x, input.player_color_idx);
+				break;
+			}
 	}
 }

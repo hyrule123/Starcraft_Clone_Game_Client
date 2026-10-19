@@ -192,34 +192,34 @@ namespace sc
 			// units[0..n)의 id, x, y, sprite_x, sprite_y 출력
 		}
 
-		// ---- 깊이 키 테스트 ----
-		{
-			constexpr int32_t kTestCount = 10;
-			constexpr int32_t kBaseX = 2048;
-			constexpr int32_t kBaseY = 2048;
+		
+		//{	// 마린
+		//	constexpr int32_t kTestCount = 10;
+		//	constexpr int32_t kBaseX = 2048;
+		//	constexpr int32_t kBaseY = 2048;
 
-			for (int32_t i = 0; i < kTestCount; ++i)
-			{
-				uint32_t test_id = SCSim::kInvalidUnitId;
-					// 마린 충돌 폭(17px)보다 촘촘하게 → 스프라이트가 같은 y에서 겹치도록. 밀려나면 y가 달라질 수 있음
-					constexpr int32_t kSpacingX = 8;
-					test_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranMarine, SCSim::Player::_1, kBaseX + i * kSpacingX, kBaseY);
-				CHECK_F(test_id != SCSim::kInvalidUnitId, "SCSim_CreateUnit failed: {}", SCSim_GetLastError());
-			}
-		}
+		//	for (int32_t i = 0; i < kTestCount; ++i)
+		//	{
+		//		uint32_t test_id = SCSim::kInvalidUnitId;
+		//			// 마린 충돌 폭(17px)보다 촘촘하게 → 스프라이트가 같은 y에서 겹치도록. 밀려나면 y가 달라질 수 있음
+		//			constexpr int32_t kSpacingX = 8;
+		//			test_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranMarine, SCSim::Player::_1, kBaseX + i * kSpacingX, kBaseY);
+		//		CHECK_F(test_id != SCSim::kInvalidUnitId, "SCSim_CreateUnit failed: {}", SCSim_GetLastError());
+		//	}
+		//}
 
-		{
-			constexpr int32_t kTestCount = 10;
-			constexpr int32_t kBaseX = 2048;
-			constexpr int32_t kBaseY = 2048;
+		//{	// 테란 레이스
+		//	constexpr int32_t kTestCount = 10;
+		//	constexpr int32_t kBaseX = 2048;
+		//	constexpr int32_t kBaseY = 2048;
 
-			for (int32_t i = 0; i < kTestCount; ++i)
-			{
-				uint32_t test_id = SCSim::kInvalidUnitId;
-				test_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranWraith, SCSim::Player::_2, kBaseX, kBaseY);
-				CHECK_F(test_id != SCSim::kInvalidUnitId, "SCSim_CreateUnit failed: {}", SCSim_GetLastError());
-			}
-		}
+		//	for (int32_t i = 0; i < kTestCount; ++i)
+		//	{
+		//		uint32_t test_id = SCSim::kInvalidUnitId;
+		//		test_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranWraith, SCSim::Player::_2, kBaseX, kBaseY);
+		//		CHECK_F(test_id != SCSim::kInvalidUnitId, "SCSim_CreateUnit failed: {}", SCSim_GetLastError());
+		//	}
+		//}
 
 		{
 			constexpr int32_t kTestCount = 10;

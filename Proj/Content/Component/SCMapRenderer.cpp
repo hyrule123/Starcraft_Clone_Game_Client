@@ -98,6 +98,7 @@ namespace sc
 		per_frame_table.RemoveShaderResource(REG_T_SC_WPE_PALETTE);
 		per_frame_table.RemoveShaderResource(REG_T_SC_PCX_TILESET_LUT);
 		per_frame_table.RemoveShaderResource(REG_T_SC_PCX_TILESET_LUT_OFFSETS);
+		per_frame_table.RemoveShaderResource(REG_T_SC_CLOAK_FADE_SELECTOR);
 	}
 	void SCMapRenderer::WriteInstanceData(engine::DataBlock data_block)
 	{
@@ -156,6 +157,9 @@ namespace sc
 
 		per_frame_table.RemoveShaderResource(REG_T_SC_PCX_TILESET_LUT_OFFSETS);
 		per_frame_table.AddShaderResource(ShaderStage::Pixel, REG_T_SC_PCX_TILESET_LUT_OFFSETS, sc_map_->pcx_tileset_LUT_offsets);
+
+		per_frame_table.RemoveShaderResource(REG_T_SC_CLOAK_FADE_SELECTOR);
+		per_frame_table.AddShaderResource(ShaderStage::Pixel, REG_T_SC_CLOAK_FADE_SELECTOR, sc_map_->cloak_fade_selector);
 
 		needs_scale_matching_ = true;
 		SetEnable(true);

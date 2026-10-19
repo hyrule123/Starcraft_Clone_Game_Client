@@ -135,6 +135,7 @@ namespace sc
 		std::vector<VF4> vf4;
 		std::vector<VR4> vr4;
 		std::vector<WPE> wpe;
+		
 		std::shared_ptr<SCTileSetPcxLUT> pcx_lut = nullptr;
 	};
 
@@ -291,6 +292,7 @@ namespace sc
 
 		// WPE 색상 팔레트
 		std::shared_ptr<engine::TypedBuffer> wpe_color_palettes = {};
+		std::shared_ptr<engine::TypedBuffer> cloak_fade_selector = {};
 
 		// modifier별 팔레트 룩업 테이블 묶음과 묶음별 색인 오프셋
 		std::shared_ptr<engine::TypedBuffer> pcx_tileset_LUT = {};
@@ -321,6 +323,7 @@ namespace sc
 		std::shared_ptr<engine::TypedBuffer> WPE_color_palettes = {}; // from WPE, std::shared_ptr - 렌더링할 때 필요
 		std::shared_ptr<engine::TypedBuffer> PCX_tileset_LUT = {}; // from SCTileSetPcxLUT, std::shared_ptr - 렌더링할 때 필요
 		std::shared_ptr<engine::TypedBuffer> PCX_tileset_LUT_offsets = {}; // from SCTileSetPcxLUT, std::shared_ptr - 렌더링할 때 필요
+		std::shared_ptr<engine::TypedBuffer> cloak_fade_selector = {};
 	};
 
 }

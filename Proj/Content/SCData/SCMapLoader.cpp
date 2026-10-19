@@ -24,6 +24,13 @@ namespace sc
 
 	namespace
 	{
+		// OpenBW ui.h cloak_fade_selector: WPE 색별 밝기 등급(0~8)
+		constexpr uint32_t kCloakFadeSelectorWeightR = 28u;
+		constexpr uint32_t kCloakFadeSelectorWeightG = 77u;
+		constexpr uint32_t kCloakFadeSelectorWeightB = 151u;	// R + G + B = 256
+		constexpr uint32_t kCloakFadeSelectorRound = 4096u;
+		constexpr uint32_t kCloakFadeSelectorDivisor = 8192u;
+
 		using ChunkTable = engine::StringHashTable<std::vector<uint8_t>>;
 
 		// .chk 청크를 순차 순회하며 [이름 4][길이 4][데이터] 단위로 테이블에 저장. 같은 청크는 뒤가 이김
@@ -460,6 +467,24 @@ namespace sc
 			if (!result) { clear_tilesets(); return false; }
 #pragma endregion WPE - Color Palette
 
+#pragma region		Cloak fade selector
+			// OpenBW ui.h cloak_fade_selector: WPE 색별 밝기 등급(0~8)
+			std::vector<uint8_t> cloak_fade_selector;
+			cloak_fade_selector.resize(wpe_span.size());
+			for (size_t i = 0; i < wpe_span.size(); ++i)
+			{
+				const WPE& wpe = wpe_span[i];
+				cloak_fade_selector[i] = static_cast<uint8_t>(
+					(static_cast<uint32_t>(wpe.r) * kCloakFadeSelectorWeightR + 
+						static_cast<uint32_t>(wpe.g) * kCloakFadeSelectorWeightG + 
+						static_cast<uint32_t>(wpe.b) * kCloakFadeSelectorWeightB + kCloakFadeSelectorRound) / kCloakFadeSelectorDivisor);
+			}
+
+			tileset_gpu.cloak_fade_selector = EntityManager::CreateEntity<TypedBuffer>();
+			result = tileset_gpu.cloak_fade_selector->CreateImmutableBuffer(DXGI_FORMAT_R8_UINT, cloak_fade_selector);
+			if (!result) { clear_tilesets(); return false; }
+#pragma endregion	Cloak fade selector
+
 #pragma region PCX - Tileset LUT
 			{
 				ASSERT(tileset.pcx_lut);
@@ -551,5 +576,6 @@ namespace sc
 		out_map.wpe_color_palettes = tileset_gpu.WPE_color_palettes;
 		out_map.pcx_tileset_LUT = tileset_gpu.PCX_tileset_LUT;
 		out_map.pcx_tileset_LUT_offsets = tileset_gpu.PCX_tileset_LUT_offsets;
+		out_map.cloak_fade_selector = tileset_gpu.cloak_fade_selector;
 	}
 }

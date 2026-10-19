@@ -11,6 +11,8 @@
 
 #define REG_T_SC_PCX_TILESET_LUT	REG_T_PER_FRAME_7
 #define REG_T_SC_PCX_TILESET_LUT_OFFSETS REG_T_PER_FRAME_8
+#define REG_T_SC_CLOAK_FADE_SELECTOR REG_T_PER_FRAME_9
+
 #define REG_U_SC_WPE_TO_ROV_SLOT REG_U(0)
 
 // C++ / HLSL 공유
@@ -43,9 +45,14 @@ SC_CONST uint kPcxLutTableWidth = 256;
 SC_CONST float kScDepthScale = 1.0f / 16777216.0f;
 
 SC_CONST uint kImageFlagHorizontallyFlipped = 0x2;	// C++ (SCImageRenderer) 쪽에서 검증
-SC_CONST int kModifierShadow = 10; // image_t::modifier 값
-SC_CONST int kModifierCloaked = 3;
 
+// Modifiers
+SC_CONST int kModifierCloaking = 2;
+SC_CONST int kModifierCloaked = 3;
+SC_CONST int kModifierDecloaking = 4;
+SC_CONST int kModifierShadow = 10; // image_t::modifier 값
+
+// Pcx LUT table indices
 SC_CONST uint kPcxLutDarkIdx = 0;
 SC_CONST uint kPcxLutOfireIdx = 1;
 SC_CONST uint kPcxLutGfireIdx = 2;
