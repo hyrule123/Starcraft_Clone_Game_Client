@@ -50,6 +50,7 @@ SC_CONST uint kImageFlagHorizontallyFlipped = 0x2;	// C++ (SCImageRenderer) 쪽�
 SC_CONST int kModifierCloaking = 2;
 SC_CONST int kModifierCloaked = 3;
 SC_CONST int kModifierDecloaking = 4;
+SC_CONST int kModifierRemapping = 9;
 SC_CONST int kModifierShadow = 10; // image_t::modifier 값
 
 // Pcx LUT table indices

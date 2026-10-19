@@ -21,7 +21,9 @@ namespace sc
 	static_assert(kModifierShadow == static_cast<int32_t>(SCSim::ImageModifier::Shadow));
 	static_assert(kModifierCloaking == static_cast<int32_t>(SCSim::ImageModifier::Cloaking));
 	static_assert(kModifierCloaked == static_cast<int32_t>(SCSim::ImageModifier::Cloaked));
+	static_assert(kModifierRemapping == static_cast<int32_t>(SCSim::ImageModifier::Remapping));
 	static_assert(kModifierDecloaking == static_cast<int32_t>(SCSim::ImageModifier::Decloaking));
+	
 
 	static_assert(std::is_same_v<decltype(SCImageInstance::image_flags), decltype(SCSim::ImageData::flags)>);
 	static_assert(std::is_same_v<decltype(SCImageInstance::modifier), decltype(SCSim::ImageData::modifier)>);
@@ -127,6 +129,11 @@ namespace sc
 		ASSERT(img_def_cache_);
 		// uint8 → uint
 		data.remapping = static_cast<uint>(img_def_cache_->remapping);
+
+		// 의미: Modifier가 Remapping일 경우 1 - 7 범위 사이여야 함
+		// 다른 테이블 인덱스를 참조하라는 remap이기 때문
+		ASSERT(data.modifier != static_cast<int32_t>(SCSim::ImageModifier::Remapping)
+			|| (kPcxLutOfireIdx <= data.remapping && data.remapping < kPcxLutCount));
 
 		data_block.Write(data);
 	}

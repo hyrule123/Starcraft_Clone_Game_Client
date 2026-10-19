@@ -79,6 +79,23 @@ void main(ImageVSOutput input)
 				break;
 			}
 		
+		case kModifierRemapping:
+			{
+				// remapping이 유효한 범위인지 확인
+				const bool is_valid = kPcxLutOfireIdx <= input.remapping && input.remapping < kPcxLutCount;
+				if(is_valid)
+				{	
+					// OpenBW no_remap: 플레이어 색 치환 없이 원본 인덱스 사용
+					g_sc_index_rt[pixel] = PcxLookupLight(input.remapping, sampled.x, old);
+				}
+				else
+				{
+					g_sc_index_rt[pixel] = ApplyPlayerColor(sampled.x, input.player_color_idx);
+				}
+				
+				break;
+			}
+		
 		default:
 			{
 				g_sc_index_rt[pixel] = ApplyPlayerColor(sampled.x, input.player_color_idx);
