@@ -52,6 +52,7 @@ SC_CONST int kModifierCloaked = 3;
 SC_CONST int kModifierDecloaking = 4;
 SC_CONST int kModifierRemapping = 9;
 SC_CONST int kModifierShadow = 10; // image_t::modifier 값
+SC_CONST int kModifierWarpFlash = 17;
 
 // Pcx LUT table indices
 SC_CONST uint kPcxLutDarkIdx = 0;

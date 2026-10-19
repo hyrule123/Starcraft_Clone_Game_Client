@@ -96,6 +96,12 @@ void main(ImageVSOutput input)
 				break;
 			}
 		
+		case kModifierWarpFlash:
+			{
+				g_sc_index_rt[pixel] = PcxLookupLight(kPcxLutOfireIdx, (uint) input.modifier_data1, old);
+				break;
+			}
+		
 		default:
 			{
 				g_sc_index_rt[pixel] = ApplyPlayerColor(sampled.x, input.player_color_idx);
