@@ -6,7 +6,8 @@
 
 #include <Content/Scene/MainGameScene.h>
 
-#include <Content/HLSL/SCImage/SCImageCommon.hlsli>
+#include <Content/HLSL/SCImage/SCPcxLut.hlsli>
+#include <Content/HLSL/SCImage/SCEffectPass.hlsli>
 
 #include <Engine/Resource/GPU/Buffer/Texture2DArray.h>
 #include <Engine/Resource/GPU/Material.h>
@@ -21,9 +22,12 @@ namespace sc
 	static_assert(kModifierShadow == static_cast<int32_t>(SCSim::ImageModifier::Shadow));
 	static_assert(kModifierCloaking == static_cast<int32_t>(SCSim::ImageModifier::Cloaking));
 	static_assert(kModifierCloaked == static_cast<int32_t>(SCSim::ImageModifier::Cloaked));
-	static_assert(kModifierRemapping == static_cast<int32_t>(SCSim::ImageModifier::Remapping));
 	static_assert(kModifierDecloaking == static_cast<int32_t>(SCSim::ImageModifier::Decloaking));
+	static_assert(kModifierDistortion == static_cast<int32_t>(SCSim::ImageModifier::Distortion));
+	static_assert(kModifierRemapping == static_cast<int32_t>(SCSim::ImageModifier::Remapping));
 	static_assert(kModifierWarpFlash == static_cast<int32_t>(SCSim::ImageModifier::WarpFlash));
+	
+	
 	
 
 	static_assert(std::is_same_v<decltype(SCImageInstance::image_flags), decltype(SCSim::ImageData::flags)>);
@@ -45,11 +49,23 @@ namespace sc
 			case ImageModifier::WarpTexture:	// 보류: 당분간 일반 그리기
 				return SCImageVariant::Opaque;
 
-			default:	// old를 읽는 효과 + 미구현/미지원 값 (Effect PS default = 일반 그리기)
+			case ImageModifier::Cloaking:
+			case ImageModifier::Cloaked:
+			case ImageModifier::Decloaking:
+			case ImageModifier::Remapping:
+			case ImageModifier::Shadow:
+			case ImageModifier::WarpFlash:
+				return SCImageVariant::Effect;
+
+			case ImageModifier::Distortion:
+				return SCImageVariant::Distortion;
+
+			default:
 				break;
 			}
 
-			// default
+			// 미구현/미지원 값: Effect PS default(일반 그리기)로 처리
+			DEBUG_LOG("처리되지 않은 modifier 값: {}. Effect Material 사용", modifier);
 			return SCImageVariant::Effect;
 		}
 	}
@@ -90,9 +106,12 @@ namespace sc
 		if (needs_material)
 		{
 			SCResourceManager& resource_manager = SCResourceManager::GetInst();
-			std::shared_ptr<engine::Material> new_mtrl = resource_manager.GetImageMaterial(img_data.image_type, variant);
+			
+			std::shared_ptr<engine::Material> mtrl_sub0 = resource_manager.GetImageMaterial(img_data.image_type, variant);
+			std::shared_ptr<engine::Material> mtrl_sub1 = variant == SCImageVariant::Distortion ? resource_manager.GetImageMaterial(img_data.image_type, SCImageVariant::DistortionSync) : nullptr;
 
-			SetMaterial(0, new_mtrl);
+			SetMaterial(0, mtrl_sub0);
+			SetMaterial(1, mtrl_sub1);
 
 			// 컬링 bounds: 1픽셀 여유
 			const auto& tex = resource_manager.GetSCImageLibrary().GetTexture(img_data.image_type);

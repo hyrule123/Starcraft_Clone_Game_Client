@@ -153,6 +153,9 @@
     <ClInclude Include="SCData\SCMapLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="EmpTestScript.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -275,6 +278,9 @@
     <ClCompile Include="SCData\SCMapLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="EmpTestScript.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Content.rc">
@@ -297,6 +303,8 @@
     <FxCompile Include="HLSL\SCImage\SCImageOpaque_PS.hlsl" />
     <FxCompile Include="HLSL\SCImage\SCImageEffect_PS.hlsl" />
     <FxCompile Include="HLSL\SCBlit_PS.hlsl" />
+    <FxCompile Include="HLSL\SCImage\SCImageDistortion_PS.hlsl" />
+    <FxCompile Include="HLSL\SCImage\SCImageDistortionSync_PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="HLSL\SCMapRender.hlsli" />
@@ -304,5 +312,7 @@
     <None Include="HLSL\SCMapTileSet.hlsli" />
     <None Include="HLSL\SCImage\SCImageCommon.hlsli" />
     <None Include="HLSL\SCCommon.hlsli" />
+    <None Include="HLSL\SCImage\SCEffectPass.hlsli" />
+    <None Include="HLSL\SCImage\SCPcxLut.hlsli" />
   </ItemGroup>
 </Project>

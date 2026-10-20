@@ -8,9 +8,15 @@
 
 namespace sc
 {
+	constexpr UINT kEffectPassUavCount = 2;	// ROV에 바인딩할 UAV 개수.
+
+	// 연속되는지 확인
+	static_assert(REG_U_SC_WPE_TO_ROV_SLOT.Get() + 1 == REG_U_SC_WPE_MIRROR_SLOT.Get());
+
 	SCEffectPass::SCEffectPass(engine::render_pass::ID id, SortPolicy sort_policy)
 		: Super(SCEffectPass::kClassConcreteName, id, sort_policy)
 	{
+		ASSERT(sort_policy == SortPolicy::Custom);
 	}
 
 	SCEffectPass::~SCEffectPass()
@@ -39,15 +45,12 @@ namespace sc
 		wpe_mirror_target_->CopyFrom(ctx.dc, *wpe_render_target_);
 
 		ID3D11UnorderedAccessView* uavs[] = { wpe_render_target_->GetRawUAV(), wpe_mirror_target_->GetRawUAV() };
-		constexpr UINT num_uav = static_cast<UINT>(sizeof(uavs) / sizeof(uavs[0]));
+		static_assert(std::size(uavs) == kEffectPassUavCount);
 
 		ID3D11DepthStencilView* wpe_depth_dsv = wpe_depth_target_->GetRawDepthStencilView();
-		
-		// 연속되는지 확인
-		static_assert(REG_U_SC_WPE_TO_ROV_SLOT.Get() + 1 == REG_U_SC_WPE_MIRROR_SLOT.Get());
 
 		// ROV만 바인딩함
-		ctx.dc->OMSetRenderTargetsAndUnorderedAccessViews(0, nullptr, wpe_depth_dsv, REG_U_SC_WPE_TO_ROV_SLOT.Get(), num_uav, uavs, nullptr);
+		ctx.dc->OMSetRenderTargetsAndUnorderedAccessViews(0, nullptr, wpe_depth_dsv, REG_U_SC_WPE_TO_ROV_SLOT.Get(), kEffectPassUavCount, uavs, nullptr);
 
 		D3D11_VIEWPORT viewport = {};
 		viewport.Width = static_cast<FLOAT>(wpe_render_target_->GetWidth());
@@ -59,12 +62,12 @@ namespace sc
 
 		ctx.dc->RSSetViewports(1, &viewport);
 	}
-	void SCEffectPass::UnbindTargets(const engine::RenderContext & ctx)
+	void SCEffectPass::UnbindTargets(const engine::RenderContext& ctx)
 	{
-		constexpr ID3D11UnorderedAccessView* null_uav = nullptr;
+		constexpr ID3D11UnorderedAccessView* null_uav[kEffectPassUavCount] = {};
 		constexpr ID3D11DepthStencilView* null_dsv = nullptr;
 
-		// ROV만 해제함
-		ctx.dc->OMSetRenderTargetsAndUnorderedAccessViews(0, nullptr, null_dsv, REG_U_SC_WPE_TO_ROV_SLOT.Get(), 1, &null_uav, nullptr);
+		// ROV A, B 해제
+		ctx.dc->OMSetRenderTargetsAndUnorderedAccessViews(0, nullptr, null_dsv, REG_U_SC_WPE_TO_ROV_SLOT.Get(), kEffectPassUavCount, null_uav, nullptr);
 	}
 }

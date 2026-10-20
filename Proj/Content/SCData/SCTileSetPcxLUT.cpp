@@ -3,7 +3,7 @@
 
 #include <Content/SCData/PCXFile.h>
 
-#include <Content/HLSL/SCImage/SCImageCommon.hlsli>
+#include <Content/HLSL/SCImage/SCPcxLut.hlsli>
 
 #include <Engine/Core/Debug.h>
 

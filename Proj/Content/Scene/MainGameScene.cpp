@@ -10,6 +10,7 @@
 #include <Engine/Resource/GPU/Buffer/RenderTarget.h>
 #include <Engine/Resource/GPU/Buffer/DepthStencilTarget.h>
 #include <Engine/Resource/GPU/Buffer/TypedBuffer.h>
+#include <Engine/Resource/GPU/Buffer/ConstantBuffer.h>
 #include <Engine/Resource/GPU/Material.h>
 #include <Engine/Resource/GPU/Mesh.h>
 #include <Engine/Resource/GPU/PipelineState.h>
@@ -53,6 +54,8 @@
 
 #include <Engine/Core/Debug.h>
 #include <SCSimulator/Include/SCSimulatorAPI.h>
+
+#include <Content/HLSL/SCCommon.hlsli>
 
 namespace // depth key
 {
@@ -208,18 +211,18 @@ namespace sc
 			}
 		}
 
-		{	// 테란 레이스
-			constexpr int32_t kTestCount = 10;
-			constexpr int32_t kBaseX = 2048;
-			constexpr int32_t kBaseY = 2048;
+		//{	// 테란 레이스
+		//	constexpr int32_t kTestCount = 10;
+		//	constexpr int32_t kBaseX = 2048;
+		//	constexpr int32_t kBaseY = 2048;
 
-			for (int32_t i = 0; i < kTestCount; ++i)
-			{
-				uint32_t test_id = SCSim::kInvalidUnitId;
-				test_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranWraith, SCSim::Player::_2, kBaseX, kBaseY);
-				CHECK_F(test_id != SCSim::kInvalidUnitId, "SCSim_CreateUnit failed: {}", SCSim_GetLastError());
-			}
-		}
+		//	for (int32_t i = 0; i < kTestCount; ++i)
+		//	{
+		//		uint32_t test_id = SCSim::kInvalidUnitId;
+		//		test_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranWraith, SCSim::Player::_2, kBaseX, kBaseY);
+		//		CHECK_F(test_id != SCSim::kInvalidUnitId, "SCSim_CreateUnit failed: {}", SCSim_GetLastError());
+		//	}
+		//}
 
 		{
 			constexpr int32_t kTestCount = 10;
@@ -232,6 +235,13 @@ namespace sc
 				test_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::ProtossDarkTemplar, SCSim::Player::_3, kBaseX, kBaseY);
 				CHECK_F(test_id != SCSim::kInvalidUnitId, "SCSim_CreateUnit failed: {}", SCSim_GetLastError());
 			}
+		}
+
+
+		{	// [테스트] EMP Shockwave (E 키)
+			GameObject* emp_test_obj = AddGameObject<GameObject>();
+			emp_test_obj->SetName("EmpTest");
+			emp_test_obj->AddComponent("EmpTestScript");
 		}
 
 		//SCUnitDebug* u = AddGameObject<SCUnitDebug>();
@@ -305,6 +315,12 @@ namespace sc
 			bool result = SCSim_NextFrame(sc_sim_ctx_);
 			CHECK_F(result, "Failed to advance simulation to the next frame: {}", SCSim_GetLastError());
 		}
+
+		// Common Info Buffer Update
+		SCCommonInfoCB info = {};
+		info.view_origin = { 0, 0 };
+		info.view_size = { sc::kResolutionWidth, sc::kResolutionHeight };
+		sc_common_info_buffer_->Upload(engine::GraphicsDevice::GetInst().GetContext(), info);
 
 		const SCSim::PlayerData* player_data = {};
 		int32_t player_count = SCSim_GetPlayers(sc_sim_ctx_, &player_data);
@@ -408,6 +424,13 @@ namespace sc
 
 		GetCollisionSystem2D()->SetCellSize(sc::kCellSize);
 		SetCollisionMask(0, 0, true);
+
+
+		// Common Info Buffer
+		// 씬 종료 훅이 생기면 RemoveConstantBuffer 필요
+		sc_common_info_buffer_ = EntityManager::CreateEntity<engine::ConstantBuffer>();
+		ENSURE(sc_common_info_buffer_->Create<SCCommonInfoCB>());
+		RenderManager::GetInst().GetPerFrameBindingTable().AddConstantBuffer(ShaderStage::Vertex | ShaderStage::Pixel, REG_B_SC_COMMON_INFO, sc_common_info_buffer_);
 	}
 	void MainGameScene::SyncUnits()
 	{

@@ -153,38 +153,57 @@ namespace sc
 		rsDesc.DepthClipEnable = false;				//Depth Clip OFF
 		if (!rss->Create(rsDesc)) { CHECK(false); }
 
-#pragma region NORMAL PIPELINE
-		std::shared_ptr<Material>& normal_material = orig_materials_[(size_t)SCImageVariant::Opaque];
-		ASSERT(normal_material == nullptr);		// 중복 호출 방지
-		normal_material = EntityManager::CreateEntity<Material>();
-		
-		std::shared_ptr<PipelineState> normal_state = EntityManager::CreateEntity<PipelineState>();
-		normal_state->SetInputLayout(il);
-		normal_state->SetVertexShader(vs);
-		normal_state->SetPixelShader("Shader/SCImageOpaque_PS.cso");
 
-		normal_state->SetInstanceDataStride(sizeof(SCImageInstance));
-		normal_state->SetDepthStencilState(depth_key_write_dss_);
-		normal_state->SetRasterizerState(rss);
+		// 공통: VS / InputLayout / RSS / 인스턴스 stride는 모든 이미지 파이프라인이 공유
+		auto create_pipeline_state = [&](const HashedStringView& ps_name, const std::shared_ptr<DepthStencilState>& dss, DrawFlags draw_flags)
+			{
+				std::shared_ptr<PipelineState> state = EntityManager::CreateEntity<PipelineState>();
+				state->SetInputLayout(il);
+				state->SetVertexShader(vs);
 
-		normal_material->SetPipelineState(sc::kSCOpaquePassID, normal_state);
-#pragma endregion NORMAL PIPELINE
+				const bool ps_result = state->SetPixelShader(ps_name);
+				CHECK_F(ps_result, "Failed to load pixel shader.");
 
-#pragma region SHADOW PIPELINE
-		std::shared_ptr<Material>& shadow_material = orig_materials_[(size_t)SCImageVariant::Effect];
-		ASSERT(shadow_material == nullptr);		// 중복 호출 방지
-		shadow_material = EntityManager::CreateEntity<Material>();
+				state->SetInstanceDataStride(sizeof(SCImageInstance));
+				state->SetRasterizerState(rss);
+				state->SetDepthStencilState(dss);
+				state->SetDrawFlags(draw_flags);
+				return state;
+			};
 
-		std::shared_ptr<PipelineState> shadow_state = EntityManager::CreateEntity<PipelineState>();
-		shadow_state->SetInputLayout(il);
-		shadow_state->SetVertexShader(vs);
-		shadow_state->SetPixelShader("Shader/SCImageEffect_PS.cso");
-		shadow_state->SetInstanceDataStride(sizeof(SCImageInstance));
-		shadow_state->SetRasterizerState(rss);
-		shadow_state->SetDepthStencilState(depth_key_test_dss_);
+		auto create_original_material = [&](SCImageVariant variant, render_pass::ID pass_id, std::shared_ptr<PipelineState> state)
+			{
+				std::shared_ptr<Material>& material = orig_materials_[(size_t)variant];
+				ASSERT(material == nullptr);		// 중복 호출 방지
 
-		shadow_material->SetPipelineState(kSCEffectPassID, shadow_state);
-#pragma endregion SHADOW PIPELINE
+				material = EntityManager::CreateEntity<Material>();
+				material->SetPipelineState(pass_id, std::move(state));
+			};
+
+#pragma region OPAQUE PIPELINE
+		// 깊이 기록, 배칭 허용
+		create_original_material(SCImageVariant::Opaque, kSCOpaquePassID,
+			create_pipeline_state("Shader/SCImageOpaque_PS.cso", depth_key_write_dss_, DrawFlags{}));
+#pragma endregion OPAQUE PIPELINE
+
+#pragma region EFFECT PIPELINE
+		// 그림자 / 클로킹 / 리매핑 / 워프 플래시 등 old를 읽는 효과. 깊이 테스트만, 배칭 허용
+		create_original_material(SCImageVariant::Effect, kSCEffectPassID,
+			create_pipeline_state("Shader/SCImageEffect_PS.cso", depth_key_test_dss_, DrawFlags{}));
+#pragma endregion EFFECT PIPELINE
+
+#pragma region DISTORTION PIPELINE
+		// 서브메시 0: B(미러)에서 오른쪽 n픽셀을 읽어 A에만 기록
+		// 같은 드로우 안의 다른 픽셀 읽기는 ROV가 순서를 보장하지 않으므로 배칭 금지
+		create_original_material(SCImageVariant::Distortion, kSCEffectPassID,
+			create_pipeline_state("Shader/SCImageDistortion_PS.cso", depth_key_test_dss_, DrawFlag::NoBatching));
+
+		// 서브메시 1: Read가 A에 쓴 결과를 B에 반영. Read와 같은 커버리지·깊이 조건
+		// VS가 GRP 텍스처 크기로 쿼드를 만들므로 GRP별 Material(Clone)이 필요
+		create_original_material(SCImageVariant::DistortionSync, kSCEffectPassID,
+			create_pipeline_state("Shader/SCImageDistortionSync_PS.cso", depth_key_test_dss_, DrawFlag::NoBatching));
+#pragma endregion DISTORTION PIPELINE
+	
 	}
 
 	void SCResourceManager::CreateMesh()

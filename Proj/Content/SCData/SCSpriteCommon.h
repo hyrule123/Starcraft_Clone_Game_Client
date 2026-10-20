@@ -46,6 +46,8 @@ namespace sc
     {
         Opaque,
         Effect,
+        Distortion,
+        DistortionSync, //서브메시 1 전용, GetMaterialVariant는 반환하지 않음
         kCount
     };
 

@@ -215,6 +215,7 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="EmpTestScript.h" />
     <ClInclude Include="GameObject\SCImageObj.h" />
     <ClInclude Include="Component\SCImageRenderer.h" />
     <ClInclude Include="SCData\SCEffectPass.h" />
@@ -263,6 +264,7 @@
     <ClInclude Include="Legacy\Script\TestScript.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="EmpTestScript.cpp" />
     <ClCompile Include="GameObject\SCImageObj.cpp" />
     <ClCompile Include="Component\SCImageRenderer.cpp" />
     <ClCompile Include="SCData\SCEffectPass.cpp" />
@@ -323,6 +325,18 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
+    <FxCompile Include="HLSL\SCImage\SCImageDistortionSync_PS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="HLSL\SCImage\SCImageDistortion_PS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
     <FxCompile Include="HLSL\SCImage\SCImageEffect_PS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
@@ -366,7 +380,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="HLSL\SCCommon.hlsli" />
+    <None Include="HLSL\SCImage\SCEffectPass.hlsli" />
     <None Include="HLSL\SCImage\SCImageCommon.hlsli" />
+    <None Include="HLSL\SCImage\SCPcxLut.hlsli" />
     <None Include="HLSL\SCMapCommon.hlsli" />
     <None Include="HLSL\SCMapRender.hlsli" />
     <None Include="HLSL\SCMapTileSet.hlsli" />

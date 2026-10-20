@@ -1,7 +1,5 @@
 #include <Content/HLSL/SCImage/SCImageCommon.hlsli>
 
-
-
 uint main(ImageVSOutput input) : SV_TARGET
 {
 	const int2 texel = int2(floor(input.local));

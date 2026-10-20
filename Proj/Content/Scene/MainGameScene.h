@@ -3,11 +3,14 @@
 
 #include <Engine/ThirdParty/ankerl/unordered_dense.h>
 
-
-
 #include <SCSimulator/Include/SCSimulatorAPI.h>
 
 #include <array>
+
+namespace engine
+{
+	class ConstantBuffer;
+}
 
 namespace sc
 {
@@ -76,5 +79,8 @@ namespace sc
         std::array<uint64_t, SCSim::kMaxSprites> sprite_sort_buffer_ = {};
 
         uint32_t sprite_sync_serial_ = 0;
+
+        std::shared_ptr<engine::ConstantBuffer> sc_common_info_buffer_ = {};
+        
     };
 }
