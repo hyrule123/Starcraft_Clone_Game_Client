@@ -14,6 +14,7 @@
 #define REG_T_SC_CLOAK_FADE_SELECTOR REG_T_PER_FRAME_9
 
 #define REG_U_SC_WPE_TO_ROV_SLOT REG_U(0)
+#define REG_U_SC_WPE_MIRROR_SLOT REG_U(1)
 
 // C++ / HLSL 공유
 struct SCImageInstance
@@ -50,6 +51,7 @@ SC_CONST uint kImageFlagHorizontallyFlipped = 0x2;	// C++ (SCImageRenderer) 쪽�
 SC_CONST int kModifierCloaking = 2;
 SC_CONST int kModifierCloaked = 3;
 SC_CONST int kModifierDecloaking = 4;
+SC_CONST int kModifierDistortion = 8;
 SC_CONST int kModifierRemapping = 9;
 SC_CONST int kModifierShadow = 10; // image_t::modifier 값
 SC_CONST int kModifierWarpFlash = 17;

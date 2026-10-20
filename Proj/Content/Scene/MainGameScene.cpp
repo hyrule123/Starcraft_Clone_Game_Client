@@ -359,9 +359,11 @@ namespace sc
 
 		RenderManager::GetInst().RegisterRenderPass(std::move(sc_opaque));
 
+		std::shared_ptr<RenderTarget> sc_wpe_mirror = rt_pool.AcquireColor("ScWpeMirror", color_desc);
+
 		// SC Effect Pass
 		std::unique_ptr<SCEffectPass> sc_effect_pass = EntityManager::CreateEntity<SCEffectPass>(kSCEffectPassID, MeshRenderPass::SortPolicy::Custom);
-		sc_effect_pass->SetWPETargets(sc_rt, sc_dst);
+		sc_effect_pass->SetWPETargets(sc_rt, sc_dst, sc_wpe_mirror);
 		RenderManager::GetInst().RegisterRenderPass(std::move(sc_effect_pass));
 
 		// Sc Blit Pass

@@ -1,6 +1,9 @@
 #include <Content/HLSL/SCImage/SCImageCommon.hlsli>
 
-RasterizerOrderedTexture2D<uint> g_sc_index_rt : register(REG_U_SC_WPE_TO_ROV_SLOT);
+RasterizerOrderedTexture2D<uint> g_sc_wpe_rt : register(REG_U_SC_WPE_TO_ROV_SLOT);
+RasterizerOrderedTexture2D<uint> g_sc_mirror_rt : register(REG_U_SC_WPE_MIRROR_SLOT);
+
+
 Buffer<uint> g_pcx_tileset_lut : register(REG_T_SC_PCX_TILESET_LUT); // R8_UINT
 Buffer<uint2> g_pcx_lut_ranges : register(REG_T_SC_PCX_TILESET_LUT_OFFSETS); // x = offset, y = rows
 
@@ -44,13 +47,13 @@ void main(ImageVSOutput input)
 	const uint2 pixel = uint2(input.position.xy);
 	
 	//현재 픽셀의 인덱스 RT 값(old) 가져오기
-	const uint old = g_sc_index_rt[pixel];
+	const uint old = g_sc_wpe_rt[pixel];
 	
 	switch(input.modifier)
 	{
 		case kModifierShadow:	// 그림자
 			{
-				g_sc_index_rt[pixel] = PcxLookup(kPcxLutDarkIdx, kShadowDarkRow, old);
+				g_sc_wpe_rt[pixel] = PcxLookup(kPcxLutDarkIdx, kShadowDarkRow, old);
 				break;
 			}
 		
@@ -65,7 +68,7 @@ void main(ImageVSOutput input)
 				// 사용 기준 판별은 '적용 전 색상' 기준
 				const bool is_cloaked = g_color_fade_selector[sampled.x] <= (uint) input.modifier_data1;
 			
-				g_sc_index_rt[pixel] = is_cloaked ? blended : src;
+				g_sc_wpe_rt[pixel] = is_cloaked ? blended : src;
 				break;
 			}
 		
@@ -75,7 +78,7 @@ void main(ImageVSOutput input)
 				const uint src = ApplyPlayerColor(sampled.x, input.player_color_idx);
 
 				// 샘플링된 색을 50% 투명 변환 테이블을 통해 변환, ROV에 기록
-				g_sc_index_rt[pixel] = PcxLookupLight(kPcxLutTrans50Idx, src, old);
+				g_sc_wpe_rt[pixel] = PcxLookupLight(kPcxLutTrans50Idx, src, old);
 				break;
 			}
 		
@@ -86,11 +89,11 @@ void main(ImageVSOutput input)
 				if(is_valid)
 				{	
 					// OpenBW no_remap: 플레이어 색 치환 없이 원본 인덱스 사용
-					g_sc_index_rt[pixel] = PcxLookupLight(input.remapping, sampled.x, old);
+					g_sc_wpe_rt[pixel] = PcxLookupLight(input.remapping, sampled.x, old);
 				}
 				else
 				{
-					g_sc_index_rt[pixel] = ApplyPlayerColor(sampled.x, input.player_color_idx);
+					g_sc_wpe_rt[pixel] = ApplyPlayerColor(sampled.x, input.player_color_idx);
 				}
 				
 				break;
@@ -98,13 +101,13 @@ void main(ImageVSOutput input)
 		
 		case kModifierWarpFlash:
 			{
-				g_sc_index_rt[pixel] = PcxLookupLight(kPcxLutOfireIdx, (uint) input.modifier_data1, old);
+				g_sc_wpe_rt[pixel] = PcxLookupLight(kPcxLutOfireIdx, (uint) input.modifier_data1, old);
 				break;
 			}
 		
 		default:
 			{
-				g_sc_index_rt[pixel] = ApplyPlayerColor(sampled.x, input.player_color_idx);
+				g_sc_wpe_rt[pixel] = ApplyPlayerColor(sampled.x, input.player_color_idx);
 				break;
 			}
 	}

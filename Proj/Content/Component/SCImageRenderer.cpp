@@ -34,7 +34,7 @@ namespace sc
 
 	namespace
 	{
-		SCImageMaterialVariant GetMaterialVariant(int32_t modifier)
+		SCImageVariant GetMaterialVariant(int32_t modifier)
 		{
 			using SCSim::ImageModifier;
 
@@ -43,14 +43,14 @@ namespace sc
 			case ImageModifier::Normal:
 			case ImageModifier::NormalNoHallu:
 			case ImageModifier::WarpTexture:	// 보류: 당분간 일반 그리기
-				return SCImageMaterialVariant::Opaque;
+				return SCImageVariant::Opaque;
 
 			default:	// old를 읽는 효과 + 미구현/미지원 값 (Effect PS default = 일반 그리기)
 				break;
 			}
 
 			// default
-			return SCImageMaterialVariant::Effect;
+			return SCImageVariant::Effect;
 		}
 	}
 
@@ -70,7 +70,7 @@ namespace sc
 	}
 	void SCImageRenderer::ApplySnapshot(const SCSim::ImageData& img_data, const SCImageParam& img_param)
 	{
-		const SCImageMaterialVariant variant = GetMaterialVariant(img_data.modifier);
+		const SCImageVariant variant = GetMaterialVariant(img_data.modifier);
 
 		const bool is_image_type_changed = (img_data.image_type != img_data_cache_.image_type);
 

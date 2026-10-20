@@ -33,7 +33,7 @@ namespace sc
 
 		const sc::SCImageLibrary& GetSCImageLibrary() const { return sc_image_library_; }
 
-		std::shared_ptr<engine::Material> GetImageMaterial(uint32_t image_type, SCImageMaterialVariant variant);
+		std::shared_ptr<engine::Material> GetImageMaterial(uint32_t image_type, SCImageVariant variant);
 		std::shared_ptr<engine::Mesh> GetImageMesh() const { return image_mesh_; }
 
 		std::shared_ptr<engine::Mesh> GetMapMesh() const { return map_mesh_; }
@@ -56,8 +56,8 @@ namespace sc
 		SCImageLibrary sc_image_library_ = {};
 
 		// GRP 별 Material, modifier에 따라 다른 Material을 사용해야 함
-		std::vector<std::array<std::shared_ptr<engine::Material>, (size_t)SCImageMaterialVariant::kCount>> materials_ = {};
-		std::array<std::shared_ptr<engine::Material>, (size_t)SCImageMaterialVariant::kCount> orig_materials_ = {};
+		std::vector<std::array<std::shared_ptr<engine::Material>, (size_t)SCImageVariant::kCount>> materials_ = {};
+		std::array<std::shared_ptr<engine::Material>, (size_t)SCImageVariant::kCount> orig_materials_ = {};
 		std::shared_ptr<engine::Mesh> image_mesh_ = {};
 
 		// GPU
@@ -71,7 +71,7 @@ namespace sc
 		std::shared_ptr<engine::TypedBuffer> tunit_buffer_ = {};
 
 		// etc
-		std::filesystem::path mpq_dir_;
+		std::filesystem::path mpq_dir_ = {};
 		bool has_initialized_ = false;
 	};
 }

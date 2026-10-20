@@ -154,7 +154,7 @@ namespace sc
 		if (!rss->Create(rsDesc)) { CHECK(false); }
 
 #pragma region NORMAL PIPELINE
-		std::shared_ptr<Material>& normal_material = orig_materials_[(size_t)SCImageMaterialVariant::Opaque];
+		std::shared_ptr<Material>& normal_material = orig_materials_[(size_t)SCImageVariant::Opaque];
 		ASSERT(normal_material == nullptr);		// 중복 호출 방지
 		normal_material = EntityManager::CreateEntity<Material>();
 		
@@ -171,7 +171,7 @@ namespace sc
 #pragma endregion NORMAL PIPELINE
 
 #pragma region SHADOW PIPELINE
-		std::shared_ptr<Material>& shadow_material = orig_materials_[(size_t)SCImageMaterialVariant::Effect];
+		std::shared_ptr<Material>& shadow_material = orig_materials_[(size_t)SCImageVariant::Effect];
 		ASSERT(shadow_material == nullptr);		// 중복 호출 방지
 		shadow_material = EntityManager::CreateEntity<Material>();
 
@@ -190,6 +190,7 @@ namespace sc
 	void SCResourceManager::CreateMesh()
 	{
 		using namespace engine;
+
 		image_mesh_ = EntityManager::CreateEntity<engine::Mesh>();
 
 		constexpr ImageVSInput vertices[4] = 
@@ -206,11 +207,10 @@ namespace sc
 			.max = float3(0.5f, 0.5f, 0.5f)
 		};
 		
-		bool result = image_mesh_->CreateVertexBuffer<ImageVSInput>(vertices, local_bounds); // YES
+		bool result = image_mesh_->CreateVertexBuffer<ImageVSInput>(vertices, local_bounds);
 		CHECK_F(result, "Failed to create vertex buffer");
-
 		constexpr uint16_t indices[6] = { 0, 1, 2, 0, 2, 3 };
-		result = image_mesh_->CreateIndexBuffer(indices, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		result = image_mesh_->CreateIndexBuffer(indices, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, { {0, 6}, {0, 6} });
 		CHECK_F(result, "Failed to create index buffer");
 	}
 
@@ -233,11 +233,11 @@ namespace sc
 		map_material_->SetPipelineState(sc::kSCOpaquePassID, pipeline_state);
 	}
 
-	std::shared_ptr<engine::Material> SCResourceManager::GetImageMaterial(uint32_t image_type, SCImageMaterialVariant variant)
+	std::shared_ptr<engine::Material> SCResourceManager::GetImageMaterial(uint32_t image_type, SCImageVariant variant)
 	{
 		using namespace engine;
 
-		ASSERT(variant < SCImageMaterialVariant::kCount);
+		ASSERT(variant < SCImageVariant::kCount);
 
 		const sc::ImageDef& image_def = sc_image_library_.GetImageDef(image_type);
 

@@ -16,25 +16,38 @@ namespace sc
 	SCEffectPass::~SCEffectPass()
 	{}
 
-	void SCEffectPass::SetWPETargets(std::shared_ptr<engine::RenderTarget> rt, std::shared_ptr<engine::DepthStencilTarget> dst)
+	void SCEffectPass::SetWPETargets(
+		std::shared_ptr<engine::RenderTarget> rt, std::shared_ptr<engine::DepthStencilTarget> dst,
+		std::shared_ptr<engine::RenderTarget> mirror)
 	{
-		CHECK(rt && dst);
-		CHECK(rt->GetRawUAV());
+		CHECK(rt && dst && mirror);
+		CHECK(rt->GetRawUAV() && mirror->GetRawUAV());
 
 		CHECK(rt->GetWidth() == dst->GetWidth() && rt->GetHeight() == dst->GetHeight());
+		CHECK(rt->GetWidth() == mirror->GetWidth() && rt->GetHeight() == mirror->GetHeight());
+		CHECK(rt->GetFormat() != DXGI_FORMAT_UNKNOWN && rt->GetFormat() == mirror->GetFormat());	// getter가 있다면
 
 		wpe_render_target_ = rt;
 		wpe_depth_target_ = dst;
+		wpe_mirror_target_ = mirror;
 	}
+
 	void SCEffectPass::BindTargets(const engine::RenderContext& ctx)
 	{
-		ASSERT(wpe_render_target_ && wpe_depth_target_);
+		ASSERT(wpe_render_target_ && wpe_depth_target_ && wpe_mirror_target_);
 
-		ID3D11UnorderedAccessView* wpe_idx_uav = wpe_render_target_->GetRawUAV();
+		wpe_mirror_target_->CopyFrom(ctx.dc, *wpe_render_target_);
+
+		ID3D11UnorderedAccessView* uavs[] = { wpe_render_target_->GetRawUAV(), wpe_mirror_target_->GetRawUAV() };
+		constexpr UINT num_uav = static_cast<UINT>(sizeof(uavs) / sizeof(uavs[0]));
+
 		ID3D11DepthStencilView* wpe_depth_dsv = wpe_depth_target_->GetRawDepthStencilView();
 		
+		// 연속되는지 확인
+		static_assert(REG_U_SC_WPE_TO_ROV_SLOT.Get() + 1 == REG_U_SC_WPE_MIRROR_SLOT.Get());
+
 		// ROV만 바인딩함
-		ctx.dc->OMSetRenderTargetsAndUnorderedAccessViews(0, nullptr, wpe_depth_dsv, REG_U_SC_WPE_TO_ROV_SLOT.Get(), 1, &wpe_idx_uav, nullptr);
+		ctx.dc->OMSetRenderTargetsAndUnorderedAccessViews(0, nullptr, wpe_depth_dsv, REG_U_SC_WPE_TO_ROV_SLOT.Get(), num_uav, uavs, nullptr);
 
 		D3D11_VIEWPORT viewport = {};
 		viewport.Width = static_cast<FLOAT>(wpe_render_target_->GetWidth());
