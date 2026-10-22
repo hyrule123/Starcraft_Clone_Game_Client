@@ -100,13 +100,15 @@ namespace SCSim
 		int32_t modifier_data1;	// image_t::modifier_data1 상태에 따른 색상 변화 플래그
 	};
 	static_assert(sizeof(ImageData) == 36);
-	
+
 
 	struct PlayerData
 	{
 		int32_t color;			// player_t::color (LoadMap에서 0~15 보장)
+		int32_t minerals;		// state::current_minerals
+		int32_t gas;			// state::current_gas
 	};
-	static_assert(sizeof(PlayerData) == 4);
+	static_assert(sizeof(PlayerData) == 12);
 
 	static_assert(std::is_trivially_copyable_v<PlayerData>&& std::is_standard_layout_v<PlayerData>);
 	static_assert(std::is_trivially_copyable_v<SpriteData>&& std::is_standard_layout_v<SpriteData>);
@@ -612,4 +614,3 @@ namespace SCSim
 	};
 
 }
-

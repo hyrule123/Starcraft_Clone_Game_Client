@@ -59,4 +59,11 @@ extern "C" {
 	// 플레이어 12명분(Player 순서)을 컨텍스트 소유 버퍼로 반환. 실패 시 -1
 	// 포인터는 컨텍스트 수명 동안 유효, 내용은 다음 GetPlayers 호출 전까지 유효
 	SCSIM_API int32_t SCSim_GetPlayers(SCSim::Context* ctx, const SCSim::PlayerData** out_players);
+
+	// ---- 디버그 API ----
+	// "입력은 명령 API로만" 원칙의 예외. 원작 트리거 액션으로 가능한 상태 변경만 허용
+
+	// 플레이어 자원을 지정 값으로 설정 (owner 0~7). 맵 트리거 Set Resources(Set To)와 동일하게
+	// 현재 보유량과 누적 채취량(점수용)을 같은 값으로 덮어씀. 음수는 실패
+	SCSIM_API bool SCSim_Debug_SetResources(SCSim::Context* ctx, SCSim::Player owner, int32_t minerals, int32_t gas);
 }
