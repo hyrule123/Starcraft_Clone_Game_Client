@@ -195,7 +195,12 @@ namespace sc
 			// units[0..n)의 id, x, y, sprite_x, sprite_y 출력
 		}
 
+#define SPAWN_MARINE 0
+#define SPAWN_WRAITH 0
+#define SPAWN_DARK_TEMPLAR 1
+#define SPAWN_ULTRALISK 1
 		
+#if SPAWN_MARINE
 		{	// 마린
 			constexpr int32_t kTestCount = 30;
 			constexpr int32_t kBaseX = 2048;
@@ -210,20 +215,25 @@ namespace sc
 				CHECK_F(test_id != SCSim::kInvalidUnitId, "SCSim_CreateUnit failed: {}", SCSim_GetLastError());
 			}
 		}
+#endif //SPAWN_MARINE
 
-		//{	// 테란 레이스
-		//	constexpr int32_t kTestCount = 10;
-		//	constexpr int32_t kBaseX = 2048;
-		//	constexpr int32_t kBaseY = 2048;
 
-		//	for (int32_t i = 0; i < kTestCount; ++i)
-		//	{
-		//		uint32_t test_id = SCSim::kInvalidUnitId;
-		//		test_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranWraith, SCSim::Player::_2, kBaseX, kBaseY);
-		//		CHECK_F(test_id != SCSim::kInvalidUnitId, "SCSim_CreateUnit failed: {}", SCSim_GetLastError());
-		//	}
-		//}
+#if SPAWN_WRAITH
+		{	// 테란 레이스
+			constexpr int32_t kTestCount = 10;
+			constexpr int32_t kBaseX = 2048;
+			constexpr int32_t kBaseY = 2048;
 
+			for (int32_t i = 0; i < kTestCount; ++i)
+			{
+				uint32_t test_id = SCSim::kInvalidUnitId;
+				test_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranWraith, SCSim::Player::_2, kBaseX, kBaseY);
+				CHECK_F(test_id != SCSim::kInvalidUnitId, "SCSim_CreateUnit failed: {}", SCSim_GetLastError());
+			}
+		}
+#endif //SPAWN_WRAITH
+
+#if SPAWN_DARK_TEMPLAR
 		{
 			constexpr int32_t kTestCount = 10;
 			constexpr int32_t kBaseX = 2048;
@@ -236,6 +246,23 @@ namespace sc
 				CHECK_F(test_id != SCSim::kInvalidUnitId, "SCSim_CreateUnit failed: {}", SCSim_GetLastError());
 			}
 		}
+#endif //SPAWN_DARK_TEMPLAR
+
+#if SPAWN_ULTRALISK
+		{	// 울트라리스크
+			constexpr int32_t kTestCount = 10;
+			constexpr int32_t kBaseX = 2048;
+			constexpr int32_t kBaseY = 2048;
+
+			for (int32_t i = 0; i < kTestCount; ++i)
+			{
+				uint32_t test_id = SCSim::kInvalidUnitId;
+				constexpr int32_t kSpacingX = 8;
+				test_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::ZergUltralisk, SCSim::Player::_1, kBaseX + i * kSpacingX, kBaseY);
+				CHECK_F(test_id != SCSim::kInvalidUnitId, "SCSim_CreateUnit failed: {}", SCSim_GetLastError());
+			}
+		}
+#endif //SPAWN_ULTRALISK
 
 
 		{	// [테스트] EMP Shockwave (E 키)
@@ -572,8 +599,29 @@ namespace sc
 
 				const SCImageParam img_param = { .depth_key = MakeDepthKey(rank, order), .player_color_idx = player_color_idx };
 
+				// [임시] 탐지 정보 연동 전까지 Player 3(테스트용 다크 템플러)의 Cloaked를 EnemyCloaked로 변환
+				// 탐지 여부를 SCSim에서 받게 되면 '로컬 플레이어가 탐지하지 못한 적'으로 판정을 교체할 것
+				SCSim::ImageData resolved_img = img_data;
+				if (sprt_data.owner == static_cast<int32_t>(SCSim::Player::_3))
+				{
+					switch (resolved_img.modifier)
+					{
+					case static_cast<int32_t>(SCSim::ImageModifier::Cloaking):
+						resolved_img.modifier = static_cast<int32_t>(SCSim::ImageModifier::EnemyCloaking);
+						break;
+					case static_cast<int32_t>(SCSim::ImageModifier::Cloaked):
+						resolved_img.modifier = static_cast<int32_t>(SCSim::ImageModifier::EnemyCloaked);
+						break;
+					case static_cast<int32_t>(SCSim::ImageModifier::Decloaking):
+						resolved_img.modifier = static_cast<int32_t>(SCSim::ImageModifier::EnemyDecloaking);
+						break;
+					default:
+						break;
+					}
+				}
+
 				// 매 프레임 바뀌기 때문에 ApplySnapshot을 항상 호출해줘야 함
-				img_obj->ApplySnapshot(img_data, img_param);
+				img_obj->ApplySnapshot(resolved_img, img_param);
 				img_slot.serial = sprite_sync_serial_;
 				img_obj->SetActive(true);
 			}

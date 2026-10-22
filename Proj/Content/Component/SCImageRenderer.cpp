@@ -18,17 +18,18 @@
 
 namespace sc
 {
+	// SCSimulator과 HLSL 값 일치 확인
 	static_assert(kImageFlagHorizontallyFlipped == SCSim::ImageFlags::HorizontallyFlipped);
 	static_assert(kModifierShadow == static_cast<int32_t>(SCSim::ImageModifier::Shadow));
 	static_assert(kModifierCloaking == static_cast<int32_t>(SCSim::ImageModifier::Cloaking));
 	static_assert(kModifierCloaked == static_cast<int32_t>(SCSim::ImageModifier::Cloaked));
 	static_assert(kModifierDecloaking == static_cast<int32_t>(SCSim::ImageModifier::Decloaking));
+	static_assert(kModifierEnemyCloaking == static_cast<int32_t>(SCSim::ImageModifier::EnemyCloaking));
+	static_assert(kModifierEnemyCloaked == static_cast<int32_t>(SCSim::ImageModifier::EnemyCloaked));
+	static_assert(kModifierEnemyDecloaking == static_cast<int32_t>(SCSim::ImageModifier::EnemyDecloaking));
 	static_assert(kModifierDistortion == static_cast<int32_t>(SCSim::ImageModifier::Distortion));
 	static_assert(kModifierRemapping == static_cast<int32_t>(SCSim::ImageModifier::Remapping));
 	static_assert(kModifierWarpFlash == static_cast<int32_t>(SCSim::ImageModifier::WarpFlash));
-	
-	
-	
 
 	static_assert(std::is_same_v<decltype(SCImageInstance::image_flags), decltype(SCSim::ImageData::flags)>);
 	static_assert(std::is_same_v<decltype(SCImageInstance::modifier), decltype(SCSim::ImageData::modifier)>);
@@ -58,6 +59,9 @@ namespace sc
 				return SCImageVariant::Effect;
 
 			case ImageModifier::Distortion:
+			case ImageModifier::EnemyCloaking:
+			case ImageModifier::EnemyDecloaking:
+			case ImageModifier::EnemyCloaked:
 				return SCImageVariant::Distortion;
 
 			default:

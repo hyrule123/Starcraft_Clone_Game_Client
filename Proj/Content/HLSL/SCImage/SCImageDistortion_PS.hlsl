@@ -1,5 +1,6 @@
 #include <Content/HLSL/SCImage/SCImageCommon.hlsli>
 #include <Content/HLSL/SCImage/SCEffectPass.hlsli>
+#include <Content/HLSL/SCImage/SCPcxLut.hlsli>	// g_color_fade_selector
 
 static const uint kDebugIndexA = 0;
 static const uint kDebugIndexB = 255;
@@ -26,8 +27,45 @@ void main(ImageVSOutput input)
 	
 	switch (input.modifier)
 	{
+		// 둘은 코드가 동일(방향만 다름)
+		case kModifierEnemyCloaking: // 은폐 중
+		case kModifierEnemyDecloaking: // 은폐 해제 중
+			{
+				// 텍스처에서 샘플링된 색(index)에 플레이어 색상 적용
+				const uint src = ApplyPlayerColor(sampled.x, input.player_color_idx);
+				
+				// 사용 기준 판별은 '적용 전 색상' 기준
+				const bool is_cloaked = g_color_fade_selector[sampled.x] <= (uint) input.modifier_data1;
+				
+				// cloak된 픽셀이면 Distortion 적용(왜곡 + 투명화), 아니면 기존 색상 적용
+				if(is_cloaked)
+				{
+					ApplyDistortion(pixel, g_color_fade_selector[src]);
+				}
+				else
+				{
+					g_sc_wpe_rt[pixel] = src;
+				}
+				
+				break;
+			}
+		
+		// 탐지 못 한 적의 은폐: 밝기 등급(cloak_fade_selector, 0~8)을 오프셋으로 사용
+		// 오프셋은 플레이어 색 치환 후 인덱스의 밝기 등급. (혹시나 원작과 일치하지 않을 경우 이 부분을 수정)
+		// 5/7과 같은 기준을 유지할 것
+		case kModifierEnemyCloaked:
+			{
+				const uint src = ApplyPlayerColor(sampled.x, input.player_color_idx);
+				ApplyDistortion(pixel, g_color_fade_selector[src]);
+				break;
+			}
+		
 		// Distortion GRP: 기록된 값 만큼 오른쪽 픽셀의 값을 가져와서 기록한다.
-		case kModifierDistortion: ApplyDistortion(pixel, sampled.x); break;		
+		case kModifierDistortion:
+			{
+				ApplyDistortion(pixel, sampled.x);
+				break;
+			}
 		
 		// 여기 오면 안 됨: Distortion Material에 다른 modifier가 들어온 경우 (GetMaterialVariant 매핑 오류)
 		// 팔레트와 무관하게 눈에 띄도록 체커 패턴으로 기록
