@@ -451,6 +451,103 @@ extern "C" {
         return false;
     }
 
+    bool SCSim_Build(SCSim::Context* ctx, SCSim::Player owner, SCSim::OrderType order_type,
+        SCSim::UnitType unit_type, int32_t tile_x, int32_t tile_y)
+    {
+        if (!CheckContext(ctx, "SCSim_Build"))
+        {
+            return false;
+        }
+        if (!CheckActionPlayerRange(owner, "SCSim_Build"))
+        {
+            return false;
+        }
+
+        // 건설 오더 화이트리스트. CTFCOP2는 OpenBW 미구현(실행 시 예외)이라 제외
+        switch (order_type)
+        {
+        case SCSim::OrderType::PlaceBuilding:
+        case SCSim::OrderType::PlaceProtossBuilding:
+        case SCSim::OrderType::CreateProtossBuilding:
+        case SCSim::OrderType::DroneStartBuild:
+        case SCSim::OrderType::PlaceAddon:
+        case SCSim::OrderType::BuildNydusExit:
+        case SCSim::OrderType::BuildingLand:
+            break;
+        default:
+            SetError("SCSim_Build: order_type " + std::to_string(static_cast<int32_t>(order_type)) +
+                " is not a supported build order");
+            return false;
+        }
+
+        const int32_t unit_type_value = static_cast<int32_t>(unit_type);
+        if (unit_type_value < 0 || unit_type_value >= static_cast<int32_t>(SCSim::UnitType::kCount))
+        {
+            SetError("SCSim_Build: invalid unit_type " + std::to_string(unit_type_value));
+            return false;
+        }
+
+        auto& st = ctx->sim.st();
+
+        // OpenBW는 size_t 타일 좌표를 int(32 * tile)로 변환하므로 음수·큰 값은 wrap/오버플로 → 먼저 막음
+        if (tile_x < 0 || static_cast<size_t>(tile_x) >= st.game->map_tile_width ||
+            tile_y < 0 || static_cast<size_t>(tile_y) >= st.game->map_tile_height)
+        {
+            SetError("SCSim_Build: tile (" + std::to_string(tile_x) + ", " + std::to_string(tile_y) +
+                ") is out of map bounds");
+            return false;
+        }
+
+        bwgame::action_functions funcs(st, ctx->action_st);
+        const bwgame::order_type_t* order = nullptr;
+        const bwgame::unit_type_t* type = nullptr;
+
+        // 1단계: 인자 해석. 상태를 건드리지 않으므로 실패해도 broken 아님
+        try
+        {
+            if (!funcs.get_single_selected_unit(static_cast<int>(owner)))
+            {
+                SetError("SCSim_Build: selection must be exactly one unit");
+                return false;
+            }
+            order = funcs.get_order_type(static_cast<bwgame::Orders>(order_type));
+            type = funcs.get_unit_type(static_cast<bwgame::UnitTypes>(unit_type));
+        }
+        catch (const std::exception& e)
+        {
+            SetError(std::string("SCSim_Build: ") + e.what());
+            return false;
+        }
+        catch (...)
+        {
+            SetError("SCSim_Build: unknown exception");
+            return false;
+        }
+
+        // 2단계: 실제 명령. true는 수락일 뿐 배치 성공을 뜻하지 않음
+        try
+        {
+            const bwgame::xy_t<size_t> tile_pos(static_cast<size_t>(tile_x), static_cast<size_t>(tile_y));
+            if (!funcs.action_build(static_cast<int>(owner), order, type, tile_pos))
+            {
+                SetError("SCSim_Build: selected unit cannot receive this build order");
+                return false;
+            }
+            return true;
+        }
+        catch (const std::exception& e)
+        {
+            SetError(std::string("SCSim_Build: ") + e.what());
+        }
+        catch (...)
+        {
+            SetError("SCSim_Build: unknown exception");
+        }
+
+        ctx->broken = true;
+        return false;
+    }
+
     int32_t SCSim_GetUnits(SCSim::Context* ctx, const SCSim::UnitData** out_units) {
         if (!out_units) {
             SetError("SCSim_GetUnits: out_units is null");

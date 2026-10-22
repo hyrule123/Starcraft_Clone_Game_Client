@@ -37,6 +37,16 @@ extern "C" {
 	SCSIM_API bool SCSim_Order(SCSim::Context* ctx, SCSim::Player owner, SCSim::OrderType order_type, int32_t x, int32_t y,
 		uint32_t target_unit_id, SCSim::UnitType target_unit_type, bool queue);
 
+	// 현재 단일 선택된 유닛에게 건설 명령 (owner 0~7). 원작 Build 액션과 동일한 형식
+	// order_type: PlaceBuilding / PlaceProtossBuilding / CreateProtossBuilding / DroneStartBuild /
+	//             PlaceAddon / BuildNydusExit / BuildingLand 만 허용 (CTF 모드 오더는 지원하지 않음)
+	// BuildingLand / BuildNydusExit는 unit_type이 선택 유닛 자신의 타입이어야 함
+	// 애드온은 애드온 자신의 좌상단 타일 좌표를 넘김 (본체 위치는 시뮬레이션이 역산)
+	// true = 명령 수락. 배치 불가·보급/자원 부족은 true를 반환하고 시뮬레이션이 무시함
+	// 선택이 단일 유닛이 아니거나 해당 유닛이 그 건설을 할 수 없으면 false
+	SCSIM_API bool SCSim_Build(SCSim::Context* ctx, SCSim::Player owner, SCSim::OrderType order_type,
+		SCSim::UnitType unit_type, int32_t tile_x, int32_t tile_y);
+
 	// visible, hidden 상태의 모든 유닛을 배열로 반환.
 	SCSIM_API int32_t SCSim_GetUnits(SCSim::Context* ctx, const SCSim::UnitData** out_units);
 
