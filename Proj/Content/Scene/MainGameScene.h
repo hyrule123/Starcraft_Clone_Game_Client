@@ -10,6 +10,7 @@
 namespace engine
 {
 	class ConstantBuffer;
+    class Texture2DArray;
 }
 
 namespace sc
@@ -69,7 +70,6 @@ namespace sc
 		uint32_t sync_serial_ = 0;
 
         // 스프라이트 이미지
-
         std::array<SpriteSlot, SCSim::kMaxSprites> sprite_slots_ = {};
         std::array<ImageSlot, SCSim::kMaxImages> image_slots_ = {};
 		std::array<SCSim::PlayerData, static_cast<size_t>(SCSim::Player::kCount)> player_data_ = {};
@@ -81,6 +81,5 @@ namespace sc
         uint32_t sprite_sync_serial_ = 0;
 
         std::shared_ptr<engine::ConstantBuffer> sc_common_info_buffer_ = {};
-        
     };
 }

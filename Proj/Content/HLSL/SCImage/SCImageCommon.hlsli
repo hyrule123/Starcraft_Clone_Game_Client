@@ -8,7 +8,10 @@
 #include <Content/HLSL/SCCommon.hlsli>
 
 #define REG_T_SC_GRP_SPRITE REG_T_PER_MATERIAL_0
+#define REG_T_SC_GRP_FRAME_OFFSETS REG_T_PER_MATERIAL_1
 
+// 건물 완료 시 생성되는 효과에 사용되는 Warp Texture. (Per Frame에 바인딩) -> SCImageRenderer::kModifierWarpTexture
+#define REG_T_SC_WARP_TEXTURE REG_T_PER_FRAME_4
 #define REG_T_SC_PCX_TILESET_LUT	REG_T_PER_FRAME_7
 #define REG_T_SC_PCX_TILESET_LUT_OFFSETS REG_T_PER_FRAME_8
 #define REG_T_SC_CLOAK_FADE_SELECTOR REG_T_PER_FRAME_9
@@ -52,6 +55,23 @@ SC_CONST float kScDepthScale = 1.0f / 16777216.0f;
 SC_CONST uint kImageFlagHorizontallyFlipped = 0x2;	// C++ (SCImageRenderer) 쪽에서 검증
 
 
+
+// Modifiers
+//	Effect Pass
+SC_CONST int kModifierCloaking = 2;
+SC_CONST int kModifierCloaked = 3;
+SC_CONST int kModifierDecloaking = 4;
+SC_CONST int kModifierEnemyCloaking = 5;
+SC_CONST int kModifierEnemyCloaked = 6; // 탐지 못 한 적의 은폐 (OpenBW 렌더러 미지원 → 왜곡으로 구현)
+SC_CONST int kModifierEnemyDecloaking = 7;
+SC_CONST int kModifierDistortion = 8;
+SC_CONST int kModifierRemapping = 9;
+SC_CONST int kModifierShadow = 10; // image_t::modifier 값
+SC_CONST int kModifierWarpFlash = 17;
+
+//	Opaque Pass
+SC_CONST int kModifierWarpTexture = 12;
+
 struct ImageVSInput
 {
 	// 위치는 인스턴스 위치와 캔버스 크기, UV로 전부 계산됨
@@ -75,10 +95,12 @@ struct ImageVSOutput
 };
 
 Texture2DArray<uint2> g_grp_sprite : register(REG_T_SC_GRP_SPRITE);
+Texture2DArray<uint2> g_warp_texture : register(REG_T_SC_WARP_TEXTURE);
+
 Buffer<uint> g_tunit : register(REG_T_SC_TUNIT); // R8_UINT, 128개
 Buffer<float4> g_wpe : register(REG_T_SC_WPE_PALETTE); // R8G8B8A8_UNORM, 256개
-
-
+// GRP 프레임별 캔버스 내 offset (x, y).
+Buffer<uint2> g_grp_frame_offsets : register(REG_T_SC_GRP_FRAME_OFFSETS);
 
 float2 ScToWorld(float sc_x, float sc_y)
 {

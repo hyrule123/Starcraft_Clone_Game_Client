@@ -215,6 +215,7 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BuildTestScript.h" />
     <ClInclude Include="EmpTestScript.h" />
     <ClInclude Include="GameObject\SCImageObj.h" />
     <ClInclude Include="Component\SCImageRenderer.h" />
@@ -264,6 +265,7 @@
     <ClInclude Include="Legacy\Script\TestScript.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BuildTestScript.cpp" />
     <ClCompile Include="EmpTestScript.cpp" />
     <ClCompile Include="GameObject\SCImageObj.cpp" />
     <ClCompile Include="Component\SCImageRenderer.cpp" />

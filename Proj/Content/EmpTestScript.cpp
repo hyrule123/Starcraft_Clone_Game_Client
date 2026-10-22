@@ -57,6 +57,13 @@ namespace sc
 			return;
 		}
 
+		int32_t selected = SCSim_Select(sim_ctx_, kTestPlayer, &vessel_id_, 1);
+		if (selected != 1)
+		{
+			LOG("EmpTestScript: 시전할 유닛 선택 실패: {}", SCSim_GetLastError());
+			return;
+		}
+
 		// 에너지가 부족해도 명령 자체는 수락될 수 있음 (시전 시점에 실패) → 반응이 없으면 에너지 대기
 		const bool ordered = SCSim_Order(sim_ctx_, kTestPlayer, SCSim::OrderType::CastEMPShockwave,
 			kTargetX, kTargetY, SCSim::kInvalidUnitId, SCSim::UnitType::None, false);

@@ -31,6 +31,8 @@ namespace sc
 	static_assert(kModifierRemapping == static_cast<int32_t>(SCSim::ImageModifier::Remapping));
 	static_assert(kModifierWarpFlash == static_cast<int32_t>(SCSim::ImageModifier::WarpFlash));
 
+	static_assert(kModifierWarpTexture == static_cast<int32_t>(SCSim::ImageModifier::WarpTexture));
+
 	static_assert(std::is_same_v<decltype(SCImageInstance::image_flags), decltype(SCSim::ImageData::flags)>);
 	static_assert(std::is_same_v<decltype(SCImageInstance::modifier), decltype(SCSim::ImageData::modifier)>);
 	static_assert(std::is_same_v<decltype(SCImageInstance::modifier_data1), decltype(SCSim::ImageData::modifier_data1)>);
@@ -47,7 +49,7 @@ namespace sc
 			{
 			case ImageModifier::Normal:
 			case ImageModifier::NormalNoHallu:
-			case ImageModifier::WarpTexture:	// 보류: 당분간 일반 그리기
+			case ImageModifier::WarpTexture:
 				return SCImageVariant::Opaque;
 
 			case ImageModifier::Cloaking:
@@ -118,7 +120,7 @@ namespace sc
 			SetMaterial(1, mtrl_sub1);
 
 			// 컬링 bounds: 1픽셀 여유
-			const auto& tex = resource_manager.GetSCImageLibrary().GetTexture(img_data.image_type);
+			std::shared_ptr<engine::Texture2DArray> tex = resource_manager.GetSCImageLibrary().GetGrp(img_data.image_type).texture;
 
 			const float hx = (float)((tex->GetWidth() >> 1) + 1);
 			const float hy = (float)((tex->GetHeight() >> 1) + 1);

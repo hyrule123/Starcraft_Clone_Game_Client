@@ -29,6 +29,7 @@
 
 namespace
 {
+	constexpr uint32_t kWarpTextureImageType = 210;	// OpenBW ImageTypes::IMAGEID_Warp_Texture
 }
 
 namespace sc
@@ -203,7 +204,14 @@ namespace sc
 		create_original_material(SCImageVariant::DistortionSync, kSCEffectPassID,
 			create_pipeline_state("Shader/SCImageDistortionSync_PS.cso", depth_key_test_dss_, DrawFlag::NoBatching));
 #pragma endregion DISTORTION PIPELINE
-	
+
+
+#pragma region WARP TEXTURE BINDING
+		std::shared_ptr<Texture2DArray> warp_texture = sc_image_library_.GetGrp(kWarpTextureImageType).texture;
+		CHECK_F(warp_texture, "Warp texture(image 210) not found");
+		RenderManager::GetInst().GetPerFrameBindingTable().AddShaderResource(
+			ShaderStage::Pixel, REG_T_SC_WARP_TEXTURE, warp_texture);
+#pragma endregion //WARP TEXTURE BINDING
 	}
 
 	void SCResourceManager::CreateMesh()
@@ -269,9 +277,12 @@ namespace sc
 		if (mtrl == nullptr)
 		{
 			mtrl = orig_materials_[(size_t)variant]->Clone();
-			std::shared_ptr<Texture2D> tex = sc_image_library_.GetTexture(image_type);
-			ASSERT_F(tex, "Failed to get texture for image type: {}", image_type);
-			mtrl->SetTexture(engine::ShaderStage::Vertex | engine::ShaderStage::Pixel, REG_T_SC_GRP_SPRITE, tex);
+			BakedGrp grp = sc_image_library_.GetGrp(image_type);
+			ASSERT_F(grp.texture && grp.frame_offsets, "Failed to get texture for image type: {}", image_type);
+
+			GPUBufferBindingTable& binding_table = mtrl->GetPerMaterialBindingTable();
+			binding_table.AddShaderResource(engine::ShaderStage::Vertex | engine::ShaderStage::Pixel, REG_T_SC_GRP_SPRITE, std::move(grp.texture));
+			binding_table.AddShaderResource(engine::ShaderStage::Vertex | engine::ShaderStage::Pixel, REG_T_SC_GRP_FRAME_OFFSETS, std::move(grp.frame_offsets));
 		}
 
 		return mtrl;

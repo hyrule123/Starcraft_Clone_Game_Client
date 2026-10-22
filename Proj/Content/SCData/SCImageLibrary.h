@@ -9,17 +9,30 @@
 namespace engine
 {
     class Texture2DArray;
+    class TypedBuffer;
 }
 
 namespace sc
 {
     class MPQFileSystem;
 
+    // BakeGrp 결과. 실패 시 둘 다 nullptr
+    struct BakedGrp
+    {
+        std::shared_ptr<engine::Texture2DArray> texture = {};      // GRP 하나를 디코딩해 Texture2DArray로 만들어 등록
+        std::shared_ptr<engine::TypedBuffer> frame_offsets = {};	// 프레임별 캔버스 내 offset (R32G32_UINT)
+    };
+
     // images.dat 기준으로 게임에서 쓰는 모든 GRP를 R8G8_UINT Texture2DArray로 구워
     // ResourceManager에 등록하고, ImageType → 리소스 키 / 이미지 속성 조회를 제공
     //
     // 리소스 키 = MPQ 내부 상대 경로 (예: "unit\\protoss\\zealot.grp")
     // 이름만 쓰면 폴더가 다른 동명 GRP가 충돌하므로 전체 경로 사용
+
+    // 참고: '캔버스'와 '프레임'
+    // SC는 데이터 절약을 위해 '캔버스'와 '프레임'을 구분 중
+    // '캔버스' = 텍스처 전체 크기
+	// '프레임' = 캔버스 내에서 실제로 쓰는 영역( = 픽셀이 존재하는 영역)
     class SCImageLibrary
     {
     public:
@@ -33,13 +46,12 @@ namespace sc
 
         uint32_t grp_count() const { return static_cast<uint32_t>(manifest_.sources.size()); }
 
-        // GRP가 없는 이미지 타입이면 nullptr
-        // 반환 포인터는 이 라이브러리가 살아있는 동안 유효 (비소유)
-        std::shared_ptr<engine::Texture2DArray> GetTexture(uint32_t image_type) const;
+        // GRP가 없는 이미지 타입이면 내부에 nullptr이 들어있음.
+		BakedGrp GetGrp(uint32_t image_type) const;
 
     private:
         ImageDefTable defs_ = {};
         GrpManifest manifest_ = {};
-        std::vector<std::shared_ptr<engine::Texture2DArray>> textures_ = {};  // manifest_.sources와 같은 순서
+		std::vector<BakedGrp> grp_resources_ = {};  // manifest_.sources와 같은 순서
     };
 }

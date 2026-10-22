@@ -156,6 +156,9 @@
     <ClInclude Include="EmpTestScript.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BuildTestScript.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -279,6 +282,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EmpTestScript.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BuildTestScript.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

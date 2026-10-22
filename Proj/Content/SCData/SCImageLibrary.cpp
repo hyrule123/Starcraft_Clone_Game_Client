@@ -5,6 +5,7 @@
 #include <Content/SCData/MPQ/MPQFileSystem.h>
 
 #include <Engine/Resource/GPU/Buffer/Texture2DArray.h>
+#include <Engine/Resource/GPU/Buffer/TypedBuffer.h>
 
 #include <Engine/Core/DX11.h>
 
@@ -13,10 +14,10 @@ namespace sc
     namespace
     {
         constexpr DXGI_FORMAT kGrpTextureFormat = DXGI_FORMAT_R8G8_UINT;
-
-        // GRP 하나를 디코딩해 Texture2DArray로 만들어 등록
+        
         // pixels는 GRP 간 재사용되는 작업 버퍼 (용량 재사용 목적)
-        std::shared_ptr<engine::Texture2DArray> BakeGrp(const MPQFileSystem& fs, const std::string& mpq_path,
+
+        BakedGrp BakeGrp(const MPQFileSystem& fs, const std::string& mpq_path,
             std::vector<uint8_t>& pixels, size_t& total_frames, size_t& total_bytes)
         {
             using namespace engine;
@@ -25,13 +26,13 @@ namespace sc
             std::optional<std::vector<uint8_t>> bytes = file.ReadAll();
             if (!bytes.has_value())
             {
-                return nullptr;  // ReadAll이 이미 알림
+                return {};  // ReadAll이 이미 알림
             }
 
             GrpFile grp;
             if (!grp.Load(std::move(*bytes)))
             {
-                return nullptr;
+                return {};
             }
 
             const uint32_t frame_count = grp.FrameCount();
@@ -46,9 +47,10 @@ namespace sc
                 uint8_t* slice = pixels.data() + static_cast<size_t>(i) * slice_pitch;
                 if (!grp.DecodeFrame(i, slice, row_pitch))
                 {
-                    return nullptr;
+                    return {};
                 }
             }
+
 
             std::shared_ptr<Texture2DArray> texture = EntityManager::CreateEntity<Texture2DArray>();
             const bool created = texture->CreateImmutableFromMemory(
@@ -57,12 +59,24 @@ namespace sc
                 static_cast<uint32_t>(row_pitch), static_cast<uint32_t>(slice_pitch));
             if (!created)
             {
-                return nullptr;
+                return {};
             }
+
+            std::vector<engine::uint32_2> offsets;
+            offsets.reserve(frame_count);
+            for (uint32_t i = 0; i < frame_count; ++i)
+            {
+                const GrpFrameInfo& f = grp.Frame(i);
+                offsets.push_back({ f.offset_x, f.offset_y });
+            }
+
+			std::shared_ptr<engine::TypedBuffer> offset_buf = EntityManager::CreateEntity<engine::TypedBuffer>();
+            const bool offset_created = offset_buf->CreateImmutableBuffer(DXGI_FORMAT_R32G32_UINT, offsets);
+            if (!offset_created) { return {}; }
 
             total_frames += frame_count;
             total_bytes += pixels.size();
-            return texture;
+            return { texture, offset_buf };
         }
     }
 
@@ -114,18 +128,18 @@ namespace sc
         size_t total_frames = 0;
         size_t total_bytes = 0;
 
-        std::vector<std::shared_ptr<Texture2DArray>> textures;
-        textures.reserve(manifest->sources.size());
+		std::vector<BakedGrp> grp_resources;
+        grp_resources.reserve(manifest->sources.size());
 
         for (const GrpSource& source : manifest->sources)
         {
-            std::shared_ptr<Texture2DArray> texture = BakeGrp(fs, source.mpq_path, pixels, total_frames, total_bytes);
-            if (texture == nullptr)
+            BakedGrp baked = BakeGrp(fs, source.mpq_path, pixels, total_frames, total_bytes);
+            if (baked.texture == nullptr || baked.frame_offsets == nullptr)
             {
                 LOG("SCImageLibrary: GRP 굽기 실패 {}", source.mpq_path);
                 return false;
             }
-            textures.push_back(std::move(texture));
+			grp_resources.push_back(std::move(baked));
         }
 
         DEBUG_LOG("SCImageLibrary: GRP {}개, 프레임 {}장, 텍스처 {:.1f} MB",
@@ -133,7 +147,7 @@ namespace sc
 
         defs_ = std::move(defs);
         manifest_ = std::move(*manifest);
-		textures_ = std::move(textures);
+		grp_resources_ = std::move(grp_resources);
         return true;
     }
 
@@ -142,16 +156,11 @@ namespace sc
         return defs_.Get(image_type);  // 범위 검사는 ImageDefTable::Get의 ASSERT
     }
 
-    std::shared_ptr<engine::Texture2DArray> SCImageLibrary::GetTexture(uint32_t image_type) const
+    BakedGrp SCImageLibrary::GetGrp(uint32_t image_type) const
     {
         ASSERT(image_type < kImageTypeCount);
-
         const int32_t source_index = manifest_.image_to_source[image_type];
-        if (source_index == GrpManifest::kNoGrp)
-        {
-            return nullptr;
-        }
-
-        return textures_[source_index];
+        if (source_index == GrpManifest::kNoGrp) { return {}; }
+        return grp_resources_[source_index];
     }
 }
