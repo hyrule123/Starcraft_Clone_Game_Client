@@ -42,35 +42,29 @@ struct SCImageInstance
 static_assert(sizeof(SCImageInstance) == 36, "SCImageInstance is not 36 bytes");
 #endif
 
-#ifdef __HLSL
-#define SC_CONST static const
-#else
-#define SC_CONST constexpr
-#endif
-
 
 // 깊이 키 → z 변환 배율 (2^-24). z = (key + 1) * kScDepthScale, 키 24비트 이내에서 정확히 표현
-SC_CONST float kScDepthScale = 1.0f / 16777216.0f;
+HLSL_CONSTEXPR float kScDepthScale = 1.0f / 16777216.0f;
 
-SC_CONST uint kImageFlagHorizontallyFlipped = 0x2;	// C++ (SCImageRenderer) 쪽에서 검증
+HLSL_CONSTEXPR uint kImageFlagHorizontallyFlipped = 0x2;	// C++ (SCImageRenderer) 쪽에서 검증
 
 
 
 // Modifiers
 //	Effect Pass
-SC_CONST int kModifierCloaking = 2;
-SC_CONST int kModifierCloaked = 3;
-SC_CONST int kModifierDecloaking = 4;
-SC_CONST int kModifierEnemyCloaking = 5;
-SC_CONST int kModifierEnemyCloaked = 6; // 탐지 못 한 적의 은폐 (OpenBW 렌더러 미지원 → 왜곡으로 구현)
-SC_CONST int kModifierEnemyDecloaking = 7;
-SC_CONST int kModifierDistortion = 8;
-SC_CONST int kModifierRemapping = 9;
-SC_CONST int kModifierShadow = 10; // image_t::modifier 값
-SC_CONST int kModifierWarpFlash = 17;
+HLSL_CONSTEXPR int kModifierCloaking = 2;
+HLSL_CONSTEXPR int kModifierCloaked = 3;
+HLSL_CONSTEXPR int kModifierDecloaking = 4;
+HLSL_CONSTEXPR int kModifierEnemyCloaking = 5;
+HLSL_CONSTEXPR int kModifierEnemyCloaked = 6; // 탐지 못 한 적의 은폐 (OpenBW 렌더러 미지원 → 왜곡으로 구현)
+HLSL_CONSTEXPR int kModifierEnemyDecloaking = 7;
+HLSL_CONSTEXPR int kModifierDistortion = 8;
+HLSL_CONSTEXPR int kModifierRemapping = 9;
+HLSL_CONSTEXPR int kModifierShadow = 10; // image_t::modifier 값
+HLSL_CONSTEXPR int kModifierWarpFlash = 17;
 
 //	Opaque Pass
-SC_CONST int kModifierWarpTexture = 12;
+HLSL_CONSTEXPR int kModifierWarpTexture = 12;
 
 struct ImageVSInput
 {

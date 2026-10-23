@@ -2,19 +2,19 @@
 #define SC_PCX_LUT_HLSLI
 #include <Content/HLSL/SCImage/SCImageCommon.hlsli>
 
-SC_CONST uint kShadowDarkRow = 18; // OpenBW 하드 코딩된 항목
-SC_CONST uint kPcxLutTableWidth = 256;
+HLSL_CONSTEXPR uint kShadowDarkRow = 18; // OpenBW 하드 코딩된 항목
+HLSL_CONSTEXPR uint kPcxLutTableWidth = 256;
 
 // Pcx LUT table indices
-SC_CONST uint kPcxLutDarkIdx = 0;
-SC_CONST uint kPcxLutOfireIdx = 1;
-SC_CONST uint kPcxLutGfireIdx = 2;
-SC_CONST uint kPcxLutBfireIdx = 3;
-SC_CONST uint kPcxLutBexplIdx = 4;
-SC_CONST uint kPcxLutTrans50Idx = 5;
-SC_CONST uint kPcxLutRedIdx = 6;
-SC_CONST uint kPcxLutGreenIdx = 7;
-SC_CONST uint kPcxLutCount = 8;
+HLSL_CONSTEXPR uint kPcxLutDarkIdx = 0;
+HLSL_CONSTEXPR uint kPcxLutOfireIdx = 1;
+HLSL_CONSTEXPR uint kPcxLutGfireIdx = 2;
+HLSL_CONSTEXPR uint kPcxLutBfireIdx = 3;
+HLSL_CONSTEXPR uint kPcxLutBexplIdx = 4;
+HLSL_CONSTEXPR uint kPcxLutTrans50Idx = 5;
+HLSL_CONSTEXPR uint kPcxLutRedIdx = 6;
+HLSL_CONSTEXPR uint kPcxLutGreenIdx = 7;
+HLSL_CONSTEXPR uint kPcxLutCount = 8;
 
 #ifdef __HLSL
 Buffer<uint> g_pcx_tileset_lut : register(REG_T_SC_PCX_TILESET_LUT); // R8_UINT
