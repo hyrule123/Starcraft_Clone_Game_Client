@@ -8,7 +8,7 @@
 #include <Content/HLSL/SCCommon.hlsli>
 
 #define REG_T_SC_GRP_SPRITE REG_T_PER_MATERIAL_0
-#define REG_T_SC_GRP_FRAME_OFFSETS REG_T_PER_MATERIAL_1
+#define REG_T_SC_GRP_FRAME_RECTS REG_T_PER_MATERIAL_1
 
 // 건물 완료 시 생성되는 효과에 사용되는 Warp Texture. (Per Frame에 바인딩) -> SCImageRenderer::kModifierWarpTexture
 #define REG_T_SC_WARP_TEXTURE REG_T_PER_FRAME_4
@@ -38,8 +38,16 @@ struct SCImageInstance
 };
 
 #ifdef __cplusplus
-// 구간이 겹치지 않는지 컴파일 시 확인
-static_assert(sizeof(SCImageInstance) == 36, "SCImageInstance is not 36 bytes");
+static_assert(sizeof(SCImageInstance) == 36, "SCImageInstance Layout changed.");
+#endif
+
+struct GrpFrameRect
+{
+	uint2 offset;
+	uint2 size;
+};
+#ifdef __cplusplus
+static_assert(sizeof(GrpFrameRect) == 16, "GrpFrameRect Layout changed.");
 #endif
 
 
@@ -47,8 +55,6 @@ static_assert(sizeof(SCImageInstance) == 36, "SCImageInstance is not 36 bytes");
 HLSL_CONSTEXPR float kScDepthScale = 1.0f / 16777216.0f;
 
 HLSL_CONSTEXPR uint kImageFlagHorizontallyFlipped = 0x2;	// C++ (SCImageRenderer) 쪽에서 검증
-
-
 
 // Modifiers
 //	Effect Pass
@@ -80,7 +86,7 @@ struct ImageVSInput
 struct ImageVSOutput
 {
 	float4 position : SV_Position;
-	float2 local : TEXCOORD0; // 캔버스 내 로컬 좌표 (보간)
+	float2 local : TEXCOORD0; // 캔버스 내 로컬 좌표 (보간) - Grp에서 texel 추출 시 사용됨(UV에 대응)
 	nointerpolation uint frame : FRAME; // 슬라이스 번호
 	nointerpolation int modifier : MODIFIER; // image_t::modifier
 	nointerpolation int modifier_data1 : MODIFIER_DATA1; // image_t::modifier_data1
@@ -93,8 +99,9 @@ Texture2DArray<uint2> g_warp_texture : register(REG_T_SC_WARP_TEXTURE);
 
 Buffer<uint> g_tunit : register(REG_T_SC_TUNIT); // R8_UINT, 128개
 Buffer<float4> g_wpe : register(REG_T_SC_WPE_PALETTE); // R8G8B8A8_UNORM, 256개
-// GRP 프레임별 캔버스 내 offset (x, y).
-Buffer<uint2> g_grp_frame_offsets : register(REG_T_SC_GRP_FRAME_OFFSETS);
+
+// GRP의 텍스처(array)별 캔버스 내 프레임의 오프셋, 크기
+StructuredBuffer<GrpFrameRect> g_grp_frame_rects : register(REG_T_SC_GRP_FRAME_RECTS);
 
 float2 ScToWorld(float sc_x, float sc_y)
 {

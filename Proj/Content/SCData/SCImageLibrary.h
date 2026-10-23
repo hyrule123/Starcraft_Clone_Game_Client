@@ -9,7 +9,7 @@
 namespace engine
 {
     class Texture2DArray;
-    class TypedBuffer;
+    class StructuredBuffer;
 }
 
 namespace sc
@@ -20,7 +20,7 @@ namespace sc
     struct BakedGrp
     {
         std::shared_ptr<engine::Texture2DArray> texture = {};      // GRP 하나를 디코딩해 Texture2DArray로 만들어 등록
-        std::shared_ptr<engine::TypedBuffer> frame_offsets = {};	// 프레임별 캔버스 내 offset (R32G32_UINT)
+        std::shared_ptr<engine::StructuredBuffer> frame_rects = {};	// 캔버스 내 프레임의 위치 정보(캔버스 좌상단으로부터 오프셋, 크기)
     };
 
     // images.dat 기준으로 게임에서 쓰는 모든 GRP를 R8G8_UINT Texture2DArray로 구워

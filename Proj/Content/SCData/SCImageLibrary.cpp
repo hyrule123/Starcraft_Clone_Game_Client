@@ -1,11 +1,13 @@
 #include "Content/pch.h"
 #include "SCImageLibrary.h"
 
+#include <Content/HLSL/SCImage/SCImageCommon.hlsli>
+
 #include <Content/SCData/GrpFile.h>
 #include <Content/SCData/MPQ/MPQFileSystem.h>
 
 #include <Engine/Resource/GPU/Buffer/Texture2DArray.h>
-#include <Engine/Resource/GPU/Buffer/TypedBuffer.h>
+#include <Engine/Resource/GPU/Buffer/StructuredBuffer.h>
 
 #include <Engine/Core/DX11.h>
 
@@ -62,21 +64,26 @@ namespace sc
                 return {};
             }
 
-            std::vector<engine::uint32_2> offsets;
-            offsets.reserve(frame_count);
+            std::vector<GrpFrameRect> frame_rects;
+            frame_rects.reserve(frame_count);
             for (uint32_t i = 0; i < frame_count; ++i)
             {
                 const GrpFrameInfo& f = grp.Frame(i);
-                offsets.push_back({ f.offset_x, f.offset_y });
+                frame_rects.push_back(
+                    {
+						.offset = uint32_2{ f.offset_x, f.offset_y },
+						.size = uint32_2{ f.width, f.height }
+                    }
+                    );
             }
 
-			std::shared_ptr<engine::TypedBuffer> offset_buf = EntityManager::CreateEntity<engine::TypedBuffer>();
-            const bool offset_created = offset_buf->CreateImmutableBuffer(DXGI_FORMAT_R32G32_UINT, offsets);
-            if (!offset_created) { return {}; }
+			std::shared_ptr<engine::StructuredBuffer> rects_buf = EntityManager::CreateEntity<engine::StructuredBuffer>();
+            const bool rects_created = rects_buf->CreateImmutableBuffer(std::span<const GrpFrameRect>(frame_rects));
+            if (!rects_created) { return {}; }
 
             total_frames += frame_count;
             total_bytes += pixels.size();
-            return { texture, offset_buf };
+            return { texture, rects_buf };
         }
     }
 
@@ -134,7 +141,7 @@ namespace sc
         for (const GrpSource& source : manifest->sources)
         {
             BakedGrp baked = BakeGrp(fs, source.mpq_path, pixels, total_frames, total_bytes);
-            if (baked.texture == nullptr || baked.frame_offsets == nullptr)
+            if (baked.texture == nullptr || baked.frame_rects == nullptr)
             {
                 LOG("SCImageLibrary: GRP 굽기 실패 {}", source.mpq_path);
                 return false;

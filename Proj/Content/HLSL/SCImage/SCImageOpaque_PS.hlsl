@@ -8,7 +8,9 @@ uint main(ImageVSOutput input) : SV_TARGET
 	if (input.modifier == kModifierWarpTexture)
 	{
    		// 건물 잘린 프레임 좌상단 = 워프 텍스처 (0, 0). 색은 텍스처 원본 값 (플레이어 색 치환 없음)
-		const int2 warp_texel = texel - int2(g_grp_frame_offsets[input.frame]);
+		const int2 warp_texel = texel - int2(g_grp_frame_rects[input.frame].offset);
+		
+		// modifier_data1에 프레임 번호가 들어 있음
 		return g_warp_texture.Load(int4(warp_texel, input.modifier_data1, 0)).x;
 	}
 

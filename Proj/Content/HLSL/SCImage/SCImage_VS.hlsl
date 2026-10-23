@@ -8,26 +8,38 @@ ImageVSOutput main(ImageVSInput input)
 
 	const SCImageInstance inst = g_image_instances[input.instance_id];
 
-	uint width, height, slices;
-	g_grp_sprite.GetDimensions(width, height, slices);
+	// 캔버스
+	uint canvas_w, canvas_h, canvas_slices;
+	g_grp_sprite.GetDimensions(canvas_w, canvas_h, canvas_slices);
 	
-	// UV 값을 반올림하여 정수 corner 값으로 변환(0 ~ 1)
-	const uint2 corner = uint2(round(input.uv));
+	// UV 값을 반올림하여 정수 corner 값으로 변환. 좌상단 (0, 0), 우하단 (1, 1)
+	int2 corner = int2(round(input.uv));
 	
-	const int half_w = int(width >> 1);
-	const int half_h = int(height >> 1);
+	const int canvas_w_half = int(canvas_w >> 1);
+	const int canvas_h_half = int(canvas_h >> 1);
 	
-	// 반전은 로컬 좌표를 뒤집어서 처리 (정점 감김 순서 유지)
 	const bool flipped = inst.image_flags & kImageFlagHorizontallyFlipped;
-	const float u = flipped ? float(1 - corner.x) : float(corner.x);
-	output.local = float2(u, corner.y) * float2(width, height);
 	
-	// 원작 반전 배치: left = cx + w/2 - w (홀수 너비면 비반전보다 1픽셀 왼쪽)
-	const int left = flipped ? (inst.sc_center_pos.x + half_w - int(width)) : (inst.sc_center_pos.x - half_w);
-	const int top = inst.sc_center_pos.y - half_h;
+	// 위치만 미러링하면 정점 순서가 뒤집혀 winding이 반대가 됨(backface culling 위험).
+	// corner를 먼저 반전하고 위치에서 한 번 더 미러링 → 정점 순서는 원래대로 유지, 샘플링 방향만 반전됨
+	if(flipped)
+	{
+		corner.x = 1 - corner.x;
+	}
 	
-    // SC 좌표(x right, y down)에서 캔버스 배치
-	const int2 vtx_sc = int2(left, top) + int2(corner) * int2(width, height);
+	const GrpFrameRect frame_rect = g_grp_frame_rects[inst.frame];
+	
+	const int2 frame_corner = int2(frame_rect.offset) + corner * int2(frame_rect.size);
+	
+	// 텍스처의 로컬 좌표: 반전된 그대로 사용
+	output.local = float2(frame_corner);
+	
+	// 캔버스 중심 기준 상대 위치(로컬)
+	const int2 rel = frame_corner - int2(canvas_w_half, canvas_h_half);
+	
+    // SC 좌표(x right, y down)에서 프레임 배치
+	// x축 반전일 경우 중심 기준 미러링(맵 기준)
+	const int2 vtx_sc = inst.sc_center_pos + int2(flipped ? -rel.x : rel.x, rel.y);
 	
 	// 월드 좌표로 변경(x right, y up -> y 반전)
 	const float2 vtx_world = ScToWorld(vtx_sc.x, vtx_sc.y);

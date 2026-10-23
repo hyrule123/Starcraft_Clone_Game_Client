@@ -8,6 +8,7 @@
 
 #include <Engine/Resource/GPU/Buffer/Texture2DArray.h>
 #include <Engine/Resource/GPU/Buffer/TypedBuffer.h>
+#include <Engine/Resource/GPU/Buffer/StructuredBuffer.h>
 #include <Engine/Resource/GPU/PipelineState.h>
 #include <Engine/Resource/GPU/Material.h>
 #include <Engine/Resource/GPU/Mesh.h>
@@ -278,11 +279,11 @@ namespace sc
 		{
 			mtrl = orig_materials_[(size_t)variant]->Clone();
 			BakedGrp grp = sc_image_library_.GetGrp(image_type);
-			ASSERT_F(grp.texture && grp.frame_offsets, "Failed to get texture for image type: {}", image_type);
+			ASSERT_F(grp.texture && grp.frame_rects, "Failed to get texture for image type: {}", image_type);
 
 			GPUBufferBindingTable& binding_table = mtrl->GetPerMaterialBindingTable();
 			binding_table.AddShaderResource(engine::ShaderStage::Vertex | engine::ShaderStage::Pixel, REG_T_SC_GRP_SPRITE, std::move(grp.texture));
-			binding_table.AddShaderResource(engine::ShaderStage::Vertex | engine::ShaderStage::Pixel, REG_T_SC_GRP_FRAME_OFFSETS, std::move(grp.frame_offsets));
+			binding_table.AddShaderResource(engine::ShaderStage::Vertex | engine::ShaderStage::Pixel, REG_T_SC_GRP_FRAME_RECTS, std::move(grp.frame_rects));
 		}
 
 		return mtrl;
