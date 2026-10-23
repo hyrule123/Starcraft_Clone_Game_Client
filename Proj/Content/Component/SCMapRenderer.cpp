@@ -1,6 +1,12 @@
 #include "Content/pch.h"
 #include "SCMapRenderer.h"
 
+#include <Content/SCData/Constants.h>
+#include <Content/SCData/SCResourceManager.h>
+#include <Content/SCData/SCMapBakeComputePass.h>
+
+#include <Content/HLSL/SCMapRender.hlsli>
+
 #include <Engine/Core/Debug.h>
 
 #include <Engine/Resource/GPU/Material.h>
@@ -16,12 +22,6 @@
 
 #include <Engine/Game/Component/Transform.h>
 #include <Engine/Game/Component/Camera.h>
-
-#include <Content/SCData/Constants.h>
-#include <Content/SCData/SCResourceManager.h>
-#include <Content/SCData/SCMapBakeComputePass.h>
-
-#include <Content/HLSL/SCMapRender.hlsli>
 
 namespace sc
 {
@@ -100,15 +100,29 @@ namespace sc
 		per_frame_table.RemoveShaderResource(REG_T_SC_PCX_TILESET_LUT_OFFSETS);
 		per_frame_table.RemoveShaderResource(REG_T_SC_CLOAK_FADE_SELECTOR);
 	}
-	void SCMapRenderer::WriteInstanceData(engine::DataBlock data_block)
+	void SCMapRenderer::WriteInstanceData(const engine::Renderer::InstanceWriteArgs& args)
 	{
 		using namespace engine;
 
-		MapInfoCB map_info_cb = {};
-		map_info_cb.megatile_size = { (int32_t)sc_map_->megatile_width, (int32_t)sc_map_->megatile_height };
-		map_info_cb.world_mat = GetTransform()->GetWorldMatrix();
+		switch (args.pass)
+		{
+		case kSCOpaquePassID:
+		{
+			MapInfoCB map_info_cb = {};
+			map_info_cb.megatile_size = { (int32_t)sc_map_->megatile_width, (int32_t)sc_map_->megatile_height };
+			map_info_cb.world_mat = GetTransform()->GetWorldMatrix();
 
-		data_block.Write(map_info_cb);
+			args.block.Write(map_info_cb);
+			break;
+		}
+
+		default:
+		{
+			ASSERT_F(false, "처리되지 않은 Pass ID: {}", static_cast<uint32_t>(args.pass));
+			break;
+		}
+
+		}
 
 		//if (sc_map_ == nullptr)
 		//{

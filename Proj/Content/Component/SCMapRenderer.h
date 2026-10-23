@@ -23,7 +23,7 @@ namespace sc
 
 		virtual void OnDestroy() override;
 
-		virtual void WriteInstanceData(engine::DataBlock data_block) override;
+		virtual void WriteInstanceData(const InstanceWriteArgs& args) override;
 
 		void SetSCMap(std::unique_ptr<SCMap> sc_map);
 

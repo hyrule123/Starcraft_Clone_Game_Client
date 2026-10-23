@@ -9,6 +9,8 @@
 #include <Content/HLSL/SCImage/SCPcxLut.hlsli>
 #include <Content/HLSL/SCImage/SCEffectPass.hlsli>
 
+#include <Content/SCData/Constants.h>
+
 #include <Engine/Resource/GPU/Buffer/Texture2DArray.h>
 #include <Engine/Resource/GPU/Material.h>
 
@@ -135,33 +137,43 @@ namespace sc
 		SetCustomSortKey(img_param.depth_key);
 	}
 
-	void SCImageRenderer::WriteInstanceData(engine::DataBlock data_block)
+	void SCImageRenderer::WriteInstanceData(const engine::Renderer::InstanceWriteArgs& args)
 	{
-		ASSERT(data_block.size == sizeof(SCImageInstance));
+		switch (args.pass)
+		{
+		case kSCOpaquePassID:
+		case kSCEffectPassID:
+		{
+			// Transform 월드 위치(이미지 중심) → SC 좌표 (VS가 SC 공간에서 배치 후 월드로 변환)
+			const float3 world_pos = GetTransform()->GetWorldPosition();
 
-		// Transform 월드 위치(이미지 중심) → SC 좌표 (VS가 SC 공간에서 배치 후 월드로 변환)
-		const float3 world_pos = GetTransform()->GetWorldPosition();
+			SCImageInstance data = {};
 
-		SCImageInstance data = {};
+			data.sc_center_pos = WorldToScInt(world_pos.x, world_pos.y);
+			data.frame = img_data_cache_.frame;
+			data.depth_key = img_param_cache_.depth_key;
+			data.image_flags = img_data_cache_.flags;
+			data.modifier = img_data_cache_.modifier;
+			data.modifier_data1 = img_data_cache_.modifier_data1;
+			data.player_color_idx = img_param_cache_.player_color_idx;
 
-		data.sc_center_pos = WorldToScInt(world_pos.x, world_pos.y);
-		data.frame = img_data_cache_.frame;
-		data.depth_key = img_param_cache_.depth_key;
-		data.image_flags = img_data_cache_.flags;
-		data.modifier = img_data_cache_.modifier;
-		data.modifier_data1 = img_data_cache_.modifier_data1;
-		data.player_color_idx = img_param_cache_.player_color_idx;
-		
-		ASSERT(img_def_cache_);
-		// uint8 → uint
-		data.remapping = static_cast<uint>(img_def_cache_->remapping);
+			ASSERT(img_def_cache_);
+			// uint8 → uint
+			data.remapping = static_cast<uint>(img_def_cache_->remapping);
 
-		// 의미: Modifier가 Remapping일 경우 1 - 7 범위 사이여야 함
-		// 다른 테이블 인덱스를 참조하라는 remap이기 때문
-		ASSERT(data.modifier != static_cast<int32_t>(SCSim::ImageModifier::Remapping)
-			|| (kPcxLutOfireIdx <= data.remapping && data.remapping < kPcxLutCount));
+			// 의미: Modifier가 Remapping일 경우 1 - 7 범위 사이여야 함
+			// 다른 테이블 인덱스를 참조하라는 remap이기 때문
+			ASSERT(data.modifier != static_cast<int32_t>(SCSim::ImageModifier::Remapping)
+				|| (kPcxLutOfireIdx <= data.remapping && data.remapping < kPcxLutCount));
 
-		data_block.Write(data);
+			args.block.Write(data);
+
+			break;
+		}
+		default:
+			ASSERT_F(false, "처리되지 않은 Pass ID: {}", static_cast<uint32_t>(args.pass));
+			break;
+		}
 	}
 }
 

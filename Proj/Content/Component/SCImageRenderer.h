@@ -26,7 +26,7 @@ namespace sc
 
 		void ApplySnapshot(const SCSim::ImageData& img_data, const SCImageParam& img_param);
 
-		virtual void WriteInstanceData(engine::DataBlock data_block) override;
+		virtual void WriteInstanceData(const InstanceWriteArgs& args) override;
 
     private:
         SCSim::ImageData img_data_cache_ = {};
