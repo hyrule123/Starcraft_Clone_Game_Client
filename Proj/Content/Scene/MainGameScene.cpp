@@ -195,6 +195,31 @@ namespace sc
 			// units[0..n)의 id, x, y, sprite_x, sprite_y 출력
 		}
 
+		{	// [테스트] action_select 다중 선택 검사 — 건물/유닛 순서
+			const uint32_t marine_a = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranMarine, SCSim::Player::_1, 500, 500);
+			const uint32_t marine_b = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranMarine, SCSim::Player::_1, 500, 500);
+
+			const uint32_t barracks_a = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::ProtossPylon, SCSim::Player::_1, 700, 700);
+			const uint32_t barracks_b = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::ProtossPylon, SCSim::Player::_1, 700, 400);
+
+			LOG("ids: marine_a={}, marine_b={}, barracks_a={}, barracks_b={}", marine_a, marine_b, barracks_a, barracks_b);
+
+			// 1. {유닛, 건물} → 예상 1
+			const uint32_t case1[] = { marine_a, barracks_a };
+			int32_t selected = SCSim_Select(sc_sim_ctx_, SCSim::Player::_1, case1, 2);
+			LOG("case1 {{unit, building}}: {}", selected);
+
+			// 2. {건물, 건물} → 예상 1
+			const uint32_t case2[] = { barracks_a, barracks_b };
+			selected = SCSim_Select(sc_sim_ctx_, SCSim::Player::_1, case2, 2);
+			LOG("case2 {{building, building}}: {}", selected);
+
+			// 3. {건물, 유닛, 유닛} → 예상 3 (혼합 선택)
+			const uint32_t case3[] = { barracks_a, marine_a, marine_b };
+			selected = SCSim_Select(sc_sim_ctx_, SCSim::Player::_1, case3, 3);
+			LOG("case3 {{building, unit, unit}}: {}", selected);
+		}
+
 #define SPAWN_MARINE 0
 #define SPAWN_WRAITH 0
 #define SPAWN_DARK_TEMPLAR 1
