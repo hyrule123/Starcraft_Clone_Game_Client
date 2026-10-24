@@ -28,7 +28,9 @@ struct SCImageInstance
 	// 깊이 키. VS에서 z = (depth_key + 1) * 2^-24 로 변환해 SV_Position.z에 덮어씀 (+1: 맵이 z = 0 사용)
 	// 범위 0 ~ 16777215 (24비트) — 이 범위에서 float32로 오차 없이 표현됨
 	// 현재 16비트 사용: [rank 12 (상위)][order 4 (하위)], 생성은 MainGameScene의 MakeDepthKey 참고
-	uint depth_key; 
+	uint depth_key;
+	
+	int frozen_frame_top_y; // flags: YFrozen가 켜졌을 때만 유효. SC 좌표 기준 프레임 상단
 	
 	uint image_flags;	// SCSim::ImageFlags 원본
 	int modifier;		// image_t::modifier
@@ -38,7 +40,7 @@ struct SCImageInstance
 };
 
 #ifdef __cplusplus
-static_assert(sizeof(SCImageInstance) == 36, "SCImageInstance Layout changed.");
+static_assert(sizeof(SCImageInstance) == 40, "SCImageInstance Layout changed.");
 #endif
 
 struct GrpFrameRect
@@ -55,8 +57,9 @@ static_assert(sizeof(GrpFrameRect) == 16, "GrpFrameRect Layout changed.");
 HLSL_CONSTEXPR float kScDepthScale = 1.0f / 16777216.0f;
 
 HLSL_CONSTEXPR uint kImageFlagHorizontallyFlipped = 0x2;	// C++ (SCImageRenderer) 쪽에서 검증
+HLSL_CONSTEXPR uint kImageFlagYFrozen = 0x4;
 
-// Modifiers
+// *** Modifiers ***
 //	Effect Pass
 HLSL_CONSTEXPR int kModifierCloaking = 2;
 HLSL_CONSTEXPR int kModifierCloaked = 3;
@@ -71,6 +74,7 @@ HLSL_CONSTEXPR int kModifierWarpFlash = 17;
 
 //	Opaque Pass
 HLSL_CONSTEXPR int kModifierWarpTexture = 12;
+// ****************
 
 struct ImageVSInput
 {

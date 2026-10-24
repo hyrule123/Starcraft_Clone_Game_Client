@@ -219,6 +219,7 @@
     <ClInclude Include="EmpTestScript.h" />
     <ClInclude Include="GameObject\SCImageObj.h" />
     <ClInclude Include="Component\SCImageRenderer.h" />
+    <ClInclude Include="LiftoffTestScript.h" />
     <ClInclude Include="SCData\SCEffectPass.h" />
     <ClInclude Include="SCData\SCMapLoader.h" />
     <ClInclude Include="Script\CameraMoveScript.h" />
@@ -269,6 +270,7 @@
     <ClCompile Include="EmpTestScript.cpp" />
     <ClCompile Include="GameObject\SCImageObj.cpp" />
     <ClCompile Include="Component\SCImageRenderer.cpp" />
+    <ClCompile Include="LiftoffTestScript.cpp" />
     <ClCompile Include="SCData\SCEffectPass.cpp" />
     <ClCompile Include="SCData\SCMapLoader.cpp" />
     <ClCompile Include="Script\CameraMoveScript.cpp" />

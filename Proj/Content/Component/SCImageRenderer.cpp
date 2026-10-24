@@ -22,6 +22,8 @@ namespace sc
 {
 	// SCSimulator과 HLSL 값 일치 확인
 	static_assert(kImageFlagHorizontallyFlipped == SCSim::ImageFlags::HorizontallyFlipped);
+	static_assert(kImageFlagYFrozen == SCSim::ImageFlags::YFrozen);
+
 	static_assert(kModifierShadow == static_cast<int32_t>(SCSim::ImageModifier::Shadow));
 	static_assert(kModifierCloaking == static_cast<int32_t>(SCSim::ImageModifier::Cloaking));
 	static_assert(kModifierCloaked == static_cast<int32_t>(SCSim::ImageModifier::Cloaked));
@@ -40,6 +42,8 @@ namespace sc
 	static_assert(std::is_same_v<decltype(SCImageInstance::modifier_data1), decltype(SCSim::ImageData::modifier_data1)>);
 	static_assert(std::is_same_v<decltype(SCImageInstance::player_color_idx), decltype(SCImageParam::player_color_idx)>);
 	static_assert(sizeof(decltype(SCImageInstance::remapping)) >= sizeof(decltype(ImageDef::remapping)));
+
+	static_assert(std::is_same_v<decltype(SCImageInstance::frozen_frame_top_y), decltype(SCSim::ImageData::frozen_y_value)>);
 
 	namespace
 	{
@@ -152,6 +156,7 @@ namespace sc
 			data.sc_center_pos = WorldToScInt(world_pos.x, world_pos.y);
 			data.frame = img_data_cache_.frame;
 			data.depth_key = img_param_cache_.depth_key;
+			data.frozen_frame_top_y = img_data_cache_.frozen_y_value;
 			data.image_flags = img_data_cache_.flags;
 			data.modifier = img_data_cache_.modifier;
 			data.modifier_data1 = img_data_cache_.modifier_data1;

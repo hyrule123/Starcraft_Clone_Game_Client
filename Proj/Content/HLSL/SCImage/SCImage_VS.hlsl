@@ -19,6 +19,7 @@ ImageVSOutput main(ImageVSInput input)
 	const int canvas_h_half = int(canvas_h >> 1);
 	
 	const bool flipped = inst.image_flags & kImageFlagHorizontallyFlipped;
+	const bool y_frozen = inst.image_flags & kImageFlagYFrozen;
 	
 	// 위치만 미러링하면 정점 순서가 뒤집혀 winding이 반대가 됨(backface culling 위험).
 	// corner를 먼저 반전하고 위치에서 한 번 더 미러링 → 정점 순서는 원래대로 유지, 샘플링 방향만 반전됨
@@ -39,7 +40,13 @@ ImageVSOutput main(ImageVSInput input)
 	
     // SC 좌표(x right, y down)에서 프레임 배치
 	// x축 반전일 경우 중심 기준 미러링(맵 기준)
-	const int2 vtx_sc = inst.sc_center_pos + int2(flipped ? -rel.x : rel.x, rel.y);
+	int2 vtx_sc = inst.sc_center_pos + int2(flipped ? -rel.x : rel.x, rel.y);
+	
+	// y축 고정일 경우, frozen_frame_top_y 값을 그대로 사용(offset도 사용 안함)
+	if (y_frozen)
+	{
+		vtx_sc.y = inst.frozen_frame_top_y + int(frame_rect.size.y) * corner.y;
+	}
 	
 	// 월드 좌표로 변경(x right, y up -> y 반전)
 	const float2 vtx_world = ScToWorld(vtx_sc.x, vtx_sc.y);

@@ -277,6 +277,12 @@ namespace sc
 			build_test_obj->AddComponent("BuildTestScript");
 		}
 
+		{	// [테스트] 프로토스 건설 → WarpTexture / WarpFlash 확인 (B 키)
+			GameObject* liftoff_test_obj = AddGameObject<GameObject>();
+			liftoff_test_obj->SetName("LiftoffTest");
+			liftoff_test_obj->AddComponent("LiftoffTestScript");
+		}
+
 		//SCUnitDebug* u = AddGameObject<SCUnitDebug>();
 		//CHECK(u);
 
