@@ -32,6 +32,14 @@ extern "C" {
 	// 부대 선택, 최대 12, 0~7번 플레이어만 가능. 아무것도 선택되지 않았을 경우 0, 실패 시 -1. nullptr인 유닛은 무시됨
 	SCSIM_API int32_t SCSim_Select(SCSim::Context* ctx, SCSim::Player owner, const uint32_t* unit_ids, int32_t count);
 
+	// owner(0~7)의 현재 선택을 out_unit_ids(kMaxSelection 칸)에 채움. 사망 유닛은 제외
+	// 반환: 선택 개수(0~12), 실패 시 -1
+	SCSIM_API int32_t SCSim_GetSelection(SCSim::Context* ctx, SCSim::Player owner, uint32_t* out_unit_ids);
+
+	// unit_ids[i]의 선택 판정 정보를 out_flags[i]에 기록 (SelectInfoFlags). 입력 순서 그대로, 필터링 없음
+	// count 0~kMaxUnits. 실패 시 false이며 out_flags는 기록되지 않음
+	SCSIM_API bool SCSim_GetSelectInfo(SCSim::Context* ctx, const uint32_t* unit_ids, int32_t count, uint32_t* out_flags);
+
 	// 현재 선택된 유닛들에게 명령 (owner 0~7)
 	// 대상 유닛 없음: kInvalidUnitId, 대상 타입 없음: UnitType::None
 	// 선택이 비었거나 시뮬레이션이 거부하면 false
@@ -71,4 +79,6 @@ extern "C" {
 	// 현재 단일 선택된 건물을 이륙 (owner 0~7). 원작 Lift 액션과 동일(위치는 건물 자신의 위치를 사용)
 	// 선택이 단일 유닛이 아니거나, 이륙할 수 없는 상태(건설·연구·업그레이드 중, 이륙 불가 유닛 등)면 false
 	SCSIM_API bool SCSim_Liftoff(SCSim::Context* ctx, SCSim::Player owner);
+
+
 }

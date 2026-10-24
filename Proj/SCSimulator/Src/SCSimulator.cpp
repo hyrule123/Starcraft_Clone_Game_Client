@@ -335,38 +335,143 @@ extern "C" {
         return static_cast<int32_t>(ctx->sim.st().current_frame);
     }
 
-    int32_t SCSim_Select(SCSim::Context* ctx, SCSim::Player owner, const uint32_t* unit_ids,
-        int32_t count) {
-        if (!CheckContext(ctx, "SCSim_Select")) { return -1; }
-
-        // 최대 Action Player = 8명
-        if (!CheckActionPlayerRange(owner, "SCSim_Select")) { return -1; }
-
-        if (count < 0 || count > SCSim::kMaxSelection) {
-            SetError("SCSim_Select: count must be 0~12");
+    int32_t SCSim_Select(SCSim::Context* ctx, SCSim::Player owner, const uint32_t* unit_ids, int32_t count)
+    {
+        if (!CheckContext(ctx, "SCSim_Select"))
+        {
             return -1;
         }
-        if (count > 0 && !unit_ids) {
+        if (!CheckActionPlayerRange(owner, "SCSim_Select"))
+        {
+            return -1;
+        }
+        if (count < 0 || count > SCSim::kMaxSelection)
+        {
+            SetError("SCSim_Select: count must be 0~" + std::to_string(SCSim::kMaxSelection));
+            return -1;
+        }
+        if (count > 0 && !unit_ids)
+        {
             SetError("SCSim_Select: unit_ids is null");
             return -1;
         }
-        try {
+
+        try
+        {
             bwgame::action_functions funcs(ctx->sim.st(), ctx->action_st);
+
             std::array<bwgame::unit_t*, static_cast<size_t>(SCSim::kMaxSelection)> units{};  // 남는 칸은 nullptr
-            for (int i = 0; i < count; ++i) {
-                units[i] = funcs.get_unit(bwgame::unit_id_32(unit_ids[i]));  // 무효면 nullptr
+            for (int32_t i = 0; i < count; ++i)
+            {
+                units[i] = funcs.get_unit(bwgame::unit_id_32(unit_ids[i]));  // 사망·세대 불일치면 nullptr
             }
-            funcs.action_select(static_cast<int>(owner), units);  // nullptr은 OpenBW가 건너뜀
+
+            // 정제는 Content 책임. OpenBW는 nullptr·핵미사일·숨김 유닛만 거르고,
+            // 다중 선택 검사는 두 번째 원소부터만 적용함 (첫 원소가 건물이면 혼합 선택이 생길 수 있음)
+            funcs.action_select(static_cast<int>(owner), units);
             return static_cast<int32_t>(ctx->action_st.selection[static_cast<size_t>(owner)].size());
         }
-        catch (const std::exception& e) {
+        catch (const std::exception& e)
+        {
             SetError(std::string("SCSim_Select: ") + e.what());
         }
-        catch (...) {
+        catch (...)
+        {
             SetError("SCSim_Select: unknown exception");
         }
         return -1;  // 선택 목록만 건드리므로 broken 처리 안 함
     }
+
+    int32_t SCSim_GetSelection(SCSim::Context* ctx, SCSim::Player owner, uint32_t* out_unit_ids)
+    {
+        if (!CheckContext(ctx, "SCSim_GetSelection"))
+        {
+            return -1;
+        }
+        if (!CheckActionPlayerRange(owner, "SCSim_GetSelection"))
+        {
+            return -1;
+        }
+        if (!out_unit_ids)
+        {
+            SetError("SCSim_GetSelection: out_unit_ids is null");
+            return -1;
+        }
+
+        try
+        {
+            bwgame::action_functions funcs(ctx->sim.st(), ctx->action_st);
+
+            int32_t count = 0;
+            // selected_units: 죽었지만 아직 목록에 남은 포인터를 걸러내는 필터 범위
+            for (bwgame::unit_t* u : funcs.selected_units(static_cast<int>(owner)))
+            {
+                out_unit_ids[count++] = funcs.get_unit_id_32(u).raw_value;
+            }
+            return count;
+        }
+        catch (const std::exception& e)
+        {
+            SetError(std::string("SCSim_GetSelection: ") + e.what());
+        }
+        catch (...)
+        {
+            SetError("SCSim_GetSelection: unknown exception");
+        }
+        return -1;  // 읽기 전용이므로 broken 처리 안 함
+    }
+
+    bool SCSim_GetSelectInfo(SCSim::Context* ctx, const uint32_t* unit_ids, int32_t count, uint32_t* out_flags)
+    {
+        if (!CheckContext(ctx, "SCSim_GetSelectInfo"))
+        {
+            return false;
+        }
+        if (count < 0 || count > SCSim::kMaxUnits)
+        {
+            SetError("SCSim_GetSelectInfo: count must be 0~" + std::to_string(SCSim::kMaxUnits));
+            return false;
+        }
+        if (count > 0 && (!unit_ids || !out_flags))
+        {
+            SetError("SCSim_GetSelectInfo: unit_ids or out_flags is null");
+            return false;
+        }
+
+        try
+        {
+            bwgame::action_functions funcs(ctx->sim.st(), ctx->action_st);
+
+            for (int32_t i = 0; i < count; ++i)
+            {
+                // 사망·세대 불일치면 nullptr
+                const bwgame::unit_t* u = funcs.get_unit(bwgame::unit_id_32(unit_ids[i]));
+                if (!u)
+                {
+                    out_flags[i] = SCSim::SelectInfoFlags::None;
+                    continue;
+                }
+
+                uint32_t flags = SCSim::SelectInfoFlags::Valid;
+                if (funcs.unit_can_be_multi_selected(u))
+                {
+                    flags |= SCSim::SelectInfoFlags::MultiSelectable;
+                }
+                out_flags[i] = flags;
+            }
+            return true;
+        }
+        catch (const std::exception& e)
+        {
+            SetError(std::string("SCSim_GetSelectInfo: ") + e.what());
+        }
+        catch (...)
+        {
+            SetError("SCSim_GetSelectInfo: unknown exception");
+        }
+        return false;
+    }
+
     bool SCSim_Order(SCSim::Context* ctx, SCSim::Player owner, SCSim::OrderType order_type, int32_t x, int32_t y,
         uint32_t target_unit_id, SCSim::UnitType target_unit_type, bool queue)
     {
@@ -790,6 +895,8 @@ extern "C" {
         ctx->broken = true;
         return false;
     }
+
+
 
 }  // extern "C"
 

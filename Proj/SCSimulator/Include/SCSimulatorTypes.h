@@ -190,5 +190,14 @@ namespace SCSim
 	};
 
 
-
+	// SCSim_GetSelectInfo 결과. 0 = 무효 ID(사망, 세대 불일치)
+	namespace SelectInfoFlags
+	{
+		enum : uint32_t
+		{
+			None = 0,
+			Valid = 0x1,			// 살아 있는 유닛
+			MultiSelectable = 0x2,	// action_functions::unit_can_be_multi_selected
+		};
+	}
 }
