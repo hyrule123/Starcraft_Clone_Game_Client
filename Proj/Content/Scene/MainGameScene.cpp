@@ -1,6 +1,22 @@
 #include "Content/pch.h"
 #include "MainGameScene.h"
 
+#include <Content/Component/SCMapRenderer.h>
+
+#include <Content/SCData/Constants.h>
+#include <Content/SCData/SCResourceManager.h>
+#include <Content/SCData/SCEffectPass.h>
+
+#include <Content/GameObject/SCSpriteObj.h>
+#include <Content/GameObject/SCImageObj.h>
+#include <Content/GameObject/SCUnitObj.h>
+
+#include <Content/Script/SCUnit.h>
+
+#include <Content/HLSL/SCCommon.hlsli>
+
+#include <SCSimulator/Include/SCSimulatorAPI.h>
+
 #include <Engine/Manager/GraphicsDevice.h>
 #include <Engine/Manager/ResourceManager.h>
 #include <Engine/Manager/RenderManager.h>
@@ -9,11 +25,7 @@
 #include <Engine/Resource/GPU/RenderTargetGroup.h>
 #include <Engine/Resource/GPU/Buffer/RenderTarget.h>
 #include <Engine/Resource/GPU/Buffer/DepthStencilTarget.h>
-#include <Engine/Resource/GPU/Buffer/TypedBuffer.h>
 #include <Engine/Resource/GPU/Buffer/ConstantBuffer.h>
-#include <Engine/Resource/GPU/Material.h>
-#include <Engine/Resource/GPU/Mesh.h>
-#include <Engine/Resource/GPU/PipelineState.h>
 #include <Engine/Resource/GPU/Shader/PixelShader.h>
 
 #include <Engine/Render/RenderPass/MeshRenderPass.h>
@@ -21,41 +33,9 @@
 
 #include <Engine/Game/GameObject.h>
 #include <Engine/Game/Component/Camera.h>
-#include <Engine/Game/Component/SpriteRenderer.h>
 #include <Engine/Game/Component/Transform.h>
 
-#include <Content/Legacy/GameObject/TerranMarine.h>
-#include <Content/Legacy/GameObject/TerranMedic.h>
-#include <Content/GameObject/SCUnitObj.h>
-#include <Content/GameObject/SCUnitDebug.h>
-#include <Content/Script/SCUnit.h>
-
-#include <Content/Legacy/Script/ActiveEnableTest.h>
-#include <Content/Legacy/Script/TestScript.h>
-
-#include <Content/Script/DestroyTestScript.h>
-#include <Content/Script/SCUnit.h>
-
-#include <Content/Component/SCMapRenderer.h>
-
-#include <Content/HLSL/SCMapRender.hlsli>
-
-#include <Content/SCData/Constants.h>
-#include <Content/SCData/SCImageLibrary.h>
-#include <Content/SCData/MPQ/MPQFileSystem.h>
-#include <Content/SCData/MPQ/MPQArchive.h>
-#include <Content/SCData/SCTileSetPcxLUT.h>
-#include <Content/SCData/SCResourceManager.h>
-#include <Content/SCData/SCMapBakeComputePass.h>
-#include <Content/SCData/SCEffectPass.h>
-
-#include <Content/GameObject/SCSpriteObj.h>
-#include <Content/GameObject/SCImageObj.h>
-
 #include <Engine/Core/Debug.h>
-#include <SCSimulator/Include/SCSimulatorAPI.h>
-
-#include <Content/HLSL/SCCommon.hlsli>
 
 namespace // depth key
 {

@@ -30,55 +30,7 @@
     <ClInclude Include="Scene\MainGameScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GameObject\TestGameObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Legacy\Script\ControlScript.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Legacy\GameObject\TerranMarine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Legacy\GameObject\TerranMedic.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Legacy\HFSMState\Idle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Legacy\Script\AnimationHandler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Legacy\Script\UnitInputHandler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Legacy\HFSMState\Move.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Legacy\HFSMState\Locomotion.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Legacy\Command.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Legacy\HFSMState\UnitRoot.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Legacy\HFSMState\Turn.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SCData\Constants.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Script\DestroyTestScript.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Legacy\Script\ActiveEnableTest.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Legacy\Script\TestScript.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Legacy\Script\MarineTestScript.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SCData\SCResourceManager.h">
@@ -94,18 +46,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Component\SCMapRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GameObject\SCUnitObj.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Script\SCUnit.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Legacy\Script\SCUnitBehavior.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Legacy\HFSMState\SCBBCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SCData\SCImageData.h">
@@ -129,9 +69,6 @@
     <ClInclude Include="SCData\MPQ\MPQFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GameObject\SCUnitDebug.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SCData\SCSpriteCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -153,16 +90,22 @@
     <ClInclude Include="SCData\SCMapLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="EmpTestScript.h">
+    <ClInclude Include="Script\EmpTestScript.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BuildTestScript.h">
+    <ClInclude Include="Script\BuildTestScript.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LiftoffTestScript.h">
+    <ClInclude Include="Script\LiftoffTestScript.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HatcheryTestScript.h">
+    <ClInclude Include="Script\HatcheryTestScript.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Script\SCUnit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject\SCUnitObj.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -176,51 +119,6 @@
     <ClCompile Include="Scene\MainGameScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GameObject\TestGameObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Legacy\Script\ControlScript.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Legacy\GameObject\TerranMarine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Legacy\GameObject\TerranMedic.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Legacy\HFSMState\Idle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Legacy\Script\AnimationHandler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Legacy\Script\UnitInputHandler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Legacy\HFSMState\Move.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Legacy\HFSMState\Locomotion.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Legacy\HFSMState\UnitRoot.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Legacy\HFSMState\Turn.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Script\DestroyTestScript.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Legacy\Script\ActiveEnableTest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Legacy\Script\TestScript.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Legacy\Script\MarineTestScript.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SCData\SCResourceManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -231,18 +129,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Component\SCMapRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GameObject\SCUnitObj.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Script\SCUnit.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Legacy\Script\SCUnitBehavior.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Legacy\HFSMState\SCBBCommon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SCData\SCImageData.cpp">
@@ -266,9 +152,6 @@
     <ClCompile Include="SCData\MPQ\MPQFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GameObject\SCUnitDebug.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Script\CameraMoveScript.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -287,16 +170,22 @@
     <ClCompile Include="SCData\SCMapLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="EmpTestScript.cpp">
+    <ClCompile Include="Script\EmpTestScript.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BuildTestScript.cpp">
+    <ClCompile Include="Script\BuildTestScript.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LiftoffTestScript.cpp">
+    <ClCompile Include="Script\LiftoffTestScript.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HatcheryTestScript.cpp">
+    <ClCompile Include="Script\HatcheryTestScript.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Script\SCUnit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GameObject\SCUnitObj.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

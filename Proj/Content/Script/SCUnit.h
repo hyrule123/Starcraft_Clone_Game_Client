@@ -19,7 +19,7 @@ namespace sc
 		const SCSim::UnitData& GetSnapshot() const { return snapshot_; }
 
     private:
-        SCSim::UnitData snapshot_;
+        SCSim::UnitData snapshot_ = {};
     };
 }
 

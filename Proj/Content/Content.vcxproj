@@ -215,20 +215,19 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="BuildTestScript.h" />
-    <ClInclude Include="EmpTestScript.h" />
+    <ClInclude Include="GameObject\SCUnitObj.h" />
+    <ClInclude Include="Script\BuildTestScript.h" />
+    <ClInclude Include="Script\EmpTestScript.h" />
     <ClInclude Include="GameObject\SCImageObj.h" />
     <ClInclude Include="Component\SCImageRenderer.h" />
-    <ClInclude Include="HatcheryTestScript.h" />
-    <ClInclude Include="LiftoffTestScript.h" />
+    <ClInclude Include="Script\HatcheryTestScript.h" />
+    <ClInclude Include="Script\LiftoffTestScript.h" />
     <ClInclude Include="SCData\SCEffectPass.h" />
     <ClInclude Include="SCData\SCMapLoader.h" />
     <ClInclude Include="Script\CameraMoveScript.h" />
     <ClInclude Include="SCData\MPQ\MPQFile.h" />
     <ClInclude Include="SCData\PCXFile.h" />
     <ClInclude Include="SCData\GrpFile.h" />
-    <ClInclude Include="Legacy\HFSMState\SCBBCommon.h" />
-    <ClInclude Include="Legacy\Script\MarineTestScript.h" />
     <ClInclude Include="SCData\MPQ\MPQFileSystem.h" />
     <ClInclude Include="SCData\MPQ\MPQArchive.h" />
     <ClInclude Include="SCData\SCMapCommon.h" />
@@ -238,49 +237,30 @@
     <ClInclude Include="SCData\SCImageLibrary.h" />
     <ClInclude Include="SCData\SCSpriteCommon.h" />
     <ClInclude Include="Component\SCMapRenderer.h" />
-    <ClInclude Include="Legacy\Script\ActiveEnableTest.h" />
-    <ClInclude Include="Script\DestroyTestScript.h" />
-    <ClInclude Include="Legacy\HFSMState\Locomotion.h" />
-    <ClInclude Include="Legacy\HFSMState\Move.h" />
-    <ClInclude Include="Legacy\Command.h" />
     <ClInclude Include="SCData\Constants.h" />
-    <ClInclude Include="Legacy\Script\ControlScript.h" />
     <ClInclude Include="framework.h" />
-    <ClInclude Include="Legacy\HFSMState\Idle.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
-    <ClInclude Include="GameObject\SCUnitObj.h" />
-    <ClInclude Include="Script\SCUnit.h" />
-    <ClInclude Include="Legacy\Script\SCUnitBehavior.h" />
     <ClInclude Include="SCData\SCTileSetPcxLUT.h" />
-    <ClInclude Include="GameObject\SCUnitDebug.h" />
     <ClInclude Include="GameObject\SCSpriteObj.h" />
+    <ClInclude Include="Script\SCUnit.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="Legacy\GameObject\TerranMarine.h" />
-    <ClInclude Include="Legacy\GameObject\TerranMedic.h" />
-    <ClInclude Include="GameObject\TestGameObject.h" />
     <ClInclude Include="Scene\MainGameScene.h" />
-    <ClInclude Include="Legacy\Script\AnimationHandler.h" />
-    <ClInclude Include="Legacy\Script\UnitInputHandler.h" />
-    <ClInclude Include="Legacy\HFSMState\UnitRoot.h" />
-    <ClInclude Include="Legacy\HFSMState\Turn.h" />
-    <ClInclude Include="Legacy\Script\TestScript.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BuildTestScript.cpp" />
-    <ClCompile Include="EmpTestScript.cpp" />
+    <ClCompile Include="GameObject\SCUnitObj.cpp" />
+    <ClCompile Include="Script\BuildTestScript.cpp" />
+    <ClCompile Include="Script\EmpTestScript.cpp" />
     <ClCompile Include="GameObject\SCImageObj.cpp" />
     <ClCompile Include="Component\SCImageRenderer.cpp" />
-    <ClCompile Include="HatcheryTestScript.cpp" />
-    <ClCompile Include="LiftoffTestScript.cpp" />
+    <ClCompile Include="Script\HatcheryTestScript.cpp" />
+    <ClCompile Include="Script\LiftoffTestScript.cpp" />
     <ClCompile Include="SCData\SCEffectPass.cpp" />
     <ClCompile Include="SCData\SCMapLoader.cpp" />
     <ClCompile Include="Script\CameraMoveScript.cpp" />
     <ClCompile Include="SCData\MPQ\MPQFile.cpp" />
     <ClCompile Include="SCData\PCXFile.cpp" />
     <ClCompile Include="SCData\GrpFile.cpp" />
-    <ClCompile Include="Legacy\HFSMState\SCBBCommon.cpp" />
-    <ClCompile Include="Legacy\Script\MarineTestScript.cpp" />
     <ClCompile Include="SCData\MPQ\MPQFileSystem.cpp" />
     <ClCompile Include="SCData\MPQ\MPQArchive.cpp" />
     <ClCompile Include="SCData\SCResourceManager.cpp" />
@@ -288,12 +268,6 @@
     <ClCompile Include="SCData\SCImageData.cpp" />
     <ClCompile Include="SCData\SCImageLibrary.cpp" />
     <ClCompile Include="Component\SCMapRenderer.cpp" />
-    <ClCompile Include="Legacy\Script\ActiveEnableTest.cpp" />
-    <ClCompile Include="Script\DestroyTestScript.cpp" />
-    <ClCompile Include="Legacy\HFSMState\Locomotion.cpp" />
-    <ClCompile Include="Legacy\HFSMState\Move.cpp" />
-    <ClCompile Include="Legacy\Script\ControlScript.cpp" />
-    <ClCompile Include="Legacy\HFSMState\Idle.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -301,21 +275,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Legacy\GameObject\TerranMarine.cpp" />
-    <ClCompile Include="Legacy\GameObject\TerranMedic.cpp" />
-    <ClCompile Include="GameObject\TestGameObject.cpp" />
     <ClCompile Include="Scene\MainGameScene.cpp" />
-    <ClCompile Include="Legacy\Script\AnimationHandler.cpp" />
-    <ClCompile Include="Legacy\Script\UnitInputHandler.cpp" />
-    <ClCompile Include="Legacy\HFSMState\UnitRoot.cpp" />
-    <ClCompile Include="Legacy\HFSMState\Turn.cpp" />
-    <ClCompile Include="Legacy\Script\TestScript.cpp" />
-    <ClCompile Include="GameObject\SCUnitObj.cpp" />
-    <ClCompile Include="Script\SCUnit.cpp" />
-    <ClCompile Include="Legacy\Script\SCUnitBehavior.cpp" />
     <ClCompile Include="SCData\SCTileSetPcxLUT.cpp" />
-    <ClCompile Include="GameObject\SCUnitDebug.cpp" />
     <ClCompile Include="GameObject\SCSpriteObj.cpp" />
+    <ClCompile Include="Script\SCUnit.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Content.rc" />
