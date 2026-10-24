@@ -117,6 +117,7 @@ namespace {
         SCSim::UnitData& out) {
         out = {};
         out.id = funcs.get_unit_id_32(u).raw_value;
+        out.unit_type = static_cast<SCSim::UnitType>(u->unit_type->id);
         out.x = u->position.x;
         out.y = u->position.y;
 
@@ -715,6 +716,79 @@ extern "C" {
         st.current_gas[p] = gas;
         st.total_gas_gathered[p] = gas;
         return true;
+    }
+    bool SCSim_Liftoff(SCSim::Context* ctx, SCSim::Player owner)
+    {
+        if (!CheckContext(ctx, "SCSim_Liftoff"))
+        {
+            return false;
+        }
+        if (!CheckActionPlayerRange(owner, "SCSim_Liftoff"))
+        {
+            return false;
+        }
+
+        bwgame::action_functions funcs(ctx->sim.st(), ctx->action_st);
+        bwgame::xy pos;
+
+        // 1단계: 대상 확인. 상태를 건드리지 않으므로 실패해도 broken 아님
+        try
+        {
+            const bwgame::unit_t* u = funcs.get_single_selected_unit(static_cast<int>(owner));
+            if (!u)
+            {
+                SetError("SCSim_Liftoff: selection must be exactly one unit");
+                return false;
+            }
+
+            // 게임 규칙 검사: action_liftoff는 통과시키지만 다음 프레임 order_BuildingLiftoff가 조용히 무시하는 경우
+            if (!funcs.ut_flying_building(u))
+            {
+                SetError("SCSim_Liftoff: selected unit cannot lift off");
+                return false;
+            }
+            if (!funcs.u_grounded_building(u))
+            {
+                SetError("SCSim_Liftoff: selected unit is not a grounded building");
+                return false;
+            }
+
+            // 원작 Lift 액션의 좌표 = 건물 자신의 위치
+            pos = u->sprite->position;
+        }
+        catch (const std::exception& e)
+        {
+            SetError(std::string("SCSim_Liftoff: ") + e.what());
+            return false;
+        }
+        catch (...)
+        {
+            SetError("SCSim_Liftoff: unknown exception");
+            return false;
+        }
+
+        // 2단계: 실제 명령
+        try
+        {
+            // 건설·연구·업그레이드 중이거나 명령을 받을 수 없는 상태(다른 소유자·무력화 등)면 false
+            if (!funcs.action_liftoff(static_cast<int>(owner), pos))
+            {
+                SetError("SCSim_Liftoff: selected unit cannot receive liftoff order");
+                return false;
+            }
+            return true;
+        }
+        catch (const std::exception& e)
+        {
+            SetError(std::string("SCSim_Liftoff: ") + e.what());
+        }
+        catch (...)
+        {
+            SetError("SCSim_Liftoff: unknown exception");
+        }
+
+        ctx->broken = true;
+        return false;
     }
 
 }  // extern "C"

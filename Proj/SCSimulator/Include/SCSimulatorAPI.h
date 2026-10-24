@@ -1,5 +1,6 @@
 // SCSimulatorAPI.h
 #pragma once
+#include <SCSimulator/Include/SCSimulatorEnums.h>
 #include <SCSimulator/Include/SCSimulatorTypes.h>
 
 #include <cstdint>
@@ -66,4 +67,8 @@ extern "C" {
 	// 플레이어 자원을 지정 값으로 설정 (owner 0~7). 맵 트리거 Set Resources(Set To)와 동일하게
 	// 현재 보유량과 누적 채취량(점수용)을 같은 값으로 덮어씀. 음수는 실패
 	SCSIM_API bool SCSim_Debug_SetResources(SCSim::Context* ctx, SCSim::Player owner, int32_t minerals, int32_t gas);
+
+	// 현재 단일 선택된 건물을 이륙 (owner 0~7). 원작 Lift 액션과 동일(위치는 건물 자신의 위치를 사용)
+	// 선택이 단일 유닛이 아니거나, 이륙할 수 없는 상태(건설·연구·업그레이드 중, 이륙 불가 유닛 등)면 false
+	SCSIM_API bool SCSim_Liftoff(SCSim::Context* ctx, SCSim::Player owner);
 }

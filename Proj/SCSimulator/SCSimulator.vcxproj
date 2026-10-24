@@ -187,6 +187,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\SCSimulatorAPI.h" />
+    <ClInclude Include="Include\SCSimulatorEnums.h" />
     <ClInclude Include="Include\SCSimulatorTypes.h" />
     <ClInclude Include="openbw\actions.h" />
     <ClInclude Include="openbw\bwenums.h" />
