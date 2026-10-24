@@ -271,16 +271,22 @@ namespace sc
 			emp_test_obj->AddComponent("EmpTestScript");
 		}
 
-		{	// [테스트] 프로토스 건설 → WarpTexture / WarpFlash 확인 (B 키)
+		{	// [테스트] 프로토스 건설 → WarpTexture / WarpFlash 확인 (B 키): 11시 방향
 			GameObject* build_test_obj = AddGameObject<GameObject>();
 			build_test_obj->SetName("BuildTest");
 			build_test_obj->AddComponent("BuildTestScript");
 		}
 
-		{	// [테스트] 프로토스 건설 → WarpTexture / WarpFlash 확인 (B 키)
+		{	// [테스트] 테란 커맨드센터 건설(V 키) → LiftOff / Land 확인 (L 키): 1시 방향
 			GameObject* liftoff_test_obj = AddGameObject<GameObject>();
 			liftoff_test_obj->SetName("LiftoffTest");
 			liftoff_test_obj->AddComponent("LiftoffTestScript");
+		}
+
+		{	// [테스트] 저그 해처리 건설 (H키): 5시 방향
+			GameObject* hatchery_test_obj = AddGameObject<GameObject>();
+			hatchery_test_obj->SetName("HatcheryTest");
+			hatchery_test_obj->AddComponent("HatcheryTestScript");
 		}
 
 		//SCUnitDebug* u = AddGameObject<SCUnitDebug>();

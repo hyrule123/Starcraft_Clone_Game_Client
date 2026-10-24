@@ -98,13 +98,15 @@ namespace sc
 	}
 	void SCImageRenderer::ApplySnapshot(const SCSim::ImageData& img_data, const SCImageParam& img_param)
 	{
+		SCResourceManager& resource_manager = SCResourceManager::GetInst();
+
 		const SCImageVariant variant = GetMaterialVariant(img_data.modifier);
 
 		const bool is_image_type_changed = (img_data.image_type != img_data_cache_.image_type);
 
 		if ((img_def_cache_ == nullptr) || is_image_type_changed)
 		{
-			const ImageDef& img_def = SCResourceManager::GetInst().GetSCImageLibrary().GetImageDef(img_data.image_type);
+			const ImageDef& img_def = resource_manager.GetSCImageLibrary().GetImageDef(img_data.image_type);
 			img_def_cache_ = &img_def;
 		}
 
@@ -115,24 +117,54 @@ namespace sc
 			|| is_image_type_changed
 			|| (variant != GetMaterialVariant(img_data_cache_.modifier));
 
+		
+		const bool is_y_frozen = (img_data.flags & SCSim::ImageFlags::YFrozen) != 0;
+		const bool was_y_frozen = (img_data_cache_.flags & SCSim::ImageFlags::YFrozen) != 0;
+		bool need_update_bounds = is_y_frozen || was_y_frozen;
+		
 		if (needs_material)
 		{
-			SCResourceManager& resource_manager = SCResourceManager::GetInst();
-			
 			std::shared_ptr<engine::Material> mtrl_sub0 = resource_manager.GetImageMaterial(img_data.image_type, variant);
 			std::shared_ptr<engine::Material> mtrl_sub1 = variant == SCImageVariant::Distortion ? resource_manager.GetImageMaterial(img_data.image_type, SCImageVariant::DistortionSync) : nullptr;
 
 			SetMaterial(0, mtrl_sub0);
 			SetMaterial(1, mtrl_sub1);
+			
+			need_update_bounds = true;
+		}
 
+		if (need_update_bounds)
+		{
 			// 컬링 bounds: 1픽셀 여유
 			std::shared_ptr<engine::Texture2DArray> tex = resource_manager.GetSCImageLibrary().GetGrp(img_data.image_type).texture;
 
-			const float hx = (float)((tex->GetWidth() >> 1) + 1);
-			const float hy = (float)((tex->GetHeight() >> 1) + 1);
+			const float hx = static_cast<float>((tex->GetWidth() >> 1) + 1);
+			const float hy = static_cast<float>((tex->GetHeight() >> 1) + 1);
+			const float canvas_height = static_cast<float>(tex->GetHeight());
 
-			SetLocalBoundsOverride(engine::AABB3D{ .min = float3(-hx, -hy, 0.0f), .max = float3(hx, hy, 0.0f) });
+			float max_y = hy;
+			float min_y = -hy;
+
+			if (is_y_frozen)
+			{
+				// 원래 그려져야 할 위치(DX 좌표계)
+				const float3 world_pos = GetTransform()->GetWorldPosition();
+
+				// -------------- SC 좌표 --------------
+				const int2 sc_pos = WorldToScInt(world_pos.x, world_pos.y);	// SC 좌표로 변환
+
+				// SC 기준(y down) 중심에서 프레임 상단까지의 거리. 그림자는 [d, d + canvas_h] 범위
+				const float dist_y = static_cast<float>(img_data.frozen_y_value - sc_pos.y);
+				// -------------------------------------
+			
+				//다시 월드 좌표: y 부호 변환 필요, min <-> max, 1픽셀 여유
+				min_y = std::min(min_y, -(dist_y + canvas_height + 1.0f));
+				max_y = std::max(max_y, -(dist_y - 1.0f));
+			}
+
+			SetLocalBoundsOverride(engine::AABB3D{ .min = float3(-hx, min_y, 0.0f), .max = float3(hx, max_y, 0.0f) });
 		}
+		
 
 		// 매 싱크 덮어쓰기 — WritePerObjectData가 여기서 읽음
 		img_data_cache_ = img_data;
