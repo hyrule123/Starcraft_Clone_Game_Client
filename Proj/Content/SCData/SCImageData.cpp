@@ -127,7 +127,7 @@ namespace sc
         return true;
     }
 
-    const ImageDef& ImageDefTable::Get(uint32_t imageType) const
+    const ImageDef& ImageDefTable::Get(int32_t imageType) const
     {
         // 호출자가 넘기는 값은 시뮬레이션/엔진 내부 데이터 → 프로그래머 실수는 ASSERT
         ASSERT(imageType < defs_.size());

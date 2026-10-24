@@ -42,12 +42,12 @@ namespace sc
         // 첫 실패에서 중단하고 false 반환 (원인은 하위 계층이 ERR_MSG로 알림)
         bool Init(const MPQFileSystem& fs);
 
-        const ImageDef& GetImageDef(uint32_t image_type) const;
+        const ImageDef& GetImageDef(int32_t image_type) const;
 
-        uint32_t grp_count() const { return static_cast<uint32_t>(manifest_.sources.size()); }
+        uint32_t grp_count() const { return static_cast<int32_t>(manifest_.sources.size()); }
 
         // GRP가 없는 이미지 타입이면 내부에 nullptr이 들어있음.
-		BakedGrp GetGrp(uint32_t image_type) const;
+		BakedGrp GetGrp(int32_t image_type) const;
 
     private:
         ImageDefTable defs_ = {};

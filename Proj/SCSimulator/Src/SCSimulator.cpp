@@ -10,6 +10,9 @@
 #include <string_view>
 #include <array>
 #include <tuple>
+#include <type_traits>
+#include <limits>
+#include <cassert>
 
 // 헤더에서 전역으로 선언했으므로 정의도 전역
 struct SCSim::Context
@@ -21,11 +24,17 @@ struct SCSim::Context
     bool map_loaded = false;
     bool broken = false;
 
-    std::array<UnitData, kMaxUnits> units{};  // GetUnits 결과 버퍼
+    std::array<SCSim::UnitData, SCSim::kMaxUnits> units{};  // GetUnits 결과 버퍼
 
-    std::array<SCSim::SpriteData, static_cast<size_t>(SCSim::kMaxSprites)> sprite_buffer = {};
-    std::array<SCSim::ImageData, static_cast<size_t>(SCSim::kMaxImages)> image_buffer = {};
-    std::array<SCSim::PlayerData, static_cast<size_t>(SCSim::Player::kCount)> player_buffer = {};
+    std::array<SCSim::SpriteData, SCSim::kMaxSprites> sprite_buffer = {};
+    std::array<SCSim::ImageData, SCSim::kMaxImages> image_buffer = {};
+    // OpenBW players 배열과 같은 크기 (Player::kCount와의 일치는 하단 static_assert로 검증)
+    std::array<SCSim::PlayerData, std::tuple_size_v<decltype(bwgame::state::players)>> player_buffer = {};
+
+    // GetSelection 결과 버퍼. OpenBW selection과 같은 구조(플레이어별, 용량 kMaxSelection)
+    // 외부 크기는 action_state::selection에서 가져옴 (kMaxActionPlayers와의 일치는 하단 static_assert로 검증)
+    std::array<std::array<uint32_t, SCSim::kMaxSelection>,
+        std::tuple_size_v<decltype(bwgame::action_state::selection)>> selection_buffers = {};
 };
 
 namespace // Error
@@ -82,12 +91,21 @@ namespace // Error
 
 namespace // Snapshot
 {
+    // 경계 변환 규칙 (SCSimulatorTypes.h 상단 참고)
+    // - size_t 인덱스 → uint32_t 축소. 상한 근거:
+    //   · image/sprite index: object_container가 [0, max_size) 범위로만 부여 (하단 static_assert로 max_size <= UINT32_MAX 검증)
+    //   · frame_index: frame_index_base + frame_index_offset(<= 16). base는 iscript playfram(uint16) /
+    //     engframe(uint8) / engset(주 이미지 base + (프레임 수 & 0x7fff) * uint8)로만 설정 → 최악 약 840만
+    // - 플래그 int → uint32_t: signed → unsigned 모듈러 변환(정의된 동작, 비트 보존)
+    // - 그 외 int 필드는 int32_t로 변환 없음
     void FillImageData(const bwgame::image_t& image, SCSim::ImageData& out)
     {
+        assert(image.frame_index <= std::numeric_limits<uint32_t>::max());
+
         out = {};
         out.index = static_cast<uint32_t>(image.index);
         out.sprite_index = static_cast<uint32_t>(image.sprite->index);
-        out.image_type = static_cast<uint32_t>(image.image_type->id);
+        out.image_type = static_cast<int32_t>(image.image_type->id);
         out.frame = static_cast<uint32_t>(image.frame_index);
         out.offset_x = image.offset.x;
         out.offset_y = image.offset.y;
@@ -97,6 +115,7 @@ namespace // Snapshot
         out.modifier_data1 = image.modifier_data1;
     }
 
+    // first_image, image_count는 호출부 카운터(<= kMaxImages)
     void FillSpriteData(const bwgame::sprite_t& sprite, uint32_t first_image, uint32_t image_count,
         SCSim::SpriteData& out)
     {
@@ -110,23 +129,18 @@ namespace // Snapshot
         out.image_count = image_count;
         out.flags = static_cast<uint32_t>(sprite.flags);
     }
-}  // namespace
 
-namespace {
-    void FillUnit(const bwgame::action_functions& funcs, const bwgame::unit_t* u,
-        SCSim::UnitData& out) {
+    void FillUnit(const bwgame::action_functions& funcs, const bwgame::unit_t* u, SCSim::UnitData& out)
+    {
         out = {};
+        out.sprite_index = static_cast<uint32_t>(u->sprite->index);
         out.id = funcs.get_unit_id_32(u).raw_value;
         out.unit_type = static_cast<SCSim::UnitType>(u->unit_type->id);
         out.x = u->position.x;
         out.y = u->position.y;
-
-        out.sprite_index = static_cast<uint32_t>(u->sprite->index);
-
         out.status_flags = static_cast<uint32_t>(u->status_flags);
         out.sprite_flags = static_cast<uint32_t>(u->sprite->flags);
     }
-
 }  // namespace
 
 extern "C" {
@@ -186,7 +200,8 @@ extern "C" {
                     // OpenBW는 크기 상한을 검사하지 않고, 256 초과 시 tile_region_index 범위 밖에 씀
                     const size_t tile_width = player_st.game->map_tile_width;
                     const size_t tile_height = player_st.game->map_tile_height;
-                    if (tile_width > static_cast<size_t>(SCSim::kMaxMapTiles) || tile_height > static_cast<size_t>(SCSim::kMaxMapTiles))
+                    constexpr size_t kMaxTiles = static_cast<size_t>(SCSim::kMaxMapTiles);
+                    if (tile_width > kMaxTiles || tile_height > kMaxTiles)
                     {
                         throw std::runtime_error("map size " + std::to_string(tile_width) + "x" + std::to_string(tile_height) +
                             " exceeds " + std::to_string(SCSim::kMaxMapTiles) + "x" + std::to_string(SCSim::kMaxMapTiles) + " tiles");
@@ -359,17 +374,26 @@ extern "C" {
         try
         {
             bwgame::action_functions funcs(ctx->sim.st(), ctx->action_st);
+            const int owner_int = static_cast<int>(owner);
 
-            std::array<bwgame::unit_t*, static_cast<size_t>(SCSim::kMaxSelection)> units{};  // 남는 칸은 nullptr
-            for (int32_t i = 0; i < count; ++i)
+            // OpenBW selection 원소와 같은 타입 (용량 kMaxSelection). count 상한은 위에서 보장
+            decltype(ctx->action_st.selection)::value_type units;
+            for (const uint32_t* it = unit_ids; it != unit_ids + count; ++it)
             {
-                units[i] = funcs.get_unit(bwgame::unit_id_32(unit_ids[i]));  // 사망·세대 불일치면 nullptr
+                units.push_back(funcs.get_unit(bwgame::unit_id_32(*it)));  // 사망·세대 불일치면 nullptr
             }
 
             // 정제는 Content 책임. OpenBW는 nullptr·핵미사일·숨김 유닛만 거르고,
             // 다중 선택 검사는 두 번째 원소부터만 적용함 (첫 원소가 건물이면 혼합 선택이 생길 수 있음)
-            funcs.action_select(static_cast<int>(owner), units);
-            return static_cast<int32_t>(ctx->action_st.selection[static_cast<size_t>(owner)].size());
+            funcs.action_select(owner_int, units);
+
+            int32_t selected = 0;
+            for (bwgame::unit_t* u : funcs.selected_units(owner_int))
+            {
+                (void)u;
+                ++selected;
+            }
+            return selected;
         }
         catch (const std::exception& e)
         {
@@ -382,8 +406,14 @@ extern "C" {
         return -1;  // 선택 목록만 건드리므로 broken 처리 안 함
     }
 
-    int32_t SCSim_GetSelection(SCSim::Context* ctx, SCSim::Player owner, uint32_t* out_unit_ids)
+    int32_t SCSim_GetSelection(SCSim::Context* ctx, SCSim::Player owner, const uint32_t** out_unit_ids)
     {
+        if (!out_unit_ids)
+        {
+            SetError("SCSim_GetSelection: out_unit_ids is null");
+            return -1;
+        }
+        *out_unit_ids = nullptr;
         if (!CheckContext(ctx, "SCSim_GetSelection"))
         {
             return -1;
@@ -392,22 +422,29 @@ extern "C" {
         {
             return -1;
         }
-        if (!out_unit_ids)
-        {
-            SetError("SCSim_GetSelection: out_unit_ids is null");
-            return -1;
-        }
 
         try
         {
             bwgame::action_functions funcs(ctx->sim.st(), ctx->action_st);
+            auto& buffer = ctx->selection_buffers[static_cast<size_t>(owner)];  // 범위는 CheckActionPlayerRange로 보장
 
+            uint32_t* out = buffer.data();
+            uint32_t* const out_end = out + buffer.size();
             int32_t count = 0;
             // selected_units: 죽었지만 아직 목록에 남은 포인터를 걸러내는 필터 범위
             for (bwgame::unit_t* u : funcs.selected_units(static_cast<int>(owner)))
             {
-                out_unit_ids[count++] = funcs.get_unit_id_32(u).raw_value;
+                // OpenBW selection 용량 = 버퍼 크기라 넘칠 수 없지만, 버퍼 쓰기 전에 확인
+                if (out == out_end)
+                {
+                    SetError("SCSim_GetSelection: selection buffer overflow");
+                    return -1;
+                }
+                *out++ = funcs.get_unit_id_32(u).raw_value;
+                ++count;
             }
+
+            *out_unit_ids = buffer.data();
             return count;
         }
         catch (const std::exception& e)
@@ -442,13 +479,14 @@ extern "C" {
         {
             bwgame::action_functions funcs(ctx->sim.st(), ctx->action_st);
 
-            for (int32_t i = 0; i < count; ++i)
+            uint32_t* out = out_flags;
+            for (const uint32_t* it = unit_ids; it != unit_ids + count; ++it, ++out)
             {
                 // 사망·세대 불일치면 nullptr
-                const bwgame::unit_t* u = funcs.get_unit(bwgame::unit_id_32(unit_ids[i]));
+                const bwgame::unit_t* u = funcs.get_unit(bwgame::unit_id_32(*it));
                 if (!u)
                 {
-                    out_flags[i] = SCSim::SelectInfoFlags::None;
+                    *out = SCSim::SelectInfoFlags::None;
                     continue;
                 }
 
@@ -457,7 +495,7 @@ extern "C" {
                 {
                     flags |= SCSim::SelectInfoFlags::MultiSelectable;
                 }
-                out_flags[i] = flags;
+                *out = flags;
             }
             return true;
         }
@@ -559,7 +597,7 @@ extern "C" {
     }
 
     bool SCSim_Build(SCSim::Context* ctx, SCSim::Player owner, SCSim::OrderType order_type,
-        SCSim::UnitType unit_type, int32_t tile_x, int32_t tile_y)
+        SCSim::UnitType unit_type, uint32_t tile_x, uint32_t tile_y)
     {
         if (!CheckContext(ctx, "SCSim_Build"))
         {
@@ -597,8 +635,8 @@ extern "C" {
         auto& st = ctx->sim.st();
 
         // OpenBW는 size_t 타일 좌표를 int(32 * tile)로 변환하므로 음수·큰 값은 wrap/오버플로 → 먼저 막음
-        if (tile_x < 0 || static_cast<size_t>(tile_x) >= st.game->map_tile_width ||
-            tile_y < 0 || static_cast<size_t>(tile_y) >= st.game->map_tile_height)
+        if (st.game->map_tile_width <= static_cast<size_t>(tile_x) ||
+            st.game->map_tile_height <= static_cast<size_t>(tile_y))
         {
             SetError("SCSim_Build: tile (" + std::to_string(tile_x) + ", " + std::to_string(tile_y) +
                 ") is out of map bounds");
@@ -655,173 +693,6 @@ extern "C" {
         return false;
     }
 
-    int32_t SCSim_GetUnits(SCSim::Context* ctx, const SCSim::UnitData** out_units) {
-        if (!out_units) {
-            SetError("SCSim_GetUnits: out_units is null");
-            return -1;
-        }
-        *out_units = nullptr;
-        if (!CheckContext(ctx, "SCSim_GetUnits")) return -1;
-
-        try {
-            auto& st = ctx->sim.st();
-            bwgame::action_functions funcs(st, ctx->action_st);
-
-            bool overflow = false;
-
-            size_t count = 0;
-            auto append = [&](bwgame::unit_t* u) {
-                // 유닛 컨테이너 상한 = 버퍼 크기라 넘칠 수 없지만, 버퍼 쓰기 전에 확인
-                if (count >= ctx->units.size())
-                {
-                    overflow = true;
-                    return;
-                }
-                FillUnit(funcs, u, ctx->units[count++]);
-                };
-            for (bwgame::unit_t* u : bwgame::ptr(st.visible_units)) { append(u); }
-            for (bwgame::unit_t* u : bwgame::ptr(st.hidden_units)) { append(u); }
-
-            if (overflow)
-            {
-                SetError("SCSim_GetUnits: unit buffer overflow");
-                return -1;
-            }
-
-            *out_units = ctx->units.data();
-            return static_cast<int32_t>(count);
-        }
-        catch (const std::exception& e) {
-            SetError(std::string("SCSim_GetUnits: ") + e.what());
-        }
-        catch (...) {
-            SetError("SCSim_GetUnits: unknown exception");
-        }
-        return -1;
-    }
-
-    bool SCSim_GetSprites(SCSim::Context* ctx, SCSim::SpriteSnapshot* out)
-    {
-        if (!CheckContext(ctx, "SCSim_GetSprites"))
-        {
-            return false;
-        }
-        if (out == nullptr)
-        {
-            SetError("SCSim_GetSprites: out is null");
-            return false;
-        }
-        *out = {};
-
-        try
-        {
-            const bwgame::state& st = ctx->sim.st();
-
-            size_t sprite_count = 0;
-            size_t image_count = 0;
-
-            // 살아 있는 스프라이트는 숨김 여부와 관계없이 정확히 한 타일 라인에 들어 있음
-            for (const auto& line : st.sprites_on_tile_line)
-            {
-                for (const bwgame::sprite_t& sprite : line)
-                {
-                    // 컨테이너 상한 = 버퍼 크기라 넘칠 수 없지만, 버퍼 쓰기 전에 확인
-                    if (sprite_count >= ctx->sprite_buffer.size())
-                    {
-                        SetError("SCSim_GetSprites: sprite buffer overflow");
-                        return false;
-                    }
-
-                    const size_t first_image = image_count;
-                    for (const bwgame::image_t& image : sprite.images)
-                    {
-                        if (image_count >= ctx->image_buffer.size())
-                        {
-                            SetError("SCSim_GetSprites: image buffer overflow");
-                            return false;
-                        }
-                        FillImageData(image, ctx->image_buffer[image_count]);
-                        ++image_count;
-                    }
-
-                    FillSpriteData(sprite, static_cast<uint32_t>(first_image),
-                        static_cast<uint32_t>(image_count - first_image), ctx->sprite_buffer[sprite_count]);
-                    ++sprite_count;
-                }
-            }
-
-            out->sprites = ctx->sprite_buffer.data();
-            out->images = ctx->image_buffer.data();
-            out->sprite_count = static_cast<int32_t>(sprite_count);
-            out->image_count = static_cast<int32_t>(image_count);
-            return true;
-        }
-        catch (const std::exception& e)
-        {
-            SetError(std::string("SCSim_GetSprites: ") + e.what());
-        }
-        catch (...)
-        {
-            SetError("SCSim_GetSprites: unknown exception");
-        }
-        return false;
-    }
-
-    int32_t SCSim_GetPlayers(SCSim::Context* ctx, const SCSim::PlayerData** out_players)
-    {
-        if (!out_players)
-        {
-            SetError("SCSim_GetPlayers: out_players is null");
-            return -1;
-        }
-        *out_players = nullptr;
-        if (!CheckContext(ctx, "SCSim_GetPlayers"))
-        {
-            return -1;
-        }
-
-        const auto& st = ctx->sim.st();
-        const auto& players = st.players;
-        for (size_t i = 0; i < players.size(); ++i)
-        {
-            ctx->player_buffer[i] = {};
-            ctx->player_buffer[i].color = players[i].color;
-            ctx->player_buffer[i].minerals = st.current_minerals[i];
-            ctx->player_buffer[i].gas = st.current_gas[i];
-        }
-
-        *out_players = ctx->player_buffer.data();
-        return static_cast<int32_t>(players.size());
-    }
-
-    bool SCSim_Debug_SetResources(SCSim::Context* ctx, SCSim::Player owner, int32_t minerals, int32_t gas)
-    {
-        if (!CheckContext(ctx, "SCSim_Debug_SetResources"))
-        {
-            return false;
-        }
-        // 맵 트리거 Set Resources와 같은 범위(0~7)
-        if (!CheckActionPlayerRange(owner, "SCSim_Debug_SetResources"))
-        {
-            return false;
-        }
-        // 음수는 OpenBW 내부의 비용 비교(<)를 왜곡시키므로 거부
-        if (minerals < 0 || gas < 0)
-        {
-            SetError("SCSim_Debug_SetResources: resources must not be negative");
-            return false;
-        }
-
-        // 맵 트리거 Set Resources(Set To)와 동일: 현재 보유량과 누적 채취량을 같은 값으로 설정
-        // 단순 값 대입이라 예외·부분 진행 상태가 없음
-        auto& st = ctx->sim.st();
-        const size_t p = static_cast<size_t>(owner);
-        st.current_minerals[p] = minerals;
-        st.total_minerals_gathered[p] = minerals;
-        st.current_gas[p] = gas;
-        st.total_gas_gathered[p] = gas;
-        return true;
-    }
     bool SCSim_Liftoff(SCSim::Context* ctx, SCSim::Player owner)
     {
         if (!CheckContext(ctx, "SCSim_Liftoff"))
@@ -896,7 +767,192 @@ extern "C" {
         return false;
     }
 
+    int32_t SCSim_GetUnits(SCSim::Context* ctx, const SCSim::UnitData** out_units)
+    {
+        if (!out_units)
+        {
+            SetError("SCSim_GetUnits: out_units is null");
+            return -1;
+        }
+        *out_units = nullptr;
+        if (!CheckContext(ctx, "SCSim_GetUnits"))
+        {
+            return -1;
+        }
 
+        try
+        {
+            auto& st = ctx->sim.st();
+            bwgame::action_functions funcs(st, ctx->action_st);
+
+            SCSim::UnitData* out = ctx->units.data();
+            SCSim::UnitData* const out_end = out + ctx->units.size();
+            bool overflow = false;
+            int32_t count = 0;
+            auto append = [&](bwgame::unit_t* u)
+                {
+                    // 유닛 컨테이너 상한 = 버퍼 크기라 넘칠 수 없지만, 버퍼 쓰기 전에 확인
+                    if (out == out_end)
+                    {
+                        overflow = true;
+                        return;
+                    }
+                    FillUnit(funcs, u, *out++);
+                    ++count;
+                };
+            for (bwgame::unit_t* u : bwgame::ptr(st.visible_units))
+            {
+                append(u);
+            }
+            for (bwgame::unit_t* u : bwgame::ptr(st.hidden_units))
+            {
+                append(u);
+            }
+
+            if (overflow)
+            {
+                SetError("SCSim_GetUnits: unit buffer overflow");
+                return -1;
+            }
+
+            *out_units = ctx->units.data();
+            return count;
+        }
+        catch (const std::exception& e)
+        {
+            SetError(std::string("SCSim_GetUnits: ") + e.what());
+        }
+        catch (...)
+        {
+            SetError("SCSim_GetUnits: unknown exception");
+        }
+        return -1;
+    }
+
+    bool SCSim_GetSprites(SCSim::Context* ctx, SCSim::SpriteSnapshot* out)
+    {
+        if (!CheckContext(ctx, "SCSim_GetSprites"))
+        {
+            return false;
+        }
+        if (out == nullptr)
+        {
+            SetError("SCSim_GetSprites: out is null");
+            return false;
+        }
+        *out = {};
+
+        try
+        {
+            const bwgame::state& st = ctx->sim.st();
+
+            size_t sprite_count = 0;
+            size_t image_count = 0;
+
+            // 살아 있는 스프라이트는 숨김 여부와 관계없이 정확히 한 타일 라인에 들어 있음
+            for (const auto& line : st.sprites_on_tile_line)
+            {
+                for (const bwgame::sprite_t& sprite : line)
+                {
+                    // 컨테이너 상한 = 버퍼 크기라 넘칠 수 없지만, 버퍼 쓰기 전에 확인
+                    if (sprite_count >= ctx->sprite_buffer.size())
+                    {
+                        SetError("SCSim_GetSprites: sprite buffer overflow");
+                        return false;
+                    }
+
+                    const size_t first_image = image_count;
+                    for (const bwgame::image_t& image : sprite.images)
+                    {
+                        if (image_count >= ctx->image_buffer.size())
+                        {
+                            SetError("SCSim_GetSprites: image buffer overflow");
+                            return false;
+                        }
+                        FillImageData(image, ctx->image_buffer[image_count]);
+                        ++image_count;
+                    }
+
+                    // 카운터는 버퍼 크기(kMaxSprites / kMaxImages)로 상한이 보장되어 32비트 축소가 안전함
+                    FillSpriteData(sprite, static_cast<uint32_t>(first_image),
+                        static_cast<uint32_t>(image_count - first_image), ctx->sprite_buffer[sprite_count]);
+                    ++sprite_count;
+                }
+            }
+
+            out->sprites = ctx->sprite_buffer.data();
+            out->images = ctx->image_buffer.data();
+            out->sprite_count = static_cast<int32_t>(sprite_count);
+            out->image_count = static_cast<int32_t>(image_count);
+            return true;
+        }
+        catch (const std::exception& e)
+        {
+            SetError(std::string("SCSim_GetSprites: ") + e.what());
+        }
+        catch (...)
+        {
+            SetError("SCSim_GetSprites: unknown exception");
+        }
+        return false;
+    }
+
+    int32_t SCSim_GetPlayers(SCSim::Context* ctx, const SCSim::PlayerData** out_players)
+    {
+        if (!out_players)
+        {
+            SetError("SCSim_GetPlayers: out_players is null");
+            return -1;
+        }
+        *out_players = nullptr;
+        if (!CheckContext(ctx, "SCSim_GetPlayers"))
+        {
+            return -1;
+        }
+
+        // 단순 값 복사라 예외·부분 진행 상태가 없음 (player_buffer 크기 = players 크기, Context에서 보장)
+        const auto& st = ctx->sim.st();
+        const auto& players = st.players;
+        for (size_t i = 0; i < players.size(); ++i)
+        {
+            ctx->player_buffer[i] = {};
+            ctx->player_buffer[i].color = players[i].color;
+            ctx->player_buffer[i].minerals = st.current_minerals[i];
+            ctx->player_buffer[i].gas = st.current_gas[i];
+        }
+
+        *out_players = ctx->player_buffer.data();
+        return static_cast<int32_t>(players.size());  // 12 (Player::kCount, 하단 static_assert)
+    }
+
+    bool SCSim_Debug_SetResources(SCSim::Context* ctx, SCSim::Player owner, int32_t minerals, int32_t gas)
+    {
+        if (!CheckContext(ctx, "SCSim_Debug_SetResources"))
+        {
+            return false;
+        }
+        // 맵 트리거 Set Resources와 같은 범위(0~7)
+        if (!CheckActionPlayerRange(owner, "SCSim_Debug_SetResources"))
+        {
+            return false;
+        }
+        // 음수는 OpenBW 내부의 비용 비교(<)를 왜곡시키므로 거부
+        if (minerals < 0 || gas < 0)
+        {
+            SetError("SCSim_Debug_SetResources: resources must not be negative");
+            return false;
+        }
+
+        // 맵 트리거 Set Resources(Set To)와 동일: 현재 보유량과 누적 채취량을 같은 값으로 설정
+        // 단순 값 대입이라 예외·부분 진행 상태가 없음
+        auto& st = ctx->sim.st();
+        const size_t p = static_cast<size_t>(owner);
+        st.current_minerals[p] = minerals;
+        st.total_minerals_gathered[p] = minerals;
+        st.current_gas[p] = gas;
+        st.total_gas_gathered[p] = gas;
+        return true;
+    }
 
 }  // extern "C"
 
@@ -922,16 +978,16 @@ namespace //type traits
         static constexpr size_t value = N;
     };
 
-    static_assert(ContainerMaxSize<decltype(bwgame::state::units_container)>::value == SCSim::kMaxUnits);
-    static_assert(ContainerMaxSize<decltype(bwgame::state::sprites_container)>::value == SCSim::kMaxSprites);
-    static_assert(ContainerMaxSize<decltype(bwgame::state::images_container)>::value == SCSim::kMaxImages);
+    static_assert(ContainerMaxSize<decltype(bwgame::state::units_container)>::value == static_cast<size_t>(SCSim::kMaxUnits));
+    static_assert(ContainerMaxSize<decltype(bwgame::state::sprites_container)>::value == static_cast<size_t>(SCSim::kMaxSprites));
+    static_assert(ContainerMaxSize<decltype(bwgame::state::images_container)>::value == static_cast<size_t>(SCSim::kMaxImages));
     using SelectionArray = decltype(bwgame::action_state::selection);
-    static_assert(std::tuple_size_v<SelectionArray> == SCSim::kMaxActionPlayers);
-    static_assert(StaticVectorCapacity<SelectionArray::value_type>::value == SCSim::kMaxSelection);
+    static_assert(std::tuple_size_v<SelectionArray> == static_cast<size_t>(SCSim::kMaxActionPlayers));
+    static_assert(StaticVectorCapacity<SelectionArray::value_type>::value == static_cast<size_t>(SCSim::kMaxSelection));
     static_assert(std::tuple_size_v<decltype(bwgame::state::players)> == static_cast<size_t>(SCSim::Player::kCount));
     static_assert(std::is_same_v<decltype(bwgame::state::current_minerals)::value_type, int32_t>);
     static_assert(std::is_same_v<decltype(bwgame::state::current_gas)::value_type, int32_t>);
-
+    static_assert(std::is_same_v<std::underlying_type_t<bwgame::ImageTypes>, decltype(SCSim::ImageData::image_type)>);
 
     // ---- 플래그 타입 검증 ----
     // 1) 공개 enum과 OpenBW enum의 기반 타입이 같은지
@@ -942,18 +998,36 @@ namespace //type traits
         std::underlying_type_t<decltype(SCSim::ImageFlags::None)>,
         std::underlying_type_t<bwgame::image_t::flags_t>>);
 
-    // 2) 실제 복사 대상인 flags 필드가 int이고, 경계 타입(uint32_t)에 손실 없이 담기는지
+    // 2) 실제 복사 대상인 flags 필드가 int이고, 경계 타입(uint32_t)과 폭이 같은지 (비트 재해석만 일어남)
     static_assert(std::is_same_v<decltype(bwgame::sprite_t::flags), int>);
     static_assert(std::is_same_v<decltype(bwgame::image_t::flags), int>);
-    static_assert(sizeof(int) <= sizeof(uint32_t));
+    static_assert(std::is_same_v<decltype(bwgame::unit_t::status_flags), int>);
+    static_assert(sizeof(int) == sizeof(uint32_t));
 
     // 3) 경계 구조체 필드 타입이 공개 enum 기반 타입과 같은지
     static_assert(std::is_same_v<decltype(SCSim::SpriteData::flags),
         std::underlying_type_t<decltype(SCSim::SpriteFlags::None)>>);
     static_assert(std::is_same_v<decltype(SCSim::ImageData::flags),
         std::underlying_type_t<decltype(SCSim::ImageFlags::None)>>);
+    // 4) size_t 인덱스 → uint32_t 축소의 안전 근거 (Fill 함수 주석 참고)
+    //    인덱스는 컨테이너 상한으로 컴파일타임에 보장, frame_index는 FillImageData의 assert로 확인
     static_assert(std::is_same_v<decltype(bwgame::sprite_t::index), size_t>);
     static_assert(std::is_same_v<decltype(bwgame::image_t::index), size_t>);
+    static_assert(std::is_same_v<decltype(bwgame::image_t::frame_index), size_t>);
+    static_assert(ContainerMaxSize<decltype(bwgame::state::sprites_container)>::value <= std::numeric_limits<uint32_t>::max());
+    static_assert(ContainerMaxSize<decltype(bwgame::state::images_container)>::value <= std::numeric_limits<uint32_t>::max());
+
+    // 5) OpenBW int 원본 타입 = 경계 필드 타입 (변환 없이 대입되는지)
+    static_assert(std::is_same_v<decltype(bwgame::sprite_t::owner), decltype(SCSim::SpriteData::owner)>);
+    static_assert(std::is_same_v<decltype(bwgame::sprite_t::elevation_level), decltype(SCSim::SpriteData::elevation_level)>);
+    static_assert(std::is_same_v<decltype(bwgame::image_t::modifier), decltype(SCSim::ImageData::modifier)>);
+    static_assert(std::is_same_v<decltype(bwgame::image_t::modifier_data1), decltype(SCSim::ImageData::modifier_data1)>);
+    static_assert(std::is_same_v<decltype(bwgame::image_t::frozen_y_value), decltype(SCSim::ImageData::frozen_y_value)>);
+    static_assert(std::is_same_v<decltype(bwgame::xy::x), int32_t>);
+    static_assert(std::is_same_v<std::underlying_type_t<bwgame::ImageTypes>, int>);	// image_type은 0~998이라 uint32_t로 손실 없음
+    static_assert(std::is_same_v<std::underlying_type_t<bwgame::UnitTypes>, std::underlying_type_t<SCSim::UnitType>>);
+    static_assert(std::is_same_v<decltype(bwgame::unit_id_32::raw_value), decltype(SCSim::UnitData::id)>);
+    static_assert(std::is_same_v<decltype(bwgame::player_t::color), decltype(SCSim::PlayerData::color)>);
     static_assert(static_cast<uint32_t>(SCSim::kMaxSprites) - 1 < SCSim::kInvalidSpriteIndex);
     static_assert(SCSim::SpriteFlags::Turret == bwgame::sprite_t::flag_turret);
     static_assert(SCSim::SpriteFlags::Hidden == bwgame::sprite_t::flag_hidden);

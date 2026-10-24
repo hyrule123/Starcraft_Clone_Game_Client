@@ -9,6 +9,13 @@ namespace SCSim
 {
 	struct Context;	// Forward
 
+	// 경계 타입 규칙
+	// - OpenBW size_t 인덱스(슬롯 번호·프레임 번호) → uint32_t. 축소는 DLL Fill 함수에서만 일어나며,
+	//   값의 상한(컨테이너 크기, iscript 프레임 범위)은 DLL의 static_assert·assert로 보장
+	//   (GPU 인스턴스 데이터가 32비트라 어차피 한 번은 축소가 필요 — 그 지점을 DLL 한 곳으로 모음)
+	// - OpenBW int(게임 값: 플레이어 번호·색상·좌표 등) → int32_t
+	// - 비트 플래그는 OpenBW int 필드를 uint32_t로 명시 변환(상수에 0x80000000이 있어 signed로 표현 불가)
+
 	constexpr int32_t kMaxUnits = 1700;			// OpenBW units_container 상한
 	constexpr int32_t kMaxMapTiles = 256;		// 1.16.1 맵 최대 크기(타일), OpenBW tile_region_index도 256x256 고정
 	constexpr int32_t kMaxPlayerColors = 16;	// 1.16.1 플레이어 색상 수(tunit.pcx 16행)
@@ -67,7 +74,7 @@ namespace SCSim
 		int32_t  y;
 		uint32_t first_image;		// SpriteSnapshot::images 내 시작 위치
 		uint32_t image_count;		// OpenBW 목록 순서(앞 = 맨 위층)로 연속 배치. 숨김 이미지 포함
-		uint32_t flags;				// SpriteFlags
+		uint32_t flags;				// SpriteFlags (sprite_t::flags 비트 그대로)
 	};
 	static_assert(sizeof(SpriteData) == 32);
 
@@ -92,13 +99,13 @@ namespace SCSim
 	{
 		uint32_t index;				// image_t::index (슬롯 번호, 0도 유효)
 		uint32_t sprite_index;		// 소속 sprite_t::index
-		uint32_t image_type;		// image_type->id (images.dat 번호)
+		int32_t image_type;		// image_type->id (images.dat 번호)
 		uint32_t frame;				// image_t::frame_index
 		int32_t  offset_x;			// image_t::offset (스프라이트 기준 로컬 좌표)
 		int32_t  offset_y;
 		int32_t  frozen_y_value;	// flags의 YFrozen가 켜졌을 때만 유효
 		int32_t  modifier;			// image_t::modifier
-		uint32_t flags;				// ImageFlags
+		uint32_t flags;				// ImageFlags (image_t::flags 비트 그대로)
 		int32_t  modifier_data1;	// image_t::modifier_data1 상태에 따른 색상 변화 플래그
 	};
 	static_assert(sizeof(ImageData) == 40);
@@ -126,15 +133,27 @@ namespace SCSim
 
 	struct UnitData
 	{
-		uint32_t id;
+		uint32_t id;				// unit_id_32::raw_value
 		UnitType unit_type;			// u->unit_type->id
 		int32_t  x;					// unit_t::position
 		int32_t  y;
 		uint32_t sprite_index;		// u->sprite->index
-		uint32_t status_flags;		// unit_t::status_flags 원본 (UnitStatusFlags)
-		uint32_t sprite_flags;		// u->sprite->flags 원본 (SpriteFlags) — 숨김은 SpriteFlags::Hidden
+		uint32_t status_flags;		// unit_t::status_flags 비트 그대로 (UnitStatusFlags)
+		uint32_t sprite_flags;		// u->sprite->flags 비트 그대로 (SpriteFlags) — 숨김은 SpriteFlags::Hidden
 	};
 	static_assert(sizeof(UnitData) == 28);
+	static_assert(std::is_trivially_copyable_v<UnitData>&& std::is_standard_layout_v<UnitData>);
+
+	// SCSim_GetSelectInfo 결과. 0 = 무효 ID(사망, 세대 불일치)
+	namespace SelectInfoFlags
+	{
+		enum : uint32_t
+		{
+			None = 0,
+			Valid = 0x1,			// 살아 있는 유닛
+			MultiSelectable = 0x2,	// action_functions::unit_can_be_multi_selected
+		};
+	}
 
 	// unit_t::status_flags 원본 비트 (1.16.1 배치). 아래에 없는 비트는 계약에 포함되지 않음
 	// 0x8, 0x4000, 0x400000은 OpenBW에서도 의미 미상 — 사용 금지
@@ -190,14 +209,5 @@ namespace SCSim
 	};
 
 
-	// SCSim_GetSelectInfo 결과. 0 = 무효 ID(사망, 세대 불일치)
-	namespace SelectInfoFlags
-	{
-		enum : uint32_t
-		{
-			None = 0,
-			Valid = 0x1,			// 살아 있는 유닛
-			MultiSelectable = 0x2,	// action_functions::unit_can_be_multi_selected
-		};
-	}
+
 }

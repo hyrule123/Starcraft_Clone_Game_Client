@@ -29,15 +29,19 @@ extern "C" {
 	SCSIM_API bool SCSim_NextFrame(SCSim::Context* ctx);
 	SCSIM_API int32_t SCSim_GetCurrentFrame(const SCSim::Context* ctx);
 
-	// 부대 선택, 최대 12, 0~7번 플레이어만 가능. 아무것도 선택되지 않았을 경우 0, 실패 시 -1. nullptr인 유닛은 무시됨
+	// owner(0~7)의 선택을 unit_ids로 교체 (원작 Select 액션). count 0~kMaxSelection, 0이면 선택 해제
+	// 입력은 Content가 정제해서 넘길 것 — 시뮬레이션은 무효 ID·핵미사일·숨김 유닛만 거름
+	// 반환: 적용 후 선택 개수(0~kMaxSelection), 실패 시 -1
 	SCSIM_API int32_t SCSim_Select(SCSim::Context* ctx, SCSim::Player owner, const uint32_t* unit_ids, int32_t count);
 
-	// owner(0~7)의 현재 선택을 out_unit_ids(kMaxSelection 칸)에 채움. 사망 유닛은 제외
-	// 반환: 선택 개수(0~12), 실패 시 -1
-	SCSIM_API int32_t SCSim_GetSelection(SCSim::Context* ctx, SCSim::Player owner, uint32_t* out_unit_ids);
+	// owner(0~7)의 현재 선택(사망 유닛 제외)을 owner별 컨텍스트 소유 버퍼에 채움
+	// 포인터는 컨텍스트 수명 동안 유효, 내용은 같은 owner의 다음 GetSelection 호출 전까지 유효
+	// Select·NextFrame 이후 자동 갱신되지 않음 — 다시 조회할 것
+	// 반환: 개수(0~kMaxSelection), 실패 시 -1이며 *out_unit_ids = nullptr
+	SCSIM_API int32_t SCSim_GetSelection(SCSim::Context* ctx, SCSim::Player owner, const uint32_t** out_unit_ids);
 
 	// unit_ids[i]의 선택 판정 정보를 out_flags[i]에 기록 (SelectInfoFlags). 입력 순서 그대로, 필터링 없음
-	// count 0~kMaxUnits. 실패 시 false이며 out_flags는 기록되지 않음
+	// unit_ids와 out_flags는 모두 count칸. count 0~kMaxUnits (0이면 두 포인터 모두 nullptr 허용). 실패 시 false
 	SCSIM_API bool SCSim_GetSelectInfo(SCSim::Context* ctx, const uint32_t* unit_ids, int32_t count, uint32_t* out_flags);
 
 	// 현재 선택된 유닛들에게 명령 (owner 0~7)
@@ -54,9 +58,15 @@ extern "C" {
 	// true = 명령 수락. 배치 불가·보급/자원 부족은 true를 반환하고 시뮬레이션이 무시함
 	// 선택이 단일 유닛이 아니거나 해당 유닛이 그 건설을 할 수 없으면 false
 	SCSIM_API bool SCSim_Build(SCSim::Context* ctx, SCSim::Player owner, SCSim::OrderType order_type,
-		SCSim::UnitType unit_type, int32_t tile_x, int32_t tile_y);
+		SCSim::UnitType unit_type, uint32_t tile_x, uint32_t tile_y);
 
-	// visible, hidden 상태의 모든 유닛을 배열로 반환.
+	// 현재 단일 선택된 건물을 이륙 (owner 0~7). 원작 Lift 액션과 동일(위치는 건물 자신의 위치를 사용)
+// 선택이 단일 유닛이 아니거나, 이륙할 수 없는 상태(건설·연구·업그레이드 중, 이륙 불가 유닛 등)면 false
+	SCSIM_API bool SCSim_Liftoff(SCSim::Context* ctx, SCSim::Player owner);
+
+	// visible, hidden 상태의 모든 유닛을 컨텍스트 소유 버퍼에 채움
+	// 포인터는 컨텍스트 수명 동안 유효, 내용은 다음 NextFrame / GetUnits 호출 전까지 유효
+	// 반환: 개수, 실패 시 -1이며 *out_units = nullptr
 	SCSIM_API int32_t SCSim_GetUnits(SCSim::Context* ctx, const SCSim::UnitData** out_units);
 
 	// 살아 있는 스프라이트·이미지 전체(숨김 포함)를 컨텍스트 소유 버퍼에 채움
@@ -65,8 +75,9 @@ extern "C" {
 	// 버퍼 오버플로(정상 상태에서는 발생하지 않음) 시 실패
 	SCSIM_API bool SCSim_GetSprites(SCSim::Context* ctx, SCSim::SpriteSnapshot* out);
 
-	// 플레이어 12명분(Player 순서)을 컨텍스트 소유 버퍼로 반환. 실패 시 -1
+	// 플레이어 12명분(Player 순서)을 컨텍스트 소유 버퍼에 채움
 	// 포인터는 컨텍스트 수명 동안 유효, 내용은 다음 GetPlayers 호출 전까지 유효
+	// 반환: 개수, 실패 시 -1이며 *out_players = nullptr
 	SCSIM_API int32_t SCSim_GetPlayers(SCSim::Context* ctx, const SCSim::PlayerData** out_players);
 
 	// ---- 디버그 API ----
@@ -75,10 +86,6 @@ extern "C" {
 	// 플레이어 자원을 지정 값으로 설정 (owner 0~7). 맵 트리거 Set Resources(Set To)와 동일하게
 	// 현재 보유량과 누적 채취량(점수용)을 같은 값으로 덮어씀. 음수는 실패
 	SCSIM_API bool SCSim_Debug_SetResources(SCSim::Context* ctx, SCSim::Player owner, int32_t minerals, int32_t gas);
-
-	// 현재 단일 선택된 건물을 이륙 (owner 0~7). 원작 Lift 액션과 동일(위치는 건물 자신의 위치를 사용)
-	// 선택이 단일 유닛이 아니거나, 이륙할 수 없는 상태(건설·연구·업그레이드 중, 이륙 불가 유닛 등)면 false
-	SCSIM_API bool SCSim_Liftoff(SCSim::Context* ctx, SCSim::Player owner);
 
 
 }

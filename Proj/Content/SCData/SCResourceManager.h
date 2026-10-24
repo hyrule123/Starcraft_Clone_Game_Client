@@ -33,7 +33,7 @@ namespace sc
 
 		const sc::SCImageLibrary& GetSCImageLibrary() const { return sc_image_library_; }
 
-		std::shared_ptr<engine::Material> GetImageMaterial(uint32_t image_type, SCImageVariant variant);
+		std::shared_ptr<engine::Material> GetImageMaterial(int32_t image_type, SCImageVariant variant);
 		std::shared_ptr<engine::Mesh> GetImageMesh() const { return image_mesh_; }
 
 		std::shared_ptr<engine::Mesh> GetMapMesh() const { return map_mesh_; }

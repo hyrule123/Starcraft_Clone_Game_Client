@@ -261,7 +261,7 @@ namespace sc
 		map_material_->SetPipelineState(sc::kSCOpaquePassID, pipeline_state);
 	}
 
-	std::shared_ptr<engine::Material> SCResourceManager::GetImageMaterial(uint32_t image_type, SCImageVariant variant)
+	std::shared_ptr<engine::Material> SCResourceManager::GetImageMaterial(int32_t image_type, SCImageVariant variant)
 	{
 		using namespace engine;
 
