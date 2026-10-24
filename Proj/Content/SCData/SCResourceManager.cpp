@@ -64,7 +64,7 @@ namespace sc
 		CreateDepthStencilStates();
 		CreateOriginalMaterials();
 		CreateMapMaterial();
-		materials_.resize(sc_image_library_.grp_count());
+		materials_.resize(sc_image_library_.GrpCount());
 		CreateMesh();
 	}
 	std::shared_ptr<engine::Material> SCResourceManager::GetNewMapMaterial() const

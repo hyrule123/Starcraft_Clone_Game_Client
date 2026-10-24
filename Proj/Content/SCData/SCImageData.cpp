@@ -127,11 +127,11 @@ namespace sc
         return true;
     }
 
-    const ImageDef& ImageDefTable::Get(int32_t imageType) const
+    const ImageDef& ImageDefTable::Get(int32_t image_type) const
     {
         // 호출자가 넘기는 값은 시뮬레이션/엔진 내부 데이터 → 프로그래머 실수는 ASSERT
-        ASSERT(imageType < defs_.size());
-        return defs_[imageType];
+        ASSERT(0 <= image_type && static_cast<size_t>(image_type) < defs_.size());
+        return defs_[image_type];
     }
 
     // ------------------------------------------------------------------

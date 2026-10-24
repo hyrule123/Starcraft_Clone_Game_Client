@@ -165,7 +165,7 @@ namespace sc
 
     BakedGrp SCImageLibrary::GetGrp(int32_t image_type) const
     {
-        ASSERT(0 <= image_type && image_type < kImageTypeCount);
+        ASSERT(0 <= image_type && static_cast<size_t>(image_type) < kImageTypeCount);
         const int32_t source_index = manifest_.image_to_source[image_type];
         if (source_index == GrpManifest::kNoGrp) { return {}; }
         return grp_resources_[source_index];

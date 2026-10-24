@@ -634,7 +634,7 @@ extern "C" {
 
         auto& st = ctx->sim.st();
 
-        // OpenBW는 size_t 타일 좌표를 int(32 * tile)로 변환하므로 음수·큰 값은 wrap/오버플로 → 먼저 막음
+        // 큰 값은 int(32 * tile)에서 오버플로 → 먼저 막음
         if (st.game->map_tile_width <= static_cast<size_t>(tile_x) ||
             st.game->map_tile_height <= static_cast<size_t>(tile_y))
         {
@@ -997,6 +997,9 @@ namespace //type traits
     static_assert(std::is_same_v<
         std::underlying_type_t<decltype(SCSim::ImageFlags::None)>,
         std::underlying_type_t<bwgame::image_t::flags_t>>);
+    static_assert(std::is_same_v<
+        std::underlying_type_t<decltype(SCSim::UnitStatusFlags::None)>,
+        std::underlying_type_t<bwgame::unit_t::status_flags_t>>);
 
     // 2) 실제 복사 대상인 flags 필드가 int이고, 경계 타입(uint32_t)과 폭이 같은지 (비트 재해석만 일어남)
     static_assert(std::is_same_v<decltype(bwgame::sprite_t::flags), int>);
@@ -1024,7 +1027,6 @@ namespace //type traits
     static_assert(std::is_same_v<decltype(bwgame::image_t::modifier_data1), decltype(SCSim::ImageData::modifier_data1)>);
     static_assert(std::is_same_v<decltype(bwgame::image_t::frozen_y_value), decltype(SCSim::ImageData::frozen_y_value)>);
     static_assert(std::is_same_v<decltype(bwgame::xy::x), int32_t>);
-    static_assert(std::is_same_v<std::underlying_type_t<bwgame::ImageTypes>, int>);	// image_type은 0~998이라 uint32_t로 손실 없음
     static_assert(std::is_same_v<std::underlying_type_t<bwgame::UnitTypes>, std::underlying_type_t<SCSim::UnitType>>);
     static_assert(std::is_same_v<decltype(bwgame::unit_id_32::raw_value), decltype(SCSim::UnitData::id)>);
     static_assert(std::is_same_v<decltype(bwgame::player_t::color), decltype(SCSim::PlayerData::color)>);

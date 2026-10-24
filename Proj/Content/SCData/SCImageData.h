@@ -64,7 +64,7 @@ namespace sc
         // 크기가 정확히 999 × 38 바이트가 아니면 실패
         bool Load(const std::vector<uint8_t>& bytes);
 
-        const ImageDef& Get(int32_t imageType) const;
+        const ImageDef& Get(int32_t image_type) const;
 
     private:
         // size: kImageTypeCount
