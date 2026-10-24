@@ -89,17 +89,18 @@ namespace SCSim
 
 	struct ImageData
 	{
-		uint32_t index;			// image_t::index (슬롯 번호, 0도 유효)
-		uint32_t sprite_index;	// 소속 sprite_t::index
-		uint32_t image_type;	// image_type->id (images.dat 번호)
-		uint32_t frame;			// image_t::frame_index
-		int32_t  offset_x;		// image_t::offset (스프라이트 기준 로컬 좌표)
+		uint32_t index;				// image_t::index (슬롯 번호, 0도 유효)
+		uint32_t sprite_index;		// 소속 sprite_t::index
+		uint32_t image_type;		// image_type->id (images.dat 번호)
+		uint32_t frame;				// image_t::frame_index
+		int32_t  offset_x;			// image_t::offset (스프라이트 기준 로컬 좌표)
 		int32_t  offset_y;
-		int32_t  modifier;		// image_t::modifier
-		uint32_t flags;			// ImageFlags
-		int32_t modifier_data1;	// image_t::modifier_data1 상태에 따른 색상 변화 플래그
+		int32_t  frozen_y_value;	// flags의 YFrozen가 켜졌을 때만 유효
+		int32_t  modifier;			// image_t::modifier
+		uint32_t flags;				// ImageFlags
+		int32_t  modifier_data1;	// image_t::modifier_data1 상태에 따른 색상 변화 플래그
 	};
-	static_assert(sizeof(ImageData) == 36);
+	static_assert(sizeof(ImageData) == 40);
 
 
 	struct PlayerData

@@ -91,6 +91,7 @@ namespace // Snapshot
         out.frame = static_cast<uint32_t>(image.frame_index);
         out.offset_x = image.offset.x;
         out.offset_y = image.offset.y;
+        out.frozen_y_value = image.frozen_y_value;
         out.modifier = image.modifier;
         out.flags = static_cast<uint32_t>(image.flags);
         out.modifier_data1 = image.modifier_data1;
