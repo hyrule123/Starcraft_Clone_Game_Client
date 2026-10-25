@@ -208,6 +208,25 @@ namespace SCSim
 		kCount
 	};
 
+	// tile_t::flags 원본 비트 (1.16.1 배치). 아래에 없는 비트는 계약에 포함되지 않음
+	namespace TileFlags
+	{
+		enum : uint16_t
+		{
+			None = 0,
+			HasCreep = 0x40,
+		};
+	}
 
+	// tile_t와 1:1 (OpenBW 표현 그대로)
+	// visible / explored는 플레이어별 비트이며 반전 저장: 비트 i가 1 = 플레이어 i가 볼 수 없음 / 탐사하지 않음
+	struct TileData
+	{
+		uint8_t  visible;
+		uint8_t  explored;
+		uint16_t flags;		// TileFlags
+	};
+	static_assert(sizeof(TileData) == 4);
+	static_assert(std::is_trivially_copyable_v<TileData>&& std::is_standard_layout_v<TileData>);
 
 }

@@ -11,8 +11,37 @@
 #include <Content/SCData/SCMapBakeComputePass.h>
 #include <Content/SCData/SCTileSetPcxLUT.h>
 
+#include <Content/SCData/GrpFile.h>
+
 #include <algorithm>
 #include <span>
+
+/*
+* Creep Texture(GRP) 확인 결과: 메가타일 사이즈를 넘어가는 프레임은 없었음(넘침 걱정 필요 없음)
+[LOG] Creep GRP [badlands]: canvas 32x32, frames 37
+[LOG] Creep GRP [badlands]: overflow frames = 0
+
+[LOG] Creep GRP [platform]: canvas 32x32, frames 37
+[LOG] Creep GRP [platform]: overflow frames = 0
+
+[LOG] Creep GRP [install]: canvas 32x32, frames 37
+[LOG] Creep GRP [install]: overflow frames = 0
+
+[LOG] Creep GRP [ashworld]: canvas 32x32, frames 37
+[LOG] Creep GRP [ashworld]: overflow frames = 0
+
+[LOG] Creep GRP [jungle]: canvas 32x32, frames 37
+[LOG] Creep GRP [jungle]: overflow frames = 0
+
+[LOG] Creep GRP [Desert]: canvas 32x32, frames 37
+[LOG] Creep GRP [Desert]: overflow frames = 0
+
+[LOG] Creep GRP [Ice]: canvas 32x32, frames 37
+[LOG] Creep GRP [Ice]: overflow frames = 0
+
+[LOG] Creep GRP [Twilight]: canvas 32x32, frames 37
+[LOG] Creep GRP [Twilight]: overflow frames = 0
+*/
 
 namespace sc
 {
@@ -361,6 +390,8 @@ namespace sc
 				return false;
 			}
 
+
+
 			// 개수 관계 검증 (배수 검사만으로는 잡히지 않는 형식 오류)
 			if (tileset.wpe.size() != 256)
 			{
@@ -378,6 +409,31 @@ namespace sc
 			{
 				ERR_MSG("TileSet: LUT 초기화 실패 [{}]", tileset_name);
 				return false;
+			}
+
+			{	// [임시] Creep 테두리 GRP 프레임 경계 확인
+				std::vector<uint8_t> grp_bytes;
+				if (read_into(each_tileset_path, ".GRP", grp_bytes))
+				{
+					GrpFile grp;
+					if (grp.Load(std::move(grp_bytes)))
+					{
+						LOG("Creep GRP [{}]: canvas {}x{}, frames {}", tileset_name, grp.Width(), grp.Height(), grp.FrameCount());
+
+						uint32_t overflow_count = 0;
+						for (uint32_t i = 0; i < grp.FrameCount(); ++i)
+						{
+							const GrpFrameInfo& f = grp.Frame(i);
+							const bool overflow = (f.offset_x + f.width > 32) || (f.offset_y + f.height > 32);
+							if (overflow)
+							{
+								++overflow_count;
+							}
+							LOG("  frame {:2}: offset ({:2}, {:2}) size ({:2}, {:2}){}", i, f.offset_x, f.offset_y, f.width, f.height, overflow ? "  <-- OVERFLOW" : "");
+						}
+						LOG("Creep GRP [{}]: overflow frames = {}", tileset_name, overflow_count);
+					}
+				}
 			}
 		}
 

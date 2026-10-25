@@ -35,6 +35,9 @@ struct SCSim::Context
     // 외부 크기는 action_state::selection에서 가져옴 (kMaxActionPlayers와의 일치는 하단 static_assert로 검증)
     std::array<std::array<uint32_t, SCSim::kMaxSelection>,
         std::tuple_size_v<decltype(bwgame::action_state::selection)>> selection_buffers = {};
+
+    // GetTiles 결과 버퍼. 맵 최대 크기(kMaxMapTiles²)만큼, 실제 맵 크기만큼만 채움
+    std::array<SCSim::TileData, static_cast<size_t>(SCSim::kMaxMapTiles)* static_cast<size_t>(SCSim::kMaxMapTiles)> tile_buffer = {};
 };
 
 namespace // Error
@@ -954,6 +957,49 @@ extern "C" {
         return true;
     }
 
+    bool SCSim_GetTiles(SCSim::Context* ctx, const SCSim::TileData** out_tiles, uint32_t* out_width, uint32_t* out_height)
+    {
+        if (!out_tiles || !out_width || !out_height)
+        {
+            SetError("SCSim_GetTiles: out_tiles, out_width or out_height is null");
+            return false;
+        }
+        *out_tiles = nullptr;
+        *out_width = 0;
+        *out_height = 0;
+        if (!CheckContext(ctx, "SCSim_GetTiles"))
+        {
+            return false;
+        }
+
+        // 단순 값 복사라 예외·부분 진행 상태가 없음
+        const auto& st = ctx->sim.st();
+        const size_t width = st.game->map_tile_width;
+        const size_t height = st.game->map_tile_height;
+
+        // 크기 상한은 LoadMap에서 보장. 버퍼·원본 크기는 쓰기 전에 확인
+        if (st.tiles.size() != width * height || st.tiles.size() > ctx->tile_buffer.size())
+        {
+            SetError("SCSim_GetTiles: unexpected tile buffer size " + std::to_string(st.tiles.size()));
+            return false;
+        }
+
+        SCSim::TileData* out = ctx->tile_buffer.data();
+        for (const bwgame::tile_t& tile : st.tiles)
+        {
+            out->visible = tile.visible;
+            out->explored = tile.explored;
+            out->flags = tile.flags;
+            ++out;
+        }
+
+        *out_tiles = ctx->tile_buffer.data();
+        // 경계 축소: 맵 크기 <= kMaxMapTiles(256)는 LoadMap에서 보장
+        *out_width = static_cast<uint32_t>(width);
+        *out_height = static_cast<uint32_t>(height);
+        return true;
+    }
+
 }  // extern "C"
 
 
@@ -1075,4 +1121,14 @@ namespace //type traits
 
     static_assert(std::is_same_v<decltype(SCSim::UnitData::sprite_flags),
         std::underlying_type_t<decltype(SCSim::SpriteFlags::None)>>);
+
+    // tile_t ↔ TileData 1:1 검증
+    static_assert(sizeof(bwgame::tile_t) == sizeof(SCSim::TileData));
+    static_assert(std::is_same_v<decltype(bwgame::tile_t::visible), decltype(SCSim::TileData::visible)>);
+    static_assert(std::is_same_v<decltype(bwgame::tile_t::explored), decltype(SCSim::TileData::explored)>);
+    static_assert(std::is_same_v<decltype(bwgame::tile_t::flags), decltype(SCSim::TileData::flags)>);
+    static_assert(offsetof(bwgame::tile_t, visible) == offsetof(SCSim::TileData, visible));
+    static_assert(offsetof(bwgame::tile_t, explored) == offsetof(SCSim::TileData, explored));
+    static_assert(offsetof(bwgame::tile_t, flags) == offsetof(SCSim::TileData, flags));
+    static_assert(SCSim::TileFlags::HasCreep == bwgame::tile_t::flag_has_creep);
 }
