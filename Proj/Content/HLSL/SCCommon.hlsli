@@ -1,10 +1,16 @@
 #ifndef SC_COMMON_HLSLI
 #define SC_COMMON_HLSLI
 
+#include <Engine/HLSL/Core/CoreMinimal.hlsli>
+
 #define REG_T_SC_TUNIT			REG_T_PER_FRAME_5
 #define REG_T_SC_WPE_PALETTE	REG_T_PER_FRAME_6
 
 #define REG_B_SC_COMMON_INFO	REG_B_PER_FRAME_1
+
+// CV5 그룹 하나의 메가타일 수 (MTXM 값 = 그룹 << 4 | 그룹 내 번호)
+HLSL_CONSTEXPR uint kCV5MegatilesPerGroup = 16;
+HLSL_CONSTEXPR uint kMegatilePixelSize = 32;
 
 // C++ / HLSL 공유. CBuffer 전용이므로 크기는 16바이트 배수 유지
 struct SCCommonInfoCB

@@ -12,7 +12,7 @@
 #include <Engine/Manager/ResourceManager.h>
 #include <Engine/Manager/GraphicsDevice.h>
 
-#include <Content/HLSL/SCMapTileSet.hlsli>
+#include <Content/HLSL/SCMap/SCMapBaker.hlsli>
 
 #include <Content/SCData/SCTileSetPcxLUT.h>
 
@@ -84,8 +84,8 @@ namespace sc
 		desc.SampleDesc.Count = 1;
 		desc.Usage = D3D11_USAGE_DEFAULT;
 		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
-		desc.Width = map_data.megatile_width * (UINT)megatile_size;
-		desc.Height = map_data.megatile_height * (UINT)megatile_size;
+		desc.Width = map_data.megatile_width * (UINT)kMegatilePixelSize;
+		desc.Height = map_data.megatile_height * (UINT)kMegatilePixelSize;
 
 		result = map_texture->CreateTexture2D(&desc, nullptr);
 		if (!result) { return nullptr; }

@@ -36,6 +36,10 @@ namespace sc
     class SCImageLibrary
     {
     public:
+        // pixels: 작업용 버퍼(재사용)
+        static BakedGrp BakeGrp(std::vector<uint8_t> grp_bytes, std::vector<uint8_t>& pixels);
+
+    public:
         SCImageLibrary();
         ~SCImageLibrary();
 

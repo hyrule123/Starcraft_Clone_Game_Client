@@ -47,7 +47,8 @@ namespace sc
 		std::optional<SCMapLoadingData> LoadMapLoadingData(const std::filesystem::path& map_path);
 
 		// 로딩 결과 공통 필드(크기, 지형, 유닛, 팔레트/LUT 버퍼)를 SCMap에 채운다
-		void FillCommonMapFields(SCMapLoadingData& map_data, SCMap& out_map) const;
+		// 실패 시 false. map_data, out_map은 비워짐.
+		[[nodiscard]] bool FillCommonMapFields(SCMapLoadingData& map_data, SCMap& out_map) const;
 
 	private:
 		// Index = TileSet Type (Jungle, Desert, Ice, Twilight, etc.)

@@ -324,7 +324,7 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
-    <FxCompile Include="HLSL\SCMapBaker_CS.hlsl">
+    <FxCompile Include="HLSL\SCMap\SCMapBaker_CS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
@@ -334,13 +334,13 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
     </FxCompile>
-    <FxCompile Include="HLSL\SCMapRender_PS.hlsl">
+    <FxCompile Include="HLSL\SCMap\SCMapRender_PS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
     </FxCompile>
-    <FxCompile Include="HLSL\SCMapRender_VS.hlsl">
+    <FxCompile Include="HLSL\SCMap\SCMapRender_VS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
@@ -352,9 +352,9 @@
     <None Include="HLSL\SCImage\SCEffectPass.hlsli" />
     <None Include="HLSL\SCImage\SCImageCommon.hlsli" />
     <None Include="HLSL\SCImage\SCPcxLut.hlsli" />
-    <None Include="HLSL\SCMapCommon.hlsli" />
-    <None Include="HLSL\SCMapRender.hlsli" />
-    <None Include="HLSL\SCMapTileSet.hlsli" />
+    <None Include="HLSL\SCMap\SCMapCommon.hlsli" />
+    <None Include="HLSL\SCMap\SCMapRender.hlsli" />
+    <None Include="HLSL\SCMap\SCMapBaker.hlsli" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

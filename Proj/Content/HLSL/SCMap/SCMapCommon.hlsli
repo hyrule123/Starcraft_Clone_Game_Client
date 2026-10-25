@@ -2,12 +2,8 @@
 #define HLSL_SC_MAP_COMMON
 
 #include <Engine/HLSL/Core/CoreMinimal.hlsli>
-#include <COntent/HLSL/SCCommon.hlsli>
+#include <Content/HLSL/SCCommon.hlsli>
 
-#define REG_B_MAP_INFO		REG_B_PER_PIPELINE_0
-
-
-#define MEGATILE_PIXEL_SIZE 32
 
 struct MapInfoCB
 {
@@ -16,4 +12,8 @@ struct MapInfoCB
 	matrix world_mat;
 };
 
-#endif//HLSL_SC_MAP_COMMON
+#ifdef __HLSL
+
+#endif//__HLSL
+
+#endif //HLSL_SC_MAP_COMMON

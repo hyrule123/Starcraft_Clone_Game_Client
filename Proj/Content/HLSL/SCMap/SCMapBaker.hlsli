@@ -1,11 +1,11 @@
-#ifndef HLSL_SC_TILE_SET
-#define HLSL_SC_TILE_SET
+#ifndef HLSL_SC_MAP_BAKER
+#define HLSL_SC_MAP_BAKER
 
 #include <Engine/HLSL/Core/CoreMinimal.hlsli>
+#include <Content/HLSL/SCMap/SCMapCommon.hlsli>
 
-#include <Content/HLSL/SCMapCommon.hlsli>
-
-// 맵 정보 레지스터: SCMapCommon.hlsli에서 정의됨(REG_B_MAP_INFO)
+// 맵 정보 레지스터
+#define REG_B_MAP_INFO		REG_B_PER_PIPELINE_0
 
 // 타일셋 리소스
 #define REG_T_TILESET_CV5 REG_T_PER_DRAW_0
@@ -54,4 +54,4 @@ RWTexture2D<uint> map_output : register(REG_U_MAP_TEXTURE);
 
 #endif//__HLSL
 
-#endif//HLSL_SC_TILE_SET
+#endif//HLSL_SC_MAP_BAKER

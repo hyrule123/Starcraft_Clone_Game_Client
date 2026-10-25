@@ -1,4 +1,4 @@
-#include <Content/HLSL/SCMapTileSet.hlsli>
+#include <Content/HLSL/SCMap/SCMapBaker.hlsli>
 
 // 메가타일 = 16 미니타일 (4 * 4)
 // 미니타일 = 64 픽셀 (8 * 8)
@@ -9,7 +9,7 @@ void main(uint3 Gid : SV_GroupID, // 미니타일 좌표
             uint3 DTid : SV_DispatchThreadID)
 {
 	// 현재 스레드의 픽셀 번호 계산
-	const uint2 map_pixel_size = g_map_info.megatile_size * MEGATILE_PIXEL_SIZE;
+	const uint2 map_pixel_size = g_map_info.megatile_size * kMegatilePixelSize;
 
 	if (DTid.x >= map_pixel_size.x || DTid.y >= map_pixel_size.y)
 	{

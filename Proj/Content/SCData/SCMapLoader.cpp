@@ -1,20 +1,28 @@
 #include "Content/pch.h"
 #include "SCMapLoader.h"
 
-#include <Engine/Core/Debug.h>
+#include <algorithm>
+#include <span>
+#include <iterator>
+#include <random>
+#include <chrono>
 
-#include <Engine/Resource/GPU/Buffer/Texture2D.h>
-#include <Engine/Resource/GPU/Buffer/TypedBuffer.h>
+#include <SCSimulator/Include/SCSimulatorTypes.h>
 
 #include <Content/SCData/MPQ/MPQArchive.h>
 #include <Content/SCData/MPQ/MPQFileSystem.h>
 #include <Content/SCData/SCMapBakeComputePass.h>
 #include <Content/SCData/SCTileSetPcxLUT.h>
+#include <Content/SCData/SCImageLibrary.h>
 
-#include <Content/SCData/GrpFile.h>
+#include <Content/HLSL/SCMap/SCMapRender.hlsli>
 
-#include <algorithm>
-#include <span>
+#include <Engine/Core/Debug.h>
+
+#include <Engine/Resource/GPU/Buffer/Texture2D.h>
+#include <Engine/Resource/GPU/Buffer/Texture2DArray.h>
+#include <Engine/Resource/GPU/Buffer/TypedBuffer.h>
+
 
 /*
 * Creep Texture(GRP) 확인 결과: 메가타일 사이즈를 넘어가는 프레임은 없었음(넘침 걱정 필요 없음)
@@ -43,6 +51,21 @@
 [LOG] Creep GRP [Twilight]: overflow frames = 0
 */
 
+/*
+* Creep 바닥 타일(CV5 그룹 1) 확인 결과: 0~12(kCreepTileCount)가 유효, 13~15는 미사용(0)
+* 예외: install(tileset 2)은 그룹 1 전체가 0 → Creep 바닥 타일 없음
+*   OpenBW는 검사 없이 cv5.at(1).mega_tile_index[랜덤 0~12]를 그대로 사용 → install에서는 메가타일 0을 그림
+*   (원작의 install Creep 표현은 미확인. 실제 맵에서 확인 후 처리 방식 결정)
+[LOG] Creep CV5 [tileset 0] group 1: 123, 124, 125, 126, 128, 129, 130, 131, 127, 132, 133, 134, 135, 0, 0, 0
+[LOG] Creep CV5 [tileset 1] group 1: 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 0, 0, 0
+[LOG] Creep CV5 [tileset 2] group 1: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+[LOG] Creep CV5 [tileset 3] group 1: 1, 2, 3, 4, 5, 6, 7, 8, 9, 2643, 2644, 2645, 2646, 0, 0, 0
+[LOG] Creep CV5 [tileset 4] group 1: 129, 130, 131, 132, 134, 135, 136, 137, 133, 138, 139, 140, 141, 0, 0, 0
+[LOG] Creep CV5 [tileset 5] group 1: 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 0, 0, 0
+[LOG] Creep CV5 [tileset 6] group 1: 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 0, 0, 0
+[LOG] Creep CV5 [tileset 7] group 1: 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 0, 0, 0
+*/
+
 namespace sc
 {
 	// TileSet Offset 범위 검증
@@ -50,6 +73,8 @@ namespace sc
 	static_assert(offsetof(SCTileSetPcxLUT::TableRange, offset) == 0);                 // 셰이더 .x
 	static_assert(offsetof(SCTileSetPcxLUT::TableRange, rows) == sizeof(uint32_t));    // 셰이더 .y
 	static_assert(std::is_trivially_copyable_v<SCTileSetPcxLUT::TableRange>);
+
+	static_assert(kTileFlagHasCreep == SCSim::TileFlags::HasCreep);
 
 	namespace
 	{
@@ -219,6 +244,167 @@ namespace sc
 
 			return mtxms;
 		}
+
+
+#pragma region CREEP
+		// OpenBW ui.h load_image_data의 v
+		constexpr uint8_t ComputeCreepEdgeShape(uint8_t neighbor_mask)
+		{
+			uint32_t v = 0;
+			const uint32_t mask = static_cast<uint32_t>(neighbor_mask);
+			if (mask & 2)					v |= 0x10;
+			if (mask & 8)					v |= 0x24;
+			if (mask & 0x10)				v |= 0x09;
+			if (mask & 0x40)				v |= 0x02;
+			if ((mask & 0xc0) == 0xc0)		v |= 0x01;
+			if ((mask & 0x60) == 0x60)		v |= 0x04;
+			if ((mask & 3) == 3)			v |= 0x20;
+			if ((mask & 6) == 6)			v |= 0x08;
+			if ((v & 0x21) == 0x21)			v |= 0x40;
+			if ((v & 0x0c) == 0x0c)			v |= 0x40;
+			return static_cast<uint8_t>(v);
+		}
+
+		// 이웃 마스크 개수: 8방향 비트 → 256가지
+		constexpr size_t kCreepEdgeMaskCount = 256;
+
+		// 모양 코드 개수: ComputeCreepEdgeShape가 OR하는 값이 모두 0x7F 이내 → 0~127
+		constexpr size_t kCreepEdgeShapeCount = 128;
+
+		// OpenBW ui.h load_image_data의 creep_edge_frame_index
+		// 이웃 마스크(8비트) → 테두리 프레임 번호(0 = 테두리 없음, 1~kCreepEdgeFrameCount = GRP 프레임 번호 + 1)
+		//
+		// 프레임 번호 = 모양 코드의 순위
+		//   256개 마스크에서 실제로 등장하는 모양 코드만 오름차순으로 0, 1, 2, ...를 매긴 값
+		//   (테두리 GRP의 프레임이 모양 코드 오름차순으로 저장되어 있다는 전제)
+		//   모양 코드 범위가 작아(0~127) 정렬 없이 '등장 여부 표 + 오름차순 순회'로 순위를 구함
+		constexpr std::array<uint8_t, kCreepEdgeMaskCount> BuildCreepEdgeFrameIndexTable()
+		{
+			// 1) 각 모양 코드가 어떤 마스크에서든 한 번이라도 나오는지 기록
+			std::array<bool, kCreepEdgeShapeCount> seen = {};
+			for (uint32_t mask = 0; mask < kCreepEdgeMaskCount; ++mask)
+			{
+				seen[ComputeCreepEdgeShape(static_cast<uint8_t>(mask))] = true;
+			}
+
+			// 2) 등장한 모양 코드에만 오름차순으로 순위 부여 (오름차순 순회가 곧 정렬)
+			//    모양 코드 0(이웃에 Creep 없음)은 항상 등장하므로 순위 0 = 테두리 없음
+			std::array<uint8_t, kCreepEdgeShapeCount> rank = {};
+			uint8_t next_rank = 0;
+			for (uint32_t shape = 0; shape < kCreepEdgeShapeCount; ++shape)
+			{
+				if (seen[shape])
+				{
+					rank[shape] = next_rank;
+					++next_rank;
+				}
+			}
+
+			// 3) 마스크 → 모양 코드 → 순위
+			std::array<uint8_t, kCreepEdgeMaskCount> table = {};
+			for (uint32_t mask = 0; mask < kCreepEdgeMaskCount; ++mask)
+			{
+				table[mask] = rank[ComputeCreepEdgeShape(static_cast<uint8_t>(mask))];
+			}
+			return table;
+		}
+
+		constexpr std::array<uint8_t, kCreepEdgeMaskCount> kCreepEdgeFrameIndexTable = BuildCreepEdgeFrameIndexTable();
+
+		// 검증: 최대 프레임 번호 = 테두리 GRP 프레임 수
+		constexpr uint8_t MaxCreepEdgeFrameIndex()
+		{
+			uint8_t max_value = 0;
+			for (const uint8_t value : kCreepEdgeFrameIndexTable)
+			{
+				if (value > max_value)
+				{
+					max_value = value;
+				}
+			}
+			return max_value;
+		}
+		static_assert(MaxCreepEdgeFrameIndex() == kCreepEdgeFrameCount, "테두리 프레임 번호 범위가 GRP 프레임 수와 다름");
+
+		// 검증: 이웃에 Creep이 없으면 테두리 없음
+		static_assert(kCreepEdgeFrameIndexTable[0x00] == 0);
+
+		// 검증: 단일 방향 → 테두리 GRP 프레임 대조 (번호 - 1 = GRP 프레임, 괄호는 로그상 프레임 영역)
+		static_assert(kCreepEdgeFrameIndexTable[0x40] == 1);	// 위     → 프레임 0  (0,0)  32x12
+		static_assert(kCreepEdgeFrameIndexTable[0x10] == 5);	// 왼쪽   → 프레임 4  (0,0)  12x32
+		static_assert(kCreepEdgeFrameIndexTable[0x02] == 7);	// 아래   → 프레임 6  (0,22) 32x10
+		static_assert(kCreepEdgeFrameIndexTable[0x08] == 16);	// 오른쪽 → 프레임 15 (20,0) 12x32
+		static_assert(kCreepEdgeFrameIndexTable[0xFF] == 37);	// 8방향  → 프레임 36 (0,0)  32x32
+
+		// HLSL에서 리터럴로 만든 테이블(kCreepEdgeFrameIndex)이 OpenBW 규칙으로 만든 표와 같은지 검증
+		constexpr bool IsCreepEdgeFrameIndexLiteralValid()
+		{
+			for (size_t mask = 0; mask < kCreepEdgeMaskCount; ++mask)
+			{
+				if (kCreepEdgeFrameIndex[mask] != kCreepEdgeFrameIndexTable[mask])
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+		static_assert(std::size(kCreepEdgeFrameIndex) == kCreepEdgeMaskCount);
+		static_assert(IsCreepEdgeFrameIndexLiteralValid(), "kCreepEdgeFrameIndex 리터럴이 OpenBW 규칙과 다름");
+
+		// OpenBW ui.h init()의 creep_random_tile_indices와 같은 분포
+		//   4%: 변형 타일 kCreepTileBaseCount ~ kCreepTileCount - 1 (6~12)
+		//   96%: 기본 타일 0 ~ kCreepTileBaseCount - 1 (0~5)
+		// 화면용 값이라 시뮬레이션과 무관 → 시드는 시간 기반(OpenBW와 동일하게 실행마다 무늬가 달라짐)
+		std::shared_ptr<engine::Texture2D> CreateCreepRandomTileTexture(uint32_t megatile_width, uint32_t megatile_height)
+		{
+			using namespace engine;
+
+			static_assert(kCreepTileCount <= kCV5MegatilesPerGroup);
+			static_assert(kCreepTileCount <= std::numeric_limits<uint8_t>::max());
+
+			const uint64_t seed_source = static_cast<uint64_t>(std::chrono::steady_clock::now().time_since_epoch().count());
+			std::mt19937 rng(static_cast<std::mt19937::result_type>(seed_source));
+
+			std::uniform_int_distribution<uint32_t> percent(0, 99);
+			std::uniform_int_distribution<uint32_t> base(0, kCreepTileBaseCount - 1);
+			std::uniform_int_distribution<uint32_t> variant(0, kCreepTileVariantCount - 1);
+
+			constexpr uint32_t kVariantPercent = 4;
+
+			std::vector<uint8_t> tiles(static_cast<size_t>(megatile_width) * static_cast<size_t>(megatile_height));
+			for (uint8_t& tile : tiles)
+			{
+				const uint32_t index = (percent(rng) < kVariantPercent)
+					? kCreepTileBaseCount + variant(rng)
+					: base(rng);
+				tile = static_cast<uint8_t>(index);	// < kCreepTileCount (static_assert)
+			}
+
+			D3D11_TEXTURE2D_DESC desc = {};
+			desc.Width = megatile_width;
+			desc.Height = megatile_height;
+			desc.MipLevels = 1;
+			desc.ArraySize = 1;
+			desc.Format = DXGI_FORMAT_R8_UINT;
+			desc.SampleDesc.Count = 1;
+			desc.Usage = D3D11_USAGE_IMMUTABLE;
+			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+			D3D11_SUBRESOURCE_DATA initial_data = {};
+			initial_data.pSysMem = tiles.data();
+			initial_data.SysMemPitch = megatile_width;	// R8: 1바이트 × width
+
+			std::shared_ptr<Texture2D> texture = EntityManager::CreateEntity<Texture2D>();
+			if (!texture->CreateTexture2D(&desc, &initial_data))
+			{
+				return nullptr;
+			}
+			return texture;
+		}
+
+#pragma endregion CREEP
+
+
 	} // namespace
 
 	SCMapLoader::SCMapLoader() = default;
@@ -257,7 +443,10 @@ namespace sc
 			return nullptr;
 		}
 
-		FillCommonMapFields(*map_data, *result_map);
+		if (FillCommonMapFields(*map_data, *result_map) == false)
+		{
+			return nullptr;
+		}
 
 		return result_map;
 	}
@@ -355,7 +544,10 @@ namespace sc
 			return nullptr;
 		}
 
-		FillCommonMapFields(map_data, *result_map);
+		if (!FillCommonMapFields(map_data, *result_map))
+		{
+			return nullptr;
+		}
 
 		return result_map;
 	}
@@ -384,13 +576,13 @@ namespace sc
 				!read_into(each_tileset_path, ".VX4", tileset.vx4) ||
 				!read_into(each_tileset_path, ".VR4", tileset.vr4) ||
 				!read_into(each_tileset_path, ".WPE", tileset.wpe) ||
-				!read_into(each_tileset_path, ".VF4", tileset.vf4))
+				!read_into(each_tileset_path, ".VF4", tileset.vf4) ||
+				!read_into(each_tileset_path, ".GRP", tileset.creep_grp_bytes)
+				)
 			{
 				ERR_MSG("TileSet: 파일 로드 실패 [{}]", tileset_name);
 				return false;
 			}
-
-
 
 			// 개수 관계 검증 (배수 검사만으로는 잡히지 않는 형식 오류)
 			if (tileset.wpe.size() != 256)
@@ -410,31 +602,6 @@ namespace sc
 				ERR_MSG("TileSet: LUT 초기화 실패 [{}]", tileset_name);
 				return false;
 			}
-
-			{	// [임시] Creep 테두리 GRP 프레임 경계 확인
-				std::vector<uint8_t> grp_bytes;
-				if (read_into(each_tileset_path, ".GRP", grp_bytes))
-				{
-					GrpFile grp;
-					if (grp.Load(std::move(grp_bytes)))
-					{
-						LOG("Creep GRP [{}]: canvas {}x{}, frames {}", tileset_name, grp.Width(), grp.Height(), grp.FrameCount());
-
-						uint32_t overflow_count = 0;
-						for (uint32_t i = 0; i < grp.FrameCount(); ++i)
-						{
-							const GrpFrameInfo& f = grp.Frame(i);
-							const bool overflow = (f.offset_x + f.width > 32) || (f.offset_y + f.height > 32);
-							if (overflow)
-							{
-								++overflow_count;
-							}
-							LOG("  frame {:2}: offset ({:2}, {:2}) size ({:2}, {:2}){}", i, f.offset_x, f.offset_y, f.width, f.height, overflow ? "  <-- OVERFLOW" : "");
-						}
-						LOG("Creep GRP [{}]: overflow frames = {}", tileset_name, overflow_count);
-					}
-				}
-			}
 		}
 
 		return true;
@@ -444,7 +611,7 @@ namespace sc
 	{
 		using namespace engine;
 
-		auto clear_tilesets = [&]()
+		auto ClearTilesets = [&]()
 			{
 				for (TileSetDataGPU& gpu : tileset_gpu_buffers_)
 				{
@@ -457,32 +624,40 @@ namespace sc
 
 		for (size_t tileset_i = 0; tileset_i < tileset_gpu_buffers_.size(); ++tileset_i)
 		{
-			const TileSetData& tileset = tilesets_[tileset_i];
+			TileSetData& tileset = tilesets_[tileset_i];
 			tileset_gpu_buffers_[tileset_i] = TileSetDataGPU();
 			TileSetDataGPU& tileset_gpu = tileset_gpu_buffers_[tileset_i];
 
 #pragma region CV5 - Megatile
 			// CV5 구조체의 CV5_megatiles 배열 크기와 오프셋을 컴파일 타임에 검증
-			static_assert(CV5{}.megatiles.size() == megatiles_per_group);
+			static_assert(CV5{}.megatiles.size() == kCV5MegatilesPerGroup);
 			static_assert(offsetof(CV5, megatiles) == 20);
 			if (tileset.cv5.empty())
 			{
 				ERR_MSG("CV5 data is empty for current tileset index");
-				clear_tilesets();
+				ClearTilesets();
 				return false;
 			}
-			megatile_data.resize(tileset.cv5.size() * megatiles_per_group);
+			megatile_data.resize(tileset.cv5.size() * kCV5MegatilesPerGroup);
 
 			// CV5에서 megatile index만 추출하여 LUT 생성
 			for (size_t j = 0; j < tileset.cv5.size(); ++j)
 			{
-				std::ranges::copy(tileset.cv5[j].megatiles, megatile_data.begin() + j * megatiles_per_group);
+				std::ranges::copy(tileset.cv5[j].megatiles, megatile_data.begin() + j * kCV5MegatilesPerGroup);
 			}
 
 			tileset_gpu.CV5_megatiles = EntityManager::CreateEntity<TypedBuffer>();
 			std::span<const uint16_t> megatile_span = megatile_data;
 			result = tileset_gpu.CV5_megatiles->CreateImmutableBuffer(DXGI_FORMAT_R16_UINT, megatile_span);
-			if (!result) { clear_tilesets(); return false; }
+			if (!result) { ClearTilesets(); return false; }
+
+			// 크립용 CV5 데이터가 있는지 확인
+			if (tileset.cv5.size() <= kCreepCV5Group)
+			{
+				ERR_MSG("CV5 group count is less than required for creep. ({} < {})", tileset.cv5.size(), kCreepCV5Group + 1);
+				ClearTilesets();
+				return false;
+			}
 #pragma endregion CV5 - Megatile
 
 #pragma region VX4 - Minitile
@@ -490,37 +665,37 @@ namespace sc
 			if (tileset.vx4.empty())
 			{
 				ERR_MSG("VX4 data is empty for tileset index");
-				clear_tilesets();
+				ClearTilesets();
 				return false;
 			}
 			tileset_gpu.VX4_minitiles = EntityManager::CreateEntity<TypedBuffer>();
 			result = tileset_gpu.VX4_minitiles->CreateImmutableBuffer(DXGI_FORMAT_R16_UINT, sizeof(VX4::Elem), tileset.vx4.data(), (uint32_t)(tileset.vx4.size() * minitiles_per_VX4));
-			if (!result) { clear_tilesets(); return false; }
+			if (!result) { ClearTilesets(); return false; }
 #pragma endregion VX4 - Minitile
 
 #pragma region VR4 - Minitile WPE index
 			if (tileset.vr4.empty())
 			{
 				ERR_MSG("VR4 data is empty for current tileset index");
-				clear_tilesets();
+				ClearTilesets();
 				return false;
 			}
 			tileset_gpu.VR4_minitile_wpe_indices = EntityManager::CreateEntity<TypedBuffer>();
 			result = tileset_gpu.VR4_minitile_wpe_indices->CreateImmutableBuffer(DXGI_FORMAT_R8_UINT, sizeof(VR4::Elem), tileset.vr4.data(), (uint32_t)(tileset.vr4.size() * minile_pixel_count));
-			if (!result) { clear_tilesets(); return false; }
+			if (!result) { ClearTilesets(); return false; }
 #pragma endregion VR4 - Minitile WPE index
 
 #pragma region WPE - Color Palette
 			if (tileset.wpe.size() != 256)
 			{
 				ERR_MSG("WPE data is empty or invalid for current tileset index");
-				clear_tilesets();
+				ClearTilesets();
 				return false;
 			}
 			tileset_gpu.WPE_color_palettes = EntityManager::CreateEntity<TypedBuffer>();
 			std::span<const WPE> wpe_span = tileset.wpe;
 			result = tileset_gpu.WPE_color_palettes->CreateImmutableBuffer(DXGI_FORMAT_R8G8B8A8_UNORM, wpe_span);
-			if (!result) { clear_tilesets(); return false; }
+			if (!result) { ClearTilesets(); return false; }
 #pragma endregion WPE - Color Palette
 
 #pragma region		Cloak fade selector
@@ -538,7 +713,7 @@ namespace sc
 
 			tileset_gpu.cloak_fade_selector = EntityManager::CreateEntity<TypedBuffer>();
 			result = tileset_gpu.cloak_fade_selector->CreateImmutableBuffer(DXGI_FORMAT_R8_UINT, cloak_fade_selector);
-			if (!result) { clear_tilesets(); return false; }
+			if (!result) { ClearTilesets(); return false; }
 #pragma endregion	Cloak fade selector
 
 #pragma region PCX - Tileset LUT
@@ -549,7 +724,7 @@ namespace sc
 
 				std::span<const SCTileSetPcxLUT::ElemType> pcx_lut_span = tileset.pcx_lut->data();
 				result = pcx_lut_gpu->CreateImmutableBuffer(DXGI_FORMAT_R8_UINT, pcx_lut_span);
-				if (!result) { clear_tilesets(); return false; }
+				if (!result) { ClearTilesets(); return false; }
 
 				
 				std::shared_ptr<TypedBuffer>& pcx_lut_offset_gpu = tileset_gpu.PCX_tileset_LUT_offsets;
@@ -558,13 +733,36 @@ namespace sc
 				std::span<const SCTileSetPcxLUT::TableRange> pcx_lut_offset_span = tileset.pcx_lut->ranges();
 
 				result = pcx_lut_offset_gpu->CreateImmutableBuffer(DXGI_FORMAT_R32G32_UINT, pcx_lut_offset_span);
-				if (!result) { clear_tilesets(); return false; }
+				if (!result) { ClearTilesets(); return false; }
 			}
 #pragma endregion PCX - Tileset LUT
+
+#pragma region		GRP - Creep
+			{
+				ASSERT(tileset.creep_grp_bytes.empty() == false);
+				std::vector<uint8_t> pixels;
+				BakedGrp grp = SCImageLibrary::BakeGrp(std::move(tileset.creep_grp_bytes), pixels);
+				
+				if (grp.texture == nullptr)
+				{
+					ERR_MSG("Failed to bake Creep GRP for tileset index {}", tileset_i);
+					ClearTilesets();
+					return false;
+				}
+				
+				CHECK_F(grp.texture->GetFrameCount() == kCreepEdgeFrameCount, "Creep GRP frame count must be 37");
+				CHECK_F(grp.texture->GetWidth() == kCreepEdgeCanvasSize && grp.texture->GetHeight() == kCreepEdgeCanvasSize, 
+					"Creep GRP canvas size must be 32x32");
+
+				tileset_gpu.creep_edge = std::move(grp.texture);
+			}
+#pragma endregion	GRP - Creep
 		}
 
 		return true;
 	}
+
+
 
 	std::optional<SCMapLoadingData> SCMapLoader::LoadMapLoadingData(const std::filesystem::path& map_path)
 	{
@@ -619,12 +817,20 @@ namespace sc
 		return map_data;
 	}
 
-	void SCMapLoader::FillCommonMapFields(SCMapLoadingData& map_data, SCMap& out_map) const
+	bool SCMapLoader::FillCommonMapFields(SCMapLoadingData& map_data, SCMap& out_map) const
 	{
 		ASSERT(map_data.terrain_type < TileSetType::kCount);
 
-		const TileSetDataGPU& tileset_gpu = tileset_gpu_buffers_[(size_t)map_data.terrain_type];
+		out_map.creep_random_tiles = CreateCreepRandomTileTexture(map_data.megatile_width, map_data.megatile_height);
 
+		if (out_map.creep_random_tiles == nullptr)
+		{
+			ERR_MSG("Failed to create Creep random tile texture.");
+			out_map = SCMap{};
+			return false;
+		}
+
+		const TileSetDataGPU& tileset_gpu = tileset_gpu_buffers_[(size_t)map_data.terrain_type];
 		out_map.megatile_width = map_data.megatile_width;
 		out_map.megatile_height = map_data.megatile_height;
 		out_map.terrain_type = map_data.terrain_type;
@@ -633,5 +839,11 @@ namespace sc
 		out_map.pcx_tileset_LUT = tileset_gpu.PCX_tileset_LUT;
 		out_map.pcx_tileset_LUT_offsets = tileset_gpu.PCX_tileset_LUT_offsets;
 		out_map.cloak_fade_selector = tileset_gpu.cloak_fade_selector;
+		out_map.creep_edge = tileset_gpu.creep_edge;
+		out_map.cv5_megatiles = tileset_gpu.CV5_megatiles;
+		out_map.vx4_minitiles = tileset_gpu.VX4_minitiles;
+		out_map.vr4_minitile_wpe_indices = tileset_gpu.VR4_minitile_wpe_indices;
+
+		return true;
 	}
 }

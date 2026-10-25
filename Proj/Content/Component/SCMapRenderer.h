@@ -1,6 +1,16 @@
 #pragma once
 #include <Engine/Game/Component/Renderer.h>
 
+namespace SCSim
+{
+	struct TileData;
+}
+
+namespace engine
+{
+	class TypedBuffer;
+}
+
 namespace sc
 {
 	struct SCMap;
@@ -27,10 +37,15 @@ namespace sc
 
 		void SetSCMap(std::unique_ptr<SCMap> sc_map);
 
-	private:
-		std::unique_ptr<SCMap> sc_map_ = nullptr;
+		// SCSim_GetTiles 결과를 그대로 업로드 (매 프레임). 맵 크기가 SCMap과 다르면 false
+		[[nodiscard]] bool ApplyTileSnapshot(const SCSim::TileData* tiles, uint32_t width, uint32_t height);
 
-		bool needs_scale_matching_ = false;
+	private:
+		std::unique_ptr<SCMap> sc_map_ = {};
+
+		std::shared_ptr<engine::TypedBuffer> tile_states_ = {};
+
+		bool needs_scale_matching_ = {};
     };
 }
 

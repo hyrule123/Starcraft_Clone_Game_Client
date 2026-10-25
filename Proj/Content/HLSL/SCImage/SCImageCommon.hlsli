@@ -53,6 +53,7 @@ static_assert(sizeof(GrpFrameRect) == 16, "GrpFrameRect Layout changed.");
 #endif
 
 
+
 // 깊이 키 → z 변환 배율 (2^-24). z = (key + 1) * kScDepthScale, 키 24비트 이내에서 정확히 표현
 HLSL_CONSTEXPR float kScDepthScale = 1.0f / 16777216.0f;
 
@@ -75,6 +76,7 @@ HLSL_CONSTEXPR int kModifierWarpFlash = 17;
 //	Opaque Pass
 HLSL_CONSTEXPR int kModifierWarpTexture = 12;
 // ****************
+
 
 struct ImageVSInput
 {

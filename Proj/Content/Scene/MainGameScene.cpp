@@ -161,9 +161,9 @@ namespace sc
 			//map_tex->SaveToFile(map_path);
 
 			GameObject* map_obj = AddGameObject<GameObject>();
-			SCMapRenderer* renderer = map_obj->AddComponent<SCMapRenderer>();
-
-			renderer->SetSCMap(std::move(sc_map));
+			SCMapRenderer* map_rdr = map_obj->AddComponent<SCMapRenderer>();
+			map_rdr->SetSCMap(std::move(sc_map));
+			map_renderer_ = map_rdr;
 		}
 
 		uint32_t unit_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranMarine, SCSim::Player::_2, 2048, 2048);
@@ -377,11 +377,11 @@ namespace sc
 		CHECK_F(player_count >= 0, "Failed to get players: {}", SCSim_GetLastError());
 		CHECK(player_count <= player_data_.size());
 		std::copy(player_data, player_data + player_count, player_data_.begin());
-		
 
 		// 유닛 Sync는 매 프레임 진행
 		//SyncUnits();
 		SyncSprites();
+		SyncTiles();
 	}
 	void MainGameScene::PrepareMapLoader()
 	{}
@@ -672,6 +672,23 @@ namespace sc
 				}
 			}
 		}
+	}
+	void MainGameScene::SyncTiles()
+	{
+		SCMapRenderer* renderer = map_renderer_.get();
+		if (renderer == nullptr)
+		{
+			return;
+		}
+
+		const SCSim::TileData* tiles = nullptr;
+		uint32_t width = 0;
+		uint32_t height = 0;
+		const bool got = SCSim_GetTiles(sc_sim_ctx_, &tiles, &width, &height);
+		CHECK_F(got, "SCSim_GetTiles failed: {}", SCSim_GetLastError());
+
+		const bool uploaded = renderer->ApplyTileSnapshot(tiles, width, height);
+		CHECK_F(uploaded, "Failed to upload tile snapshot");
 	}
 }
 

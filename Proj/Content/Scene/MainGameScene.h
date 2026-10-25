@@ -21,6 +21,8 @@ namespace sc
     class SCSpriteObj;
     class SCImageObj;
 
+    class SCMapRenderer;
+
     struct UnitEntry {
         SCUnitObj* object = {};
         uint32_t serial = 0;
@@ -50,29 +52,30 @@ namespace sc
         virtual void Init() override;
         virtual void FrameStart() override;
 
-		SCSim::Context* GetSCSimContext() const { return sc_sim_ctx_; }
+        SCSim::Context* GetSCSimContext() const { return sc_sim_ctx_; }
 
     private:
         void PrepareMapLoader();
-		void DefaultEngineSetting();
+        void DefaultEngineSetting();
         void SyncUnits();
         void SyncSprites();
+        void SyncTiles();
 
     private:
         SCSim::Context* sc_sim_ctx_ = nullptr;
-		float acc_delta_time_ = 0.0f; // for SCSimContext update
+        float acc_delta_time_ = 0.0f; // for SCSimContext update
 
-		const SCSim::UnitData* sc_units_ = {};
-		int32_t sc_units_count_ = 0;
+        const SCSim::UnitData* sc_units_ = {};
+        int32_t sc_units_count_ = 0;
 
         // Unit ID - UnitEntry pair
         ankerl::unordered_dense::map<uint32_t, UnitEntry> unit_objects_ = {};
-		uint32_t sync_serial_ = 0;
+        uint32_t sync_serial_ = 0;
 
         // 스프라이트 이미지
         std::array<SpriteSlot, SCSim::kMaxSprites> sprite_slots_ = {};
         std::array<ImageSlot, SCSim::kMaxImages> image_slots_ = {};
-		std::array<SCSim::PlayerData, static_cast<size_t>(SCSim::Player::kCount)> player_data_ = {};
+        std::array<SCSim::PlayerData, static_cast<size_t>(SCSim::Player::kCount)> player_data_ = {};
         int32_t player_count_ = 0;
 
         // SyncSprites 정렬용: (정렬 키 << 32) | 스냅샷 위치
@@ -81,5 +84,7 @@ namespace sc
         uint32_t sprite_sync_serial_ = 0;
 
         std::shared_ptr<engine::ConstantBuffer> sc_common_info_buffer_ = {};
+
+        engine::weak_handle_ptr<SCMapRenderer> map_renderer_ = {};
     };
 }

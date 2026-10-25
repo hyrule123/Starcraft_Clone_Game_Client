@@ -1,11 +1,12 @@
 #pragma once
 #include <Engine/Core/CoreMinimal.h>
 
-#include <Content/HLSL/SCMapTileSet.hlsli>
+#include <Content/HLSL/SCMap/SCMapBaker.hlsli>
 
 namespace engine
 {
 	class Texture2D;
+	class Texture2DArray;
 	class TypedBuffer;
 	class ConstantBuffer;
 }
@@ -30,7 +31,6 @@ namespace sc
 	//        DIM/MTXM은 모두 메가타일 단위
 	// ===================================================================
 
-
 	// -------------------------------------------------------------------
 	// CV5 : 타일 그룹 정의. MTXM이 참조하는 최상위 단위.
 	//   파일 크기 / 52 = 그룹 개수 (타일셋마다 다름)
@@ -38,8 +38,7 @@ namespace sc
 	//   terrain_type == 1 이면 두다드 그룹이라 오프셋 4~19의 해석이 다름.
 	//   단, megatile[16]은 양쪽 모두 오프셋 20으로 동일 → 렌더링은 구분 불필요.
 	// -------------------------------------------------------------------
-	constexpr size_t megatile_size = 32;
-	constexpr size_t megatiles_per_group = 16;
+	
 	struct CV5
 	{
 		uint16_t terrain_type;      // 0=미사용, 1=두다드, 2+=지형/가장자리
@@ -56,9 +55,11 @@ namespace sc
 		uint16_t piece_down;
 
 		// VX4 / VF4 megatile lookup table.
-		std::array<uint16_t, megatiles_per_group> megatiles; // VX4/VF4 인덱스
+		std::array<uint16_t, kCV5MegatilesPerGroup> megatiles; // VX4/VF4 인덱스
 	};
 	static_assert(sizeof(CV5) == 52, "CV5 must be 52 bytes");
+
+
 
 	// -------------------------------------------------------------------
 	// VX4 : 메가타일당 미니타일 "그래픽" 참조
@@ -127,17 +128,6 @@ namespace sc
 
 
 	class SCTileSetPcxLUT;
-
-	struct TileSetData
-	{
-		std::vector<CV5> cv5;
-		std::vector<VX4> vx4;
-		std::vector<VF4> vf4;
-		std::vector<VR4> vr4;
-		std::vector<WPE> wpe;
-		
-		std::shared_ptr<SCTileSetPcxLUT> pcx_lut = nullptr;
-	};
 
 	//스타크래프트 맵 데이터 속 "ERA" 안에 들어있는 정보 
 	enum class TileSetType : uint32_t
@@ -290,6 +280,11 @@ namespace sc
 		// 결과물
 		std::shared_ptr<engine::Texture2D> texture = {};	// uint8_t texture
 
+		// 타일셋 공유 (맵 PS에서 Creep 메가타일 디코딩용)
+		std::shared_ptr<engine::TypedBuffer> cv5_megatiles = {};
+		std::shared_ptr<engine::TypedBuffer> vx4_minitiles = {};
+		std::shared_ptr<engine::TypedBuffer> vr4_minitile_wpe_indices = {};
+
 		// WPE 색상 팔레트
 		std::shared_ptr<engine::TypedBuffer> wpe_color_palettes = {};
 		std::shared_ptr<engine::TypedBuffer> cloak_fade_selector = {};
@@ -297,6 +292,10 @@ namespace sc
 		// modifier별 팔레트 룩업 테이블 묶음과 묶음별 색인 오프셋
 		std::shared_ptr<engine::TypedBuffer> pcx_tileset_LUT = {};
 		std::shared_ptr<engine::TypedBuffer> pcx_tileset_LUT_offsets = {};
+
+		// Creep
+		std::shared_ptr<engine::Texture2D> creep_random_tiles = {};		// R8_UINT, 메가타일 크기. 타일별 Creep 바닥 번호(0 ~ kCreepTileCount - 1)
+		std::shared_ptr<engine::Texture2DArray> creep_edge = {};		// 타일셋 공유. 테두리 GRP(R8G8_UINT, 32x32 × kCreepEdgeFrameCount)
 	};
 
 	struct SCMapLoadingData
@@ -315,6 +314,18 @@ namespace sc
 		const TileSetDataGPU* tileset_gpu = {};
 	};
 
+	struct TileSetData
+	{
+		std::vector<CV5> cv5 = {};
+		std::vector<VX4> vx4 = {};
+		std::vector<VF4> vf4 = {};
+		std::vector<VR4> vr4 = {};
+		std::vector<WPE> wpe = {};
+
+		std::shared_ptr<SCTileSetPcxLUT> pcx_lut = {};
+		std::vector<uint8_t> creep_grp_bytes = {};	// GPU에서 생성한 뒤 버림. 비어있을 수 있음.
+	};
+
 	struct TileSetDataGPU
 	{
 		std::shared_ptr<engine::TypedBuffer> CV5_megatiles = {};	// from CV5
@@ -324,6 +335,7 @@ namespace sc
 		std::shared_ptr<engine::TypedBuffer> PCX_tileset_LUT = {}; // from SCTileSetPcxLUT, std::shared_ptr - 렌더링할 때 필요
 		std::shared_ptr<engine::TypedBuffer> PCX_tileset_LUT_offsets = {}; // from SCTileSetPcxLUT, std::shared_ptr - 렌더링할 때 필요
 		std::shared_ptr<engine::TypedBuffer> cloak_fade_selector = {};
+		std::shared_ptr<engine::Texture2DArray> creep_edge = {};
 	};
 
 }

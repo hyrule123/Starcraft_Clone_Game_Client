@@ -1,4 +1,4 @@
-#include <Content/HLSL/SCMapRender.hlsli>
+#include <Content/HLSL/SCMap/SCMapRender.hlsli>
 
 SCMapVSOut main(SCMapVSIn input)
 {
@@ -9,7 +9,7 @@ SCMapVSOut main(SCMapVSIn input)
 	output.pos.z = 0.0f;
 	
 	//output.pos.xy = output.pos.xy * g_map_info.megatile_size * 32;
-	output.pixel_coord = input.uv * g_map_info[0].megatile_size * 32;
+	output.pixel_coord = input.uv * g_map_info[0].megatile_size * kMegatilePixelSize;
 
 	return output;
 }
