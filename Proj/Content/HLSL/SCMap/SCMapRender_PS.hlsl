@@ -1,7 +1,5 @@
 #include <Content/HLSL/SCMap/SCMapRender.hlsli>
 
-#define SC_MAP_VERIFY_BAKE 1
-
 // OpenBW ui.h draw_tiles의 dirs 순서 (비트 i = kCreepNeighborOffsets[i] 이웃이 Creep)
 // 0 오른쪽아래, 1 아래, 2 왼쪽아래, 3 오른쪽, 4 왼쪽, 5 오른쪽위, 6 위, 7 왼쪽위  (+x 오른쪽, +y 아래)
 static const int2 kCreepNeighborOffsets[8] =
@@ -38,7 +36,7 @@ uint ResolveMegatile(int2 tile, int2 tile_size, uint cv5_count, bool has_creep)
 	}
 	else
 	{
-		// 1) Creep 타일: 바닥 전체를 Creep 메가타일로 (OpenBW: cv5[1].mega_tile_index[랜덤])
+		// Creep 타일: 바닥 전체를 Creep 메가타일로 (OpenBW: cv5[1].mega_tile_index[랜덤])
 		// 크립 바닥: CV5 그룹 1의 0~12번 중 로드 시 정해 둔 무작위 번호
 		cv5_idx = kCreepCV5Group * kCV5MegatilesPerGroup + g_creep_random_tiles.Load(int3(tile, 0));
 	}
@@ -83,29 +81,15 @@ uint main(SCMapVSOut input) : SV_TARGET
 	const uint2 pixel = uint2(floor(input.pixel_coord)); // 맵 UV 범위 안이라 음수 없음
 	const int2 tile = int2(pixel / kMegatilePixelSize); // uint 나눗셈 (32 → 시프트)
 	const uint2 local = pixel % kMegatilePixelSize;
-
-	// 맵 타일 크기 = Creep 랜덤 표 크기 (메가타일 단위, MipLevels 1)
+	
 	const bool has_creep = HasCreep(tile, input.megatile_count);
 	
 	const uint megatile_idx = ResolveMegatile(tile, input.megatile_count, cv5_count, has_creep);
 
 	// 현재 픽셀의 wpe index
 	uint wpe_index = DecodeMegatilePixel(megatile_idx, local);
-	
-	#if (SC_MAP_VERIFY_BAKE)
-	uint wpe_pixel = g_map_texture.Load(int3(int2(pixel), 0));
-	
-	if (wpe_pixel == wpe_index)
-	{
-		return 255;
-	}
-	else
-	{
-		return 0;
-	}
-#endif
 
-	// 2) Creep이 아닌 타일: 주변에 Creep이 있는지 확인 후
+	// Creep이 아닌 타일: 주변에 Creep이 있는지 확인 후
 	// Creep이 있을 시 메가타일 픽셀 위에 테두리 프레임을 커버리지가 있는 픽셀만 덮어씀
 	if(has_creep == false)
 	{

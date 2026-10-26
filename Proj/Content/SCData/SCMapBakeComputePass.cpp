@@ -78,7 +78,7 @@ namespace sc
 
 		std::shared_ptr<Texture2D> map_texture = EntityManager::CreateEntity<Texture2D>();
 		D3D11_TEXTURE2D_DESC desc = {};
-		desc.Format = DXGI_FORMAT_R8_UINT;
+		desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		desc.MipLevels = 1;
 		desc.ArraySize = 1;
 		desc.SampleDesc.Count = 1;
@@ -94,6 +94,7 @@ namespace sc
 		tileset_gpu.CV5_megatiles->BindSRV(context, ShaderStage::Compute, REG_T_TILESET_CV5);
 		tileset_gpu.VX4_minitiles->BindSRV(context, ShaderStage::Compute, REG_T_TILESET_VX4);
 		tileset_gpu.VR4_minitile_wpe_indices->BindSRV(context, ShaderStage::Compute, REG_T_TILESET_VR4);
+		tileset_gpu.WPE_color_palettes->BindSRV(context, ShaderStage::Compute, REG_T_TILESET_WPE);
 
 		// scx 맵 데이터(mtxm) 생성 및 binding
 		std::unique_ptr<TypedBuffer> mtxm_buffer = EntityManager::CreateEntity<TypedBuffer>();
@@ -111,6 +112,10 @@ namespace sc
 		Execute(context);
 
 		map_texture->UnbindUAV(context, REG_U_MAP_TEXTURE);
+		context->CSSetShaderResources(REG_T_TILESET_CV5.Get(), 1, nullptr);
+		context->CSSetShaderResources(REG_T_TILESET_VX4.Get(), 1, nullptr);
+		context->CSSetShaderResources(REG_T_TILESET_VR4.Get(), 1, nullptr);
+		context->CSSetShaderResources(REG_T_TILESET_WPE.Get(), 1, nullptr);
 
 		return map_texture;
 	}

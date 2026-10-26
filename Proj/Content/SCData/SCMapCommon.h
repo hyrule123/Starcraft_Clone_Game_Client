@@ -277,8 +277,6 @@ namespace sc
 		
 		std::vector<UnitData> unit_data = {};
 
-		std::shared_ptr<engine::Texture2D> texture = {};
-
 		// R16_UINT, 메가타일 수, MTXM 원값(그룹 << 4 | 타일)
 		std::shared_ptr<engine::TypedBuffer> mtxm = {};
 

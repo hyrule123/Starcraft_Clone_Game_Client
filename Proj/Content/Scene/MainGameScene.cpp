@@ -153,7 +153,7 @@ namespace sc
 			//ASSERT(result);
 
 			//GPU
-			std::unique_ptr<SCMap> sc_map = map_loader.LoadMapGPU(map_path);
+			std::unique_ptr<SCMap> sc_map = map_loader.LoadSCMap(map_path);
 
 			//Save Map Texture to File
 			//map_path = ResourceManager::GetInst().GetResourceDir();

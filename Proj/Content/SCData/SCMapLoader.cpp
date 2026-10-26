@@ -426,10 +426,8 @@ namespace sc
 		sc_map_baker_ = EntityManager::CreateEntity<SCMapBakeComputePass>();
 	}
 
-	std::unique_ptr<SCMap> SCMapLoader::LoadMapGPU(const std::filesystem::path& map_path)
+	std::unique_ptr<SCMap> SCMapLoader::LoadSCMap(const std::filesystem::path& map_path)
 	{
-		ASSERT(sc_map_baker_ != nullptr);
-
 		std::optional<SCMapLoadingData> map_data = LoadMapLoadingData(map_path);
 		if (false == map_data.has_value())
 		{
@@ -437,11 +435,6 @@ namespace sc
 		}
 
 		std::unique_ptr<SCMap> result_map = std::make_unique<SCMap>();
-		result_map->texture = sc_map_baker_->BakeMapTexture(*map_data);
-		if (result_map->texture == nullptr)
-		{
-			return nullptr;
-		}
 
 		if (FillCommonMapFields(*map_data, *result_map) == false)
 		{
@@ -451,7 +444,25 @@ namespace sc
 		return result_map;
 	}
 
-	std::unique_ptr<SCMap> SCMapLoader::LoadMapCPU(const std::filesystem::path& map_path)
+	std::shared_ptr<engine::Texture2D> SCMapLoader::LoadMapTextureGPU(const std::filesystem::path& map_path)
+	{
+		ASSERT(sc_map_baker_ != nullptr);
+
+		std::optional<SCMapLoadingData> map_data = LoadMapLoadingData(map_path);
+		if (false == map_data.has_value())
+		{
+			return nullptr;
+		}
+
+		std::shared_ptr<engine::Texture2D> texture = sc_map_baker_->BakeMapTexture(*map_data);
+		if (texture == nullptr)
+		{
+			return nullptr;
+		}
+		return texture;
+	}
+
+	std::shared_ptr<engine::Texture2D> SCMapLoader::LoadMapTextureCPU(const std::filesystem::path& map_path)
 	{
 		using namespace engine;
 
@@ -468,7 +479,7 @@ namespace sc
 		// 픽셀 색 정보 컨테이너 할당
 		const size_t pixel_width = (size_t)map_data.megatile_width * (size_t)32;
 		const size_t pixel_height = (size_t)map_data.megatile_height * (size_t)32;
-		std::vector<uint8_t> WPE_idx(pixel_width * pixel_height);
+		std::vector<RGBA> map_pixels(pixel_width * pixel_height);
 
 		// 채워넣기
 		for (uint32_t ty = 0; ty < map_data.megatile_height; ++ty)
@@ -514,7 +525,13 @@ namespace sc
 							const uint32_t x = tx * 32 + mx + px;
 							const uint32_t y = ty * 32 + my + py;
 
-							WPE_idx[y * pixel_width + x] = idx;
+							const auto& color = tileset.wpe[idx];
+							RGBA& pixel = map_pixels[y * pixel_width + x];
+
+							pixel.r = color.r;
+							pixel.g = color.g;
+							pixel.b = color.b;
+							pixel.a = 255; // WPE의 a값은 미사용
 						}
 					}
 				}
@@ -522,34 +539,29 @@ namespace sc
 		}
 
 		// Texture 생성
+		constexpr DXGI_FORMAT kTextureFormat = DXGI_FORMAT_R8G8B8A8_UNORM;	// WPE 색인 → RGBA 변환은 쉐이더에서 처리
 		D3D11_TEXTURE2D_DESC desc = {};
 		desc.Width = (UINT)pixel_width;
 		desc.Height = (UINT)pixel_height;
 		desc.MipLevels = 1;
 		desc.ArraySize = 1;
-		desc.Format = DXGI_FORMAT_R8_UINT;
+		desc.Format = kTextureFormat;
 		desc.SampleDesc.Count = 1;
 		desc.Usage = D3D11_USAGE_IMMUTABLE;
 		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 
 		D3D11_SUBRESOURCE_DATA init_data = {};
-		init_data.pSysMem = WPE_idx.data();
-		init_data.SysMemPitch = (uint32_t)(sizeof(uint8_t)) * (uint32_t)pixel_width;      // 바이트 단위
-
-		std::unique_ptr<SCMap> result_map = std::make_unique<SCMap>();
-		result_map->texture = EntityManager::CreateEntity<Texture2D>();
-		const bool result = result_map->texture->CreateTexture2D(&desc, &init_data);
+		init_data.pSysMem = map_pixels.data();
+		init_data.SysMemPitch = (uint32_t)(GetDXGIFormatByteStride(kTextureFormat) * (uint32_t)pixel_width);      // 바이트 단위
+		
+		std::shared_ptr<Texture2D> texture = EntityManager::CreateEntity<Texture2D>();
+		const bool result = texture->CreateTexture2D(&desc, &init_data);
 		if (result == false)
 		{
 			return nullptr;
 		}
 
-		if (!FillCommonMapFields(map_data, *result_map))
-		{
-			return nullptr;
-		}
-
-		return result_map;
+		return texture;
 	}
 
 	bool SCMapLoader::LoadTilesetData(const MPQFileSystem& mpq_file_system)

@@ -127,27 +127,6 @@ namespace sc
 		}
 
 		}
-
-		//if (sc_map_ == nullptr)
-		//{
-		//	ASSERT(false);
-		//	return;
-		//}
-		//if(false == data_block.IsValid())
-		//{
-		//	ASSERT(false);
-		//	return;
-		//}
-
-		//auto* context = GraphicsDevice::GetInst().GetContext();
-
-		////TODO: 임시방편, Shader Set 단위로 묶는 함수가 필요할 듯
-		//sc_map_->wpe_color_palettes->BindSRV(context, REG_T_SC_WPE_PALETTE, ShaderStage::kPS);
-
-		//MapInfoCB map_info_cb = {};
-		//map_info_cb.megatile_size = { sc_map_->megatile_width, sc_map_->megatile_height };
-
-		//data_block.Write(map_info_cb);
 	}
 	void SCMapRenderer::SetSCMap(std::unique_ptr<SCMap> sc_map)
 	{
@@ -163,8 +142,6 @@ namespace sc
 
 		Material* mtrl = GetMaterial(0);
 		ASSERT(mtrl);
-		
-		mtrl->SetTexture(ShaderStage::Pixel, REG_T_MAP_TEXTURE, sc_map_->texture);
 
 		// Creep / 타일셋 리소스 (맵 수명 동안 고정)
 		mtrl->SetTexture(ShaderStage::Pixel, REG_T_CREEP_RANDOM_TABLE, sc_map_->creep_random_tiles);

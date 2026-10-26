@@ -11,6 +11,7 @@
 namespace engine
 {
 	class TypedBuffer;
+	class Texture2D;
 }
 
 namespace sc
@@ -33,11 +34,13 @@ namespace sc
 		// MPQ 파일 시스템은 초기화(타일셋 로드)에만 사용하고 보관하지 않는다.
 		void Init(const MPQFileSystem& mpq_file_system);
 
-		// 컴퓨트 셰이더로 맵 인덱스 텍스처를 굽는다. 실패 시 nullptr
-		std::unique_ptr<SCMap> LoadMapGPU(const std::filesystem::path& map_path);
+		std::unique_ptr<SCMap> LoadSCMap(const std::filesystem::path& map_path);
 
-		// CPU에서 맵 인덱스 텍스처를 굽는다 (디버그·검증용). 실패 시 nullptr
-		std::unique_ptr<SCMap> LoadMapCPU(const std::filesystem::path& map_path);
+		// 컴퓨트 셰이더로 맵 인덱스 텍스처를 굽는다. (단순 디버그 / 출력용) 실패 시 nullptr
+		std::shared_ptr<engine::Texture2D> LoadMapTextureGPU(const std::filesystem::path& map_path);
+
+		// CPU에서 맵 인덱스 텍스처를 굽는다 (단순 디버그 / 출력용). 실패 시 nullptr
+		std::shared_ptr<engine::Texture2D> LoadMapTextureCPU(const std::filesystem::path& map_path);
 
 	private:
 		bool LoadTilesetData(const MPQFileSystem& mpq_file_system);
