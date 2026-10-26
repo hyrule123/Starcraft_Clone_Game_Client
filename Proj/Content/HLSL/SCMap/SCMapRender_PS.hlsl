@@ -1,5 +1,7 @@
 #include <Content/HLSL/SCMap/SCMapRender.hlsli>
 
+#define SC_MAP_VERIFY_BAKE 1
+
 // OpenBW ui.h draw_tiles의 dirs 순서 (비트 i = kCreepNeighborOffsets[i] 이웃이 Creep)
 // 0 오른쪽아래, 1 아래, 2 왼쪽아래, 3 오른쪽, 4 왼쪽, 5 오른쪽위, 6 위, 7 왼쪽위  (+x 오른쪽, +y 아래)
 static const int2 kCreepNeighborOffsets[8] =
@@ -90,7 +92,18 @@ uint main(SCMapVSOut input) : SV_TARGET
 	// 현재 픽셀의 wpe index
 	uint wpe_index = DecodeMegatilePixel(megatile_idx, local);
 	
-
+	#if (SC_MAP_VERIFY_BAKE)
+	uint wpe_pixel = g_map_texture.Load(int3(int2(pixel), 0));
+	
+	if (wpe_pixel == wpe_index)
+	{
+		return 255;
+	}
+	else
+	{
+		return 0;
+	}
+#endif
 
 	// 2) Creep이 아닌 타일: 주변에 Creep이 있는지 확인 후
 	// Creep이 있을 시 메가타일 픽셀 위에 테두리 프레임을 커버리지가 있는 픽셀만 덮어씀
