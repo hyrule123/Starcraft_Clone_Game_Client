@@ -830,6 +830,21 @@ namespace sc
 			return false;
 		}
 
+		if(map_data.mtxm.size() != map_data.megatile_width * map_data.megatile_height)
+		{
+			ERR_MSG("MTXM size does not match megatile dimensions.");
+			out_map = SCMap{};
+			return false;
+		}
+		out_map.mtxm = engine::EntityManager::CreateEntity<engine::TypedBuffer>();
+		bool result = out_map.mtxm->CreateImmutableBuffer(DXGI_FORMAT_R16_UINT, map_data.mtxm);
+		if (!result)
+		{
+			ERR_MSG("Failed to create MTXM buffer.");
+			out_map = SCMap{};
+			return false;
+		}
+
 		const TileSetDataGPU& tileset_gpu = tileset_gpu_buffers_[(size_t)map_data.terrain_type];
 		out_map.megatile_width = map_data.megatile_width;
 		out_map.megatile_height = map_data.megatile_height;

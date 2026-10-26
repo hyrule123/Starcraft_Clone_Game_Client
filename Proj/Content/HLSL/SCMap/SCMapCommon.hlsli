@@ -7,7 +7,7 @@
 
 struct MapInfoCB
 {
-	int2 megatile_size;
+	int2 megatile_count;
 	int2 padding;
 	matrix world_mat;
 };

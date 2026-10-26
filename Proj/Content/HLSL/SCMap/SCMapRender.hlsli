@@ -11,6 +11,7 @@
 #define REG_T_CV5					REG_T_PER_MATERIAL_4
 #define REG_T_VX4					REG_T_PER_MATERIAL_5
 #define REG_T_VR4					REG_T_PER_MATERIAL_6
+#define REG_T_MTXM					REG_T_PER_MATERIAL_7
 
 struct SCMapVSIn
 {
@@ -18,16 +19,16 @@ struct SCMapVSIn
 	float2 uv SEMANTIC(TEXCOORD);
 	
 #ifdef __HLSL
-	uint instance_id SEMANTIC(INSTANCE_ID);
+	uint instance_id : INSTANCE_ID;
 #endif//__HLSL	
 };
 
 #ifdef __HLSL
-
 struct SCMapVSOut
 {
-	float4 pos SEMANTIC(SV_Position);
-	float2 pixel_coord SEMANTIC(TEXCOORD); // 픽셀 단위, UV 아님
+	float4 pos : SV_Position;
+	float2 pixel_coord : TEXCOORD; // 픽셀 단위, UV 아님
+	nointerpolation int2 megatile_count : MEGATILE_COUNT; //메가타일 기준 맵 사이즈
 };
 #endif//__HLSL
 
@@ -42,7 +43,14 @@ Texture2DArray<uint2> g_creep_edge : register(REG_T_CREEP_EDGE_TEXTURE); // R8G8
 Buffer<uint> g_cv5 : register(REG_T_CV5);
 Buffer<uint> g_vx4 : register(REG_T_VX4);
 Buffer<uint> g_vr4 : register(REG_T_VR4);
+Buffer<uint> g_mtxm : register(REG_T_MTXM);
 #endif//__HLSL
+
+// 맵 로딩 관련 상수
+HLSL_CONSTEXPR uint kMTXMGroupShift = 4;
+HLSL_CONSTEXPR uint kMTXMGroupMask = 0x7FF;
+HLSL_CONSTEXPR uint kMTXMSubtileMask = 0xF;
+HLSL_CONSTEXPR uint kMTXMTileIdMask = 0x7FFF;
 
 // g_tile_states 원소 = SCSim::TileData 4바이트를 그대로 담은 uint (리틀 엔디안)
 //   [7:0] visible, [15:8] explored, [31:16] flags (TileFlags)

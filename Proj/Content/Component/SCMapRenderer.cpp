@@ -28,6 +28,8 @@ namespace sc
 	static_assert(offsetof(SCSim::TileData, explored) == 1);
 	static_assert(offsetof(SCSim::TileData, flags) * 8 == kTileStateFlagsShift);
 
+
+
 	SCMapRenderer::SCMapRenderer()
 		: Super(SCMapRenderer::kClassConcreteName)
 	{}
@@ -111,7 +113,7 @@ namespace sc
 		case kSCOpaquePassID:
 		{
 			MapInfoCB map_info_cb = {};
-			map_info_cb.megatile_size = { (int32_t)sc_map_->megatile_width, (int32_t)sc_map_->megatile_height };
+			map_info_cb.megatile_count = { (int32_t)sc_map_->megatile_width, (int32_t)sc_map_->megatile_height };
 			map_info_cb.world_mat = GetTransform()->GetWorldMatrix();
 
 			args.block.Write(map_info_cb);
@@ -173,6 +175,7 @@ namespace sc
 		mtrl_table.AddShaderResource(ShaderStage::Pixel, REG_T_CV5, sc_map_->cv5_megatiles);
 		mtrl_table.AddShaderResource(ShaderStage::Pixel, REG_T_VX4, sc_map_->vx4_minitiles);
 		mtrl_table.AddShaderResource(ShaderStage::Pixel, REG_T_VR4, sc_map_->vr4_minitile_wpe_indices);
+		mtrl_table.AddShaderResource(ShaderStage::Pixel, REG_T_MTXM, sc_map_->mtxm);
 
 		// 타일 상태 (버퍼 객체는 고정, 내용은 ApplyTileSnapshot에서 매 프레임 갱신)
 		const uint32_t tile_count = sc_map_->megatile_width * sc_map_->megatile_height;

@@ -277,8 +277,10 @@ namespace sc
 		
 		std::vector<UnitData> unit_data = {};
 
-		// 결과물
-		std::shared_ptr<engine::Texture2D> texture = {};	// uint8_t texture
+		std::shared_ptr<engine::Texture2D> texture = {};
+
+		// R16_UINT, 메가타일 수, MTXM 원값(그룹 << 4 | 타일)
+		std::shared_ptr<engine::TypedBuffer> mtxm = {};
 
 		// 타일셋 공유 (맵 PS에서 Creep 메가타일 디코딩용)
 		std::shared_ptr<engine::TypedBuffer> cv5_megatiles = {};
