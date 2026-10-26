@@ -59,7 +59,7 @@ namespace sc
         void DefaultEngineSetting();
         void SyncUnits();
         void SyncSprites();
-        void SyncTiles();
+        void SyncMegatileStates();
 
     private:
         SCSim::Context* sc_sim_ctx_ = nullptr;

@@ -87,10 +87,10 @@ extern "C" {
 	// 현재 보유량과 누적 채취량(점수용)을 같은 값으로 덮어씀. 음수는 실패
 	SCSIM_API bool SCSim_Debug_SetResources(SCSim::Context* ctx, SCSim::Player owner, int32_t minerals, int32_t gas);
 
-	// 맵 전체 타일 상태를 컨텍스트 소유 버퍼에 채움 (행 우선, index = y * width + x)
+	// 맵 전체 타일(Megatile) 상태를 컨텍스트 소유 버퍼에 채움 (행 우선, index = y * width + x)
 	// 포인터는 컨텍스트 수명 동안 유효, 내용은 다음 NextFrame / GetTiles 호출 전까지 유효
-	// 성공 시 *out_width, *out_height = 맵 타일 크기(1~kMaxMapTiles)
-	// 실패 시 false, *out_tiles = nullptr, *out_width = *out_height = 0
-	SCSIM_API bool SCSim_GetTiles(SCSim::Context* ctx, const SCSim::TileData** out_tiles,
-		uint32_t* out_width, uint32_t* out_height);
+	// 성공 시 *out_width_megatile, *out_height_megatile = 메가타일 기준 맵 크기(1~kMaxMapMegatiles)
+	// 실패 시 false, *out_megatile_states = nullptr, *out_width_megatile = *out_height_megatile = 0
+	SCSIM_API bool SCSim_GetMegatileStates(SCSim::Context* ctx, const SCSim::MegatileState** out_megatile_states,
+		uint32_t* out_width_megatile, uint32_t* out_height_megatile);
 }

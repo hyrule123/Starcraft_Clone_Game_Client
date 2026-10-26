@@ -74,7 +74,7 @@ namespace sc
 	static_assert(offsetof(SCTileSetPcxLUT::TableRange, rows) == sizeof(uint32_t));    // 셰이더 .y
 	static_assert(std::is_trivially_copyable_v<SCTileSetPcxLUT::TableRange>);
 
-	static_assert(kTileFlagHasCreep == SCSim::TileFlags::HasCreep);
+	static_assert(kMegatileFlagHasCreep == SCSim::MegatileFlags::HasCreep);
 
 	namespace
 	{
@@ -145,7 +145,7 @@ namespace sc
 		}
 
 		// DIM. 실패 시 {0, 0}
-		std::array<uint32_t, 2> GetMegaTileCount(const ChunkTable& map_data_table)
+		std::array<uint32_t, 2> GetMapSizeMegatile(const ChunkTable& map_data_table)
 		{
 			auto it = map_data_table.find(SCChunkTypeName[(uint32_t)SCChunkType::kMapSize]);
 			if (it == map_data_table.end())
@@ -226,7 +226,7 @@ namespace sc
 		}
 
 		// MTXM. DIM 크기로 버퍼를 잡고 청크 길이만큼만 복사 (모자란 부분은 null tile). 청크가 없으면 빈 vector
-		std::vector<MTXM> GetMTXM(const ChunkTable& map_data_table, uint32_t megatile_width, uint32_t megatile_height)
+		std::vector<MTXM> GetMTXM(const ChunkTable& map_data_table, uint32_t map_width_megatile, uint32_t map_height_megatile)
 		{
 			auto it = map_data_table.find(SCChunkTypeName[(uint32_t)SCChunkType::kTileMapAtlas]);
 			if (it == map_data_table.end())
@@ -237,7 +237,7 @@ namespace sc
 
 			const std::vector<uint8_t>& mtxm_data = it->second;
 
-			std::vector<MTXM> mtxms((size_t)megatile_width * (size_t)megatile_height);
+			std::vector<MTXM> mtxms((size_t)map_width_megatile * (size_t)map_height_megatile);
 
 			const size_t copy_size = (std::min)(mtxm_data.size(), mtxms.size() * sizeof(MTXM));
 			memcpy(mtxms.data(), mtxm_data.data(), copy_size);
@@ -355,7 +355,7 @@ namespace sc
 		//   4%: 변형 타일 kCreepTileBaseCount ~ kCreepTileCount - 1 (6~12)
 		//   96%: 기본 타일 0 ~ kCreepTileBaseCount - 1 (0~5)
 		// 화면용 값이라 시뮬레이션과 무관 → 시드는 시간 기반(OpenBW와 동일하게 실행마다 무늬가 달라짐)
-		std::shared_ptr<engine::Texture2D> CreateCreepRandomTileTexture(uint32_t megatile_width, uint32_t megatile_height)
+		std::shared_ptr<engine::Texture2D> CreateCreepRandomMegatileTexture(uint32_t map_width_megatile, uint32_t map_height_megatile)
 		{
 			using namespace engine;
 
@@ -371,18 +371,18 @@ namespace sc
 
 			constexpr uint32_t kVariantPercent = 4;
 
-			std::vector<uint8_t> tiles(static_cast<size_t>(megatile_width) * static_cast<size_t>(megatile_height));
-			for (uint8_t& tile : tiles)
+			std::vector<uint8_t> megatiles(static_cast<size_t>(map_width_megatile) * static_cast<size_t>(map_height_megatile));
+			for (uint8_t& megatile : megatiles)
 			{
 				const uint32_t index = (percent(rng) < kVariantPercent)
 					? kCreepTileBaseCount + variant(rng)
 					: base(rng);
-				tile = static_cast<uint8_t>(index);	// < kCreepTileCount (static_assert)
+				megatile = static_cast<uint8_t>(index);	// < kCreepTileCount (static_assert)
 			}
 
 			D3D11_TEXTURE2D_DESC desc = {};
-			desc.Width = megatile_width;
-			desc.Height = megatile_height;
+			desc.Width = map_width_megatile;
+			desc.Height = map_height_megatile;
 			desc.MipLevels = 1;
 			desc.ArraySize = 1;
 			desc.Format = DXGI_FORMAT_R8_UINT;
@@ -391,8 +391,8 @@ namespace sc
 			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 
 			D3D11_SUBRESOURCE_DATA initial_data = {};
-			initial_data.pSysMem = tiles.data();
-			initial_data.SysMemPitch = megatile_width;	// R8: 1바이트 × width
+			initial_data.pSysMem = megatiles.data();
+			initial_data.SysMemPitch = map_width_megatile;	// R8: 1바이트 × width
 
 			std::shared_ptr<Texture2D> texture = EntityManager::CreateEntity<Texture2D>();
 			if (!texture->CreateTexture2D(&desc, &initial_data))
@@ -477,42 +477,42 @@ namespace sc
 		const TileSetData& tileset = tilesets_[(size_t)map_data.terrain_type];
 
 		// 픽셀 색 정보 컨테이너 할당
-		const size_t pixel_width = (size_t)map_data.megatile_width * (size_t)32;
-		const size_t pixel_height = (size_t)map_data.megatile_height * (size_t)32;
-		std::vector<RGBA> map_pixels(pixel_width * pixel_height);
+		const size_t map_width = (size_t)map_data.map_width_megatile * (size_t)32;
+		const size_t map_height = (size_t)map_data.map_height_megatile * (size_t)32;
+		std::vector<RGBA> map_pixels(map_width * map_height);
 
 		// 채워넣기
-		for (uint32_t ty = 0; ty < map_data.megatile_height; ++ty)
+		for (uint32_t mega_y = 0; mega_y < map_data.map_height_megatile; ++mega_y)
 		{
-			for (uint32_t tx = 0; tx < map_data.megatile_width; ++tx)
+			for (uint32_t mega_x = 0; mega_x < map_data.map_width_megatile; ++mega_x)
 			{
 				// 1. MTXM에서 타일 정보 가져오기
-				const uint16_t v = map_data.mtxm[ty * map_data.megatile_width + tx];
+				const uint16_t v = map_data.mtxm[mega_y * map_data.map_width_megatile + mega_x];
 
 				// CV5 인덱스
 				const uint32_t group = MTXMGroup(v);
 
 				// CV5 내 타일 인덱스 (0 ~ 15)
-				const uint32_t tile = MTXMTile(v);
+				const uint32_t cv5_sub_idx = MTXMTile(v);
 
 				// 널 타일 → 검정
 				if (group >= tileset.cv5.size()) { continue; }
 
-				// CV5[group]의 CV5_megatiles[tile]
-				const uint16_t mega = tileset.cv5[group].megatiles[tile];
+				// CV5[group]의 CV5_megatiles[cv5_sub_idx]
+				const uint16_t mega = tileset.cv5[group].megatiles[cv5_sub_idx];
 				if (mega >= tileset.vx4.size()) { continue; }
 
 				// 메가타일 안의 미니타일 4*4 참조
-				for (uint32_t m = 0; m < 16; ++m)
+				for (uint32_t mini = 0; mini < 16; ++mini)
 				{
 					// VX4에서 VR4 참조 및 반전 여부 확인
-					const uint16_t ref = tileset.vx4[mega].minitiles[m];
+					const uint16_t ref = tileset.vx4[mega].minitiles[mini];
 					const uint16_t vr4_id = VX4Ref(ref);
 					const bool   flipped = VX4Flipped(ref);
 					if (vr4_id >= tileset.vr4.size()) { continue; }
 
-					const uint32_t mx = (m % 4) * 8;
-					const uint32_t my = (m / 4) * 8;
+					const uint32_t mini_x = (mini % 4) * 8;
+					const uint32_t mini_y = (mini / 4) * 8;
 
 					for (uint32_t py = 0; py < 8; ++py)
 					{
@@ -522,11 +522,11 @@ namespace sc
 							const uint8_t idx = tileset.vr4[vr4_id].pixels[py][flipped ? 7 - px : px];
 
 							// 최종 픽셀 좌표 계산
-							const uint32_t x = tx * 32 + mx + px;
-							const uint32_t y = ty * 32 + my + py;
+							const uint32_t x = mega_x * 32 + mini_x + px;
+							const uint32_t y = mega_y * 32 + mini_y + py;
 
 							const auto& color = tileset.wpe[idx];
-							RGBA& pixel = map_pixels[y * pixel_width + x];
+							RGBA& pixel = map_pixels[y * map_width + x];
 
 							pixel.r = color.r;
 							pixel.g = color.g;
@@ -541,8 +541,8 @@ namespace sc
 		// Texture 생성
 		constexpr DXGI_FORMAT kTextureFormat = DXGI_FORMAT_R8G8B8A8_UNORM;	// WPE 색인 → RGBA 변환은 쉐이더에서 처리
 		D3D11_TEXTURE2D_DESC desc = {};
-		desc.Width = (UINT)pixel_width;
-		desc.Height = (UINT)pixel_height;
+		desc.Width = (UINT)map_width;
+		desc.Height = (UINT)map_height;
 		desc.MipLevels = 1;
 		desc.ArraySize = 1;
 		desc.Format = kTextureFormat;
@@ -552,7 +552,7 @@ namespace sc
 
 		D3D11_SUBRESOURCE_DATA init_data = {};
 		init_data.pSysMem = map_pixels.data();
-		init_data.SysMemPitch = (uint32_t)(GetDXGIFormatByteStride(kTextureFormat) * (uint32_t)pixel_width);      // 바이트 단위
+		init_data.SysMemPitch = (uint32_t)(GetDXGIFormatByteStride(kTextureFormat) * (uint32_t)map_width);      // 바이트 단위
 		
 		std::shared_ptr<Texture2D> texture = EntityManager::CreateEntity<Texture2D>();
 		const bool result = texture->CreateTexture2D(&desc, &init_data);
@@ -797,13 +797,13 @@ namespace sc
 		map_data.map_data_table = ParseMapData(map_data.map_raw_bytes);
 
 		// 맵 사이즈
-		const std::array<uint32_t, 2> megatile_count = GetMegaTileCount(map_data.map_data_table);
-		if (megatile_count[0] == 0 || megatile_count[1] == 0)
+		const std::array<uint32_t, 2> map_size_megatile = GetMapSizeMegatile(map_data.map_data_table);
+		if (map_size_megatile[0] == 0 || map_size_megatile[1] == 0)
 		{
 			return std::nullopt;
 		}
-		map_data.megatile_width = megatile_count[0];
-		map_data.megatile_height = megatile_count[1];
+		map_data.map_width_megatile = map_size_megatile[0];
+		map_data.map_height_megatile = map_size_megatile[1];
 
 		// 지형 타입
 		const TileSetType terrain_type = GetTerrainType(map_data.map_data_table);
@@ -814,7 +814,7 @@ namespace sc
 		map_data.terrain_type = terrain_type;
 
 		// MTXM 데이터
-		map_data.mtxm = GetMTXM(map_data.map_data_table, map_data.megatile_width, map_data.megatile_height);
+		map_data.mtxm = GetMTXM(map_data.map_data_table, map_data.map_width_megatile, map_data.map_height_megatile);
 		if (map_data.mtxm.empty())
 		{
 			return std::nullopt;
@@ -833,16 +833,16 @@ namespace sc
 	{
 		ASSERT(map_data.terrain_type < TileSetType::kCount);
 
-		out_map.creep_random_tiles = CreateCreepRandomTileTexture(map_data.megatile_width, map_data.megatile_height);
+		out_map.creep_random_megatiles = CreateCreepRandomMegatileTexture(map_data.map_width_megatile, map_data.map_height_megatile);
 
-		if (out_map.creep_random_tiles == nullptr)
+		if (out_map.creep_random_megatiles == nullptr)
 		{
-			ERR_MSG("Failed to create Creep random tile texture.");
+			ERR_MSG("Failed to create Creep random megatile texture.");
 			out_map = SCMap{};
 			return false;
 		}
 
-		if(map_data.mtxm.size() != map_data.megatile_width * map_data.megatile_height)
+		if(map_data.mtxm.size() != map_data.map_width_megatile * map_data.map_height_megatile)
 		{
 			ERR_MSG("MTXM size does not match megatile dimensions.");
 			out_map = SCMap{};
@@ -858,8 +858,8 @@ namespace sc
 		}
 
 		const TileSetDataGPU& tileset_gpu = tileset_gpu_buffers_[(size_t)map_data.terrain_type];
-		out_map.megatile_width = map_data.megatile_width;
-		out_map.megatile_height = map_data.megatile_height;
+		out_map.map_width_megatile = map_data.map_width_megatile;
+		out_map.map_height_megatile = map_data.map_height_megatile;
 		out_map.terrain_type = map_data.terrain_type;
 		out_map.unit_data = std::move(map_data.unit_data);
 		out_map.wpe_color_palettes = tileset_gpu.WPE_color_palettes;

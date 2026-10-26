@@ -36,12 +36,12 @@ namespace sc
 	{
 		using namespace engine;
 
-		if (map_data.megatile_width == 0 || map_data.megatile_height == 0)
+		if (map_data.map_width_megatile == 0 || map_data.map_height_megatile == 0)
 		{
 			ERR_MSG("Invalid map size. Width and height must be greater than 0.");
 			return nullptr;
 		}
-		if (map_data.mtxm.size() < (map_data.megatile_width * map_data.megatile_height))
+		if (map_data.mtxm.size() < (map_data.map_width_megatile * map_data.map_height_megatile))
 		{
 			ERR_MSG("MTXM data is invalid.");
 			return nullptr;
@@ -63,7 +63,7 @@ namespace sc
 		auto context = GraphicsDevice::GetInst().GetContext();
 
 		MapInfoCB map_info_cb = {};
-		map_info_cb.megatile_count = { (int32_t)map_data.megatile_width, (int32_t)map_data.megatile_height };
+		map_info_cb.map_size_megatile = { (int32_t)map_data.map_width_megatile, (int32_t)map_data.map_height_megatile };
 		
 		if (map_info_buffer_ == nullptr)
 		{
@@ -84,10 +84,16 @@ namespace sc
 		desc.SampleDesc.Count = 1;
 		desc.Usage = D3D11_USAGE_DEFAULT;
 		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
-		desc.Width = map_data.megatile_width * (UINT)kMegatilePixelSize;
-		desc.Height = map_data.megatile_height * (UINT)kMegatilePixelSize;
+		desc.Width = map_data.map_width_megatile * (UINT)kMegatilePixelSize;
+		desc.Height = map_data.map_height_megatile * (UINT)kMegatilePixelSize;
 
 		result = map_texture->CreateTexture2D(&desc, nullptr);
+		if (!result) { return nullptr; }
+
+		// scx 맵 데이터(mtxm) 생성
+		std::unique_ptr<TypedBuffer> mtxm_buffer = EntityManager::CreateEntity<TypedBuffer>();
+		std::span<const MTXM> mtxm_span = map_data.mtxm;
+		result = mtxm_buffer->CreateImmutableBuffer(DXGI_FORMAT_R16_UINT, mtxm_span);
 		if (!result) { return nullptr; }
 
 		// Tileset Bind
@@ -96,12 +102,7 @@ namespace sc
 		tileset_gpu.VR4_minitile_wpe_indices->BindSRV(context, ShaderStage::Compute, REG_T_TILESET_VR4);
 		tileset_gpu.WPE_color_palettes->BindSRV(context, ShaderStage::Compute, REG_T_TILESET_WPE);
 
-		// scx 맵 데이터(mtxm) 생성 및 binding
-		std::unique_ptr<TypedBuffer> mtxm_buffer = EntityManager::CreateEntity<TypedBuffer>();
-		std::span<const MTXM> mtxm_span = map_data.mtxm;
-		result = mtxm_buffer->CreateImmutableBuffer(DXGI_FORMAT_R16_UINT, mtxm_span);
-		if (!result) { return nullptr; }
-
+		// Mtxm Bind
 		mtxm_buffer->BindSRV(context, ShaderStage::Compute, REG_T_MAP_MTXM);
 
 		// Texture Bind
@@ -112,10 +113,13 @@ namespace sc
 		Execute(context);
 
 		map_texture->UnbindUAV(context, REG_U_MAP_TEXTURE);
-		context->CSSetShaderResources(REG_T_TILESET_CV5.Get(), 1, nullptr);
-		context->CSSetShaderResources(REG_T_TILESET_VX4.Get(), 1, nullptr);
-		context->CSSetShaderResources(REG_T_TILESET_VR4.Get(), 1, nullptr);
-		context->CSSetShaderResources(REG_T_TILESET_WPE.Get(), 1, nullptr);
+		
+		mtxm_buffer->UnbindSRV(context, ShaderStage::Compute, REG_T_MAP_MTXM);
+
+		tileset_gpu.WPE_color_palettes->UnbindSRV(context, ShaderStage::Compute, REG_T_TILESET_WPE);
+		tileset_gpu.VR4_minitile_wpe_indices->UnbindSRV(context, ShaderStage::Compute, REG_T_TILESET_VR4);
+		tileset_gpu.VX4_minitiles->UnbindSRV(context, ShaderStage::Compute, REG_T_TILESET_VX4);
+		tileset_gpu.CV5_megatiles->UnbindSRV(context, ShaderStage::Compute, REG_T_TILESET_CV5);
 
 		return map_texture;
 	}

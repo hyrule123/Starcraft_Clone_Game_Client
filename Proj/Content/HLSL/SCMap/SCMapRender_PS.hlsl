@@ -14,21 +14,21 @@ static const uint kMinitilePixelSize = 8; // 미니타일 = 8x8 픽셀
 
 // MTXM / 크립 상태로부터 이 타일의 메가타일 번호(VX4 색인)를 구한다
 // cv5_count: CV5 원소 수 (= 그룹 수 * kCV5MegatilesPerGroup, g_cv5.GetDimensions 결과)
-uint ResolveMegatile(int2 tile, int2 tile_size, uint cv5_count, bool has_creep)
+uint ResolveMegatile(int2 megatile_pos, int2 map_size_megatile, uint cv5_count, bool has_creep)
 {
 	uint cv5_idx = 0;
 
 	if (has_creep == false)
 	{
 		// CV5는 그룹 배열이고, 그룹마다 메가타일 번호 16개를 가진다
-		// MTXM 값(tile id) = cv5_group_idx << 4 | cv5_sub_idx
+		// MTXM 값(OpenBW tile_id) = cv5_group_idx << 4 | cv5_sub_idx
 		//   cv5_group_idx = (mtxm >> 4) & 0x7FF
 		//   cv5_sub_idx   = mtxm & 0xF
 		// CV5를 1차원으로 펼쳐 두었으므로 CV5[cv5_group_idx][cv5_sub_idx] == CV5_flat[mtxm & 0x7FFF]
 		// 최상위 비트(0x8000)는 OpenBW tile_id::group_index()와 같이 버린다
-		cv5_idx = g_mtxm[tile.y * tile_size.x + tile.x] & kMTXMTileIdMask;
+		cv5_idx = g_mtxm[megatile_pos.y * map_size_megatile.x + megatile_pos.x] & kMTXMTileIdMask;
 
-		// 범위 밖 그룹은 OpenBW와 같이 tile id 0으로 대체 (bwgame.h: tile_id = {})
+		// 범위 밖 그룹은 OpenBW와 같이 tile id(MTXM 값) 0으로 대체 (bwgame.h: tile_id = {})
 		if (cv5_count <= cv5_idx)
 		{
 			cv5_idx = 0;
@@ -38,20 +38,20 @@ uint ResolveMegatile(int2 tile, int2 tile_size, uint cv5_count, bool has_creep)
 	{
 		// Creep 타일: 바닥 전체를 Creep 메가타일로 (OpenBW: cv5[1].mega_tile_index[랜덤])
 		// 크립 바닥: CV5 그룹 1의 0~12번 중 로드 시 정해 둔 무작위 번호
-		cv5_idx = kCreepCV5Group * kCV5MegatilesPerGroup + g_creep_random_tiles.Load(int3(tile, 0));
+		cv5_idx = kCreepCV5Group * kCV5MegatilesPerGroup + g_creep_random_tiles.Load(int3(megatile_pos, 0));
 	}
 
 	return g_cv5[cv5_idx];
 }
 
 // 맵 밖 타일은 Creep 없음으로 취급 (OpenBW: 범위 밖 이웃은 건너뜀)
-bool HasCreep(int2 tile, int2 map_size)
+bool HasCreep(int2 megatile_pos, int2 map_size_megatile)
 {
 	bool has_creep = false;
-	if (all(tile >= 0) && all(tile < map_size))
+	if (all(megatile_pos >= 0) && all(megatile_pos < map_size_megatile))
 	{
-		const uint tile_state = g_tile_states[tile.y * map_size.x + tile.x];
-		has_creep = ((tile_state >> kTileStateFlagsShift) & kTileFlagHasCreep) != 0;
+		const uint megatile_state = g_megatile_states[megatile_pos.y * map_size_megatile.x + megatile_pos.x];
+		has_creep = ((megatile_state >> kMegatileStateFlagsShift) & kMegatileFlagHasCreep) != 0;
 	}
 	return has_creep;
 }
@@ -79,12 +79,12 @@ uint main(SCMapVSOut input) : SV_TARGET
 	g_cv5.GetDimensions(cv5_count);
 	
 	const uint2 pixel = uint2(floor(input.pixel_coord)); // 맵 UV 범위 안이라 음수 없음
-	const int2 tile = int2(pixel / kMegatilePixelSize); // uint 나눗셈 (32 → 시프트)
+	const int2 megatile_pos = int2(pixel / kMegatilePixelSize); // uint 나눗셈 (32 → 시프트)
 	const uint2 local = pixel % kMegatilePixelSize;
 	
-	const bool has_creep = HasCreep(tile, input.megatile_count);
+	const bool has_creep = HasCreep(megatile_pos, input.map_size_megatile);
 	
-	const uint megatile_idx = ResolveMegatile(tile, input.megatile_count, cv5_count, has_creep);
+	const uint megatile_idx = ResolveMegatile(megatile_pos, input.map_size_megatile, cv5_count, has_creep);
 
 	// 현재 픽셀의 wpe index
 	uint wpe_index = DecodeMegatilePixel(megatile_idx, local);
@@ -98,7 +98,7 @@ uint main(SCMapVSOut input) : SV_TARGET
 		[unroll]	// 반복문을 컴파일 시점에 코드로 싹 펼침
 		for (uint i = 0; i < 8; ++i)
 		{
-			if (HasCreep(tile + kCreepNeighborOffsets[i], input.megatile_count))
+			if (HasCreep(megatile_pos + kCreepNeighborOffsets[i], input.map_size_megatile))
 			{
 				neighbor_mask |= (1u << i);
 			}

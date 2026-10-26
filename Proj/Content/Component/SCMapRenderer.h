@@ -3,7 +3,7 @@
 
 namespace SCSim
 {
-	struct TileData;
+	struct MegatileState;
 }
 
 namespace engine
@@ -37,13 +37,13 @@ namespace sc
 
 		void SetSCMap(std::unique_ptr<SCMap> sc_map);
 
-		// SCSim_GetTiles 결과를 그대로 업로드 (매 프레임). 맵 크기가 SCMap과 다르면 false
-		[[nodiscard]] bool ApplyTileSnapshot(const SCSim::TileData* tiles, uint32_t width, uint32_t height);
+		// SCSim_GetMegatileStates 결과를 그대로 업로드 (매 프레임). 맵 크기가 SCMap과 다르면 false
+		[[nodiscard]] bool ApplyMegatileSnapshot(const SCSim::MegatileState* megatiles, uint32_t map_width_megatile, uint32_t map_height_megatile);
 
 	private:
 		std::unique_ptr<SCMap> sc_map_ = {};
 
-		std::shared_ptr<engine::TypedBuffer> tile_states_ = {};
+		std::shared_ptr<engine::TypedBuffer> megatile_states_ = {};
 
 		bool needs_scale_matching_ = {};
     };

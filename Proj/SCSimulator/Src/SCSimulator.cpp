@@ -37,7 +37,7 @@ struct SCSim::Context
         std::tuple_size_v<decltype(bwgame::action_state::selection)>> selection_buffers = {};
 
     // GetTiles 결과 버퍼. 맵 최대 크기(kMaxMapTiles²)만큼, 실제 맵 크기만큼만 채움
-    std::array<SCSim::TileData, static_cast<size_t>(SCSim::kMaxMapTiles)* static_cast<size_t>(SCSim::kMaxMapTiles)> tile_buffer = {};
+    std::array<SCSim::MegatileState, static_cast<size_t>(SCSim::kMaxMapMegatiles)* static_cast<size_t>(SCSim::kMaxMapMegatiles)> megatile_states_buffer = {};
 };
 
 namespace // Error
@@ -201,13 +201,13 @@ extern "C" {
                 {
                     // DIM 청크를 읽은 직후, 타일·지역 생성 전에 호출됨
                     // OpenBW는 크기 상한을 검사하지 않고, 256 초과 시 tile_region_index 범위 밖에 씀
-                    const size_t tile_width = player_st.game->map_tile_width;
-                    const size_t tile_height = player_st.game->map_tile_height;
-                    constexpr size_t kMaxTiles = static_cast<size_t>(SCSim::kMaxMapTiles);
-                    if (tile_width > kMaxTiles || tile_height > kMaxTiles)
+                    const size_t map_width_megatile = player_st.game->map_tile_width;
+                    const size_t map_height_megatile = player_st.game->map_tile_height;
+                    constexpr size_t kMaxMegatiles = static_cast<size_t>(SCSim::kMaxMapMegatiles);
+                    if (map_width_megatile > kMaxMegatiles || map_height_megatile > kMaxMegatiles)
                     {
-                        throw std::runtime_error("map size " + std::to_string(tile_width) + "x" + std::to_string(tile_height) +
-                            " exceeds " + std::to_string(SCSim::kMaxMapTiles) + "x" + std::to_string(SCSim::kMaxMapTiles) + " tiles");
+                        throw std::runtime_error("map size " + std::to_string(map_width_megatile) + "x" + std::to_string(map_height_megatile) +
+                            " exceeds " + std::to_string(SCSim::kMaxMapMegatiles) + "x" + std::to_string(SCSim::kMaxMapMegatiles) + " tiles");
                     }
 
                     load.setup_info.create_no_units = !create_map_units;
@@ -957,17 +957,17 @@ extern "C" {
         return true;
     }
 
-    bool SCSim_GetTiles(SCSim::Context* ctx, const SCSim::TileData** out_tiles, uint32_t* out_width, uint32_t* out_height)
+    bool SCSim_GetMegatileStates(SCSim::Context* ctx, const SCSim::MegatileState** out_megatile_states, uint32_t* out_width_megatile, uint32_t* out_height_megatile)
     {
-        if (!out_tiles || !out_width || !out_height)
+        if (!out_megatile_states || !out_width_megatile || !out_height_megatile)
         {
-            SetError("SCSim_GetTiles: out_tiles, out_width or out_height is null");
+            SetError("SCSim_GetMegatileStates: out_megatile_states, out_width_megatile or out_height_megatile is null");
             return false;
         }
-        *out_tiles = nullptr;
-        *out_width = 0;
-        *out_height = 0;
-        if (!CheckContext(ctx, "SCSim_GetTiles"))
+        *out_megatile_states = nullptr;
+        *out_width_megatile = 0;
+        *out_height_megatile = 0;
+        if (!CheckContext(ctx, "SCSim_GetMegatileStates"))
         {
             return false;
         }
@@ -978,13 +978,13 @@ extern "C" {
         const size_t height = st.game->map_tile_height;
 
         // 크기 상한은 LoadMap에서 보장. 버퍼·원본 크기는 쓰기 전에 확인
-        if (st.tiles.size() != width * height || st.tiles.size() > ctx->tile_buffer.size())
+        if (st.tiles.size() != width * height || st.tiles.size() > ctx->megatile_states_buffer.size())
         {
-            SetError("SCSim_GetTiles: unexpected tile buffer size " + std::to_string(st.tiles.size()));
+            SetError("SCSim_GetMegatileStates: unexpected tile buffer size " + std::to_string(st.tiles.size()));
             return false;
         }
 
-        SCSim::TileData* out = ctx->tile_buffer.data();
+        SCSim::MegatileState* out = ctx->megatile_states_buffer.data();
         for (const bwgame::tile_t& tile : st.tiles)
         {
             out->visible = tile.visible;
@@ -993,10 +993,10 @@ extern "C" {
             ++out;
         }
 
-        *out_tiles = ctx->tile_buffer.data();
-        // 경계 축소: 맵 크기 <= kMaxMapTiles(256)는 LoadMap에서 보장
-        *out_width = static_cast<uint32_t>(width);
-        *out_height = static_cast<uint32_t>(height);
+        *out_megatile_states = ctx->megatile_states_buffer.data();
+        // 경계 축소: 맵 크기 <= kMaxMapMegatiles(256)는 LoadMap에서 보장
+        *out_width_megatile = static_cast<uint32_t>(width);
+        *out_height_megatile = static_cast<uint32_t>(height);
         return true;
     }
 
@@ -1122,13 +1122,13 @@ namespace //type traits
     static_assert(std::is_same_v<decltype(SCSim::UnitData::sprite_flags),
         std::underlying_type_t<decltype(SCSim::SpriteFlags::None)>>);
 
-    // tile_t ↔ TileData 1:1 검증
-    static_assert(sizeof(bwgame::tile_t) == sizeof(SCSim::TileData));
-    static_assert(std::is_same_v<decltype(bwgame::tile_t::visible), decltype(SCSim::TileData::visible)>);
-    static_assert(std::is_same_v<decltype(bwgame::tile_t::explored), decltype(SCSim::TileData::explored)>);
-    static_assert(std::is_same_v<decltype(bwgame::tile_t::flags), decltype(SCSim::TileData::flags)>);
-    static_assert(offsetof(bwgame::tile_t, visible) == offsetof(SCSim::TileData, visible));
-    static_assert(offsetof(bwgame::tile_t, explored) == offsetof(SCSim::TileData, explored));
-    static_assert(offsetof(bwgame::tile_t, flags) == offsetof(SCSim::TileData, flags));
-    static_assert(SCSim::TileFlags::HasCreep == bwgame::tile_t::flag_has_creep);
+    // tile_t ↔ MegatileState 1:1 검증
+    static_assert(sizeof(bwgame::tile_t) == sizeof(SCSim::MegatileState));
+    static_assert(std::is_same_v<decltype(bwgame::tile_t::visible), decltype(SCSim::MegatileState::visible)>);
+    static_assert(std::is_same_v<decltype(bwgame::tile_t::explored), decltype(SCSim::MegatileState::explored)>);
+    static_assert(std::is_same_v<decltype(bwgame::tile_t::flags), decltype(SCSim::MegatileState::flags)>);
+    static_assert(offsetof(bwgame::tile_t, visible) == offsetof(SCSim::MegatileState, visible));
+    static_assert(offsetof(bwgame::tile_t, explored) == offsetof(SCSim::MegatileState, explored));
+    static_assert(offsetof(bwgame::tile_t, flags) == offsetof(SCSim::MegatileState, flags));
+    static_assert(SCSim::MegatileFlags::HasCreep == bwgame::tile_t::flag_has_creep);
 }

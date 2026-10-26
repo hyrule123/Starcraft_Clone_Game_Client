@@ -9,7 +9,7 @@ void main(uint3 Gid : SV_GroupID, // 미니타일 좌표
             uint3 DTid : SV_DispatchThreadID)
 {
 	// 현재 스레드의 픽셀 번호 계산
-	const uint2 map_pixel_size = g_map_info.megatile_count * kMegatilePixelSize;
+	const uint2 map_pixel_size = g_map_info.map_size_megatile * kMegatilePixelSize;
 
 	if (DTid.x >= map_pixel_size.x || DTid.y >= map_pixel_size.y)
 	{
@@ -21,7 +21,7 @@ void main(uint3 Gid : SV_GroupID, // 미니타일 좌표
 	
 	// MTXM (맵 데이터)에서 현재 메가타일의 인덱스 조회
 	const uint megatile_flat_idx =
-        (MTXM_CV5_indices[megatile_coord.y * g_map_info.megatile_count.x + megatile_coord.x]) & kMTXMTileIdMask;
+        (MTXM_CV5_indices[megatile_coord.y * g_map_info.map_size_megatile.x + megatile_coord.x]) & kMTXMTileIdMask;
 	
 	// CV5는 원래 16개의 메가타일 그룹으로 이루어져 있음
 	// megatile_group = megatile_flat_idx >> 4u
@@ -52,5 +52,6 @@ void main(uint3 Gid : SV_GroupID, // 미니타일 좌표
 	const uint wpe_idx = VR4_minitile_wpe_indices[vr4_idx * 64 + GTid.y * 8 + px_x];
 
 	// 최종 결과 = Color(float4)
-	map_output[DTid.xy] = g_wpe[wpe_idx];
+	// WPE.a는 미사용 -> 1로 채움
+	map_output[DTid.xy] = float4(g_wpe[wpe_idx].xyz, 1.0f);
 }

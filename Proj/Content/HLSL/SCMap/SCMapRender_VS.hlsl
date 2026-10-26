@@ -11,8 +11,8 @@ SCMapVSOut main(SCMapVSIn input)
 	output.pos.z = 0.0f;
 	
 	//output.pos.xy = output.pos.xy * g_map_info.megatile_size * 32;
-	output.pixel_coord = input.uv * map_info.megatile_count * kMegatilePixelSize;
-	output.megatile_count = map_info.megatile_count;
+	output.pixel_coord = input.uv * map_info.map_size_megatile * kMegatilePixelSize;
+	output.map_size_megatile = map_info.map_size_megatile;
 
 	return output;
 }

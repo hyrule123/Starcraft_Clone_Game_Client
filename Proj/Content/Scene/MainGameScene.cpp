@@ -67,7 +67,7 @@ namespace // depth key
 	static_assert(kRankShift + kRankBits <= 24, "+1 오프셋 포함 float(2^-24 정규화)로 정확히 표현 가능해야 함");
 	static_assert(static_cast<uint32_t>(SCSim::kMaxSprites) <= (1u << kIndexBits));
 	static_assert(static_cast<uint32_t>(SCSim::kMaxSprites) <= (1u << kRankBits));
-	static_assert(static_cast<uint32_t>(SCSim::kMaxMapTiles) * 32u <= (1u << kYBits));
+	static_assert(static_cast<uint32_t>(SCSim::kMaxMapMegatiles) * 32u <= (1u << kYBits));
 
 	uint32_t MakeSortKey(const SCSim::SpriteData& sprt_data)
 	{
@@ -381,7 +381,7 @@ namespace sc
 		// 유닛 Sync는 매 프레임 진행
 		//SyncUnits();
 		SyncSprites();
-		SyncTiles();
+		SyncMegatileStates();
 	}
 	void MainGameScene::PrepareMapLoader()
 	{}
@@ -673,7 +673,7 @@ namespace sc
 			}
 		}
 	}
-	void MainGameScene::SyncTiles()
+	void MainGameScene::SyncMegatileStates()
 	{
 		SCMapRenderer* renderer = map_renderer_.get();
 		if (renderer == nullptr)
@@ -681,13 +681,13 @@ namespace sc
 			return;
 		}
 
-		const SCSim::TileData* tiles = nullptr;
-		uint32_t width = 0;
-		uint32_t height = 0;
-		const bool got = SCSim_GetTiles(sc_sim_ctx_, &tiles, &width, &height);
-		CHECK_F(got, "SCSim_GetTiles failed: {}", SCSim_GetLastError());
+		const SCSim::MegatileState* megatiles = nullptr;
+		uint32_t map_width_megatile = 0;
+		uint32_t map_height_megatile = 0;
+		const bool got = SCSim_GetMegatileStates(sc_sim_ctx_, &megatiles, &map_width_megatile, &map_height_megatile);
+		CHECK_F(got, "SCSim_GetMegatileStates failed: {}", SCSim_GetLastError());
 
-		const bool uploaded = renderer->ApplyTileSnapshot(tiles, width, height);
+		const bool uploaded = renderer->ApplyMegatileSnapshot(megatiles, map_width_megatile, map_height_megatile);
 		CHECK_F(uploaded, "Failed to upload tile snapshot");
 	}
 }

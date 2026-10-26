@@ -17,7 +17,7 @@ namespace SCSim
 	// - 비트 플래그는 OpenBW int 필드를 uint32_t로 명시 변환(상수에 0x80000000이 있어 signed로 표현 불가)
 
 	constexpr int32_t kMaxUnits = 1700;			// OpenBW units_container 상한
-	constexpr int32_t kMaxMapTiles = 256;		// 1.16.1 맵 최대 크기(타일), OpenBW tile_region_index도 256x256 고정
+	constexpr int32_t kMaxMapMegatiles = 256;		// 1.16.1 맵 최대 크기(메가타일), OpenBW tile_region_index도 256x256 고정
 	constexpr int32_t kMaxPlayerColors = 16;	// 1.16.1 플레이어 색상 수(tunit.pcx 16행)
 	constexpr int32_t kMaxActionPlayers = 8;	// 명령 주체 수, OpenBW action_state::selection 크기
 	constexpr int32_t kMaxSelection = 12;		// 동시 선택 상한(부대지정), OpenBW selection 원소 용량
@@ -209,7 +209,7 @@ namespace SCSim
 	};
 
 	// tile_t::flags 원본 비트 (1.16.1 배치). 아래에 없는 비트는 계약에 포함되지 않음
-	namespace TileFlags
+	namespace MegatileFlags
 	{
 		enum : uint16_t
 		{
@@ -220,13 +220,13 @@ namespace SCSim
 
 	// tile_t와 1:1 (OpenBW 표현 그대로)
 	// visible / explored는 플레이어별 비트이며 반전 저장: 비트 i가 1 = 플레이어 i가 볼 수 없음 / 탐사하지 않음
-	struct TileData
+	struct MegatileState
 	{
 		uint8_t  visible;
 		uint8_t  explored;
-		uint16_t flags;		// TileFlags
+		uint16_t flags;		// MegatileFlags
 	};
-	static_assert(sizeof(TileData) == 4);
-	static_assert(std::is_trivially_copyable_v<TileData>&& std::is_standard_layout_v<TileData>);
+	static_assert(sizeof(MegatileState) == 4);
+	static_assert(std::is_trivially_copyable_v<MegatileState>&& std::is_standard_layout_v<MegatileState>);
 
 }

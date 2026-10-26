@@ -14,7 +14,7 @@
 #define REG_T_TILESET_WPE REG_T_PER_DRAW_3
 
 // 맵 리소스
-#define REG_T_MAP_MTXM REG_T_PER_DRAW_3
+#define REG_T_MAP_MTXM REG_T_PER_DRAW_4
 
 // 아웃풋
 #define REG_U_MAP_TEXTURE REG_U(0)
@@ -49,7 +49,7 @@ Buffer<uint> VR4_minitile_wpe_indices : register(REG_T_TILESET_VR4);
 // MTXM_CV5_indices[tile_y * map_tile_width + tile_x] = megatile flat index
 Buffer<uint> MTXM_CV5_indices : register(REG_T_MAP_MTXM);
 
-Buffer<float4> g_wpe : register(REG_T_SC_WPE_PALETTE); // R8G8B8A8_UNORM, 256개
+Buffer<float4> g_wpe : register(REG_T_TILESET_WPE); // R8G8B8A8_UNORM, 256개
 
 // output
 RWTexture2D<float4> map_output : register(REG_U_MAP_TEXTURE);

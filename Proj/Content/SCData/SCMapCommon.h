@@ -272,8 +272,8 @@ namespace sc
 	struct SCMap
 	{
 		TileSetType terrain_type = TileSetType::kCount;
-		uint32_t megatile_width = 0;
-		uint32_t megatile_height = 0;
+		uint32_t map_width_megatile = 0;
+		uint32_t map_height_megatile = 0;
 		
 		std::vector<UnitData> unit_data = {};
 
@@ -294,15 +294,15 @@ namespace sc
 		std::shared_ptr<engine::TypedBuffer> pcx_tileset_LUT_offsets = {};
 
 		// Creep
-		std::shared_ptr<engine::Texture2D> creep_random_tiles = {};		// R8_UINT, 메가타일 크기. 타일별 Creep 바닥 번호(0 ~ kCreepTileCount - 1)
+		std::shared_ptr<engine::Texture2D> creep_random_megatiles = {};		// R8_UINT, 메가타일 크기. 타일별 Creep 바닥 번호(0 ~ kCreepTileCount - 1)
 		std::shared_ptr<engine::Texture2DArray> creep_edge = {};		// 타일셋 공유. 테두리 GRP(R8G8_UINT, 32x32 × kCreepEdgeFrameCount)
 	};
 
 	struct SCMapLoadingData
 	{
 		TileSetType terrain_type = TileSetType::kCount;
-		uint32_t megatile_width = 0;
-		uint32_t megatile_height = 0;
+		uint32_t map_width_megatile = 0;
+		uint32_t map_height_megatile = 0;
 
 		std::vector<uint8_t> map_raw_bytes = {};
 		engine::StringHashTable<std::vector<uint8_t>> map_data_table = {};

@@ -5,7 +5,7 @@
 #include <Engine/HLSL/Camera.hlsli>
 
 #define REG_T_MTXM					REG_T_PER_MATERIAL_0
-#define REG_T_TILE_STATES			REG_T_PER_MATERIAL_1
+#define REG_T_MEGATILE_STATES		REG_T_PER_MATERIAL_1
 #define REG_T_CREEP_RANDOM_TABLE	REG_T_PER_MATERIAL_2
 #define REG_T_CREEP_EDGE_TEXTURE	REG_T_PER_MATERIAL_3	// Texture2DArray<uint2>, tileset\<이름>.grp
 #define REG_T_CV5					REG_T_PER_MATERIAL_4
@@ -28,7 +28,7 @@ struct SCMapVSOut
 {
 	float4 pos : SV_Position;
 	float2 pixel_coord : TEXCOORD; // 픽셀 단위, UV 아님
-	nointerpolation int2 megatile_count : MEGATILE_COUNT; //메가타일 기준 맵 사이즈
+	nointerpolation int2 map_size_megatile : MAP_SIZE_MEGATILE; //메가타일 기준 맵 사이즈
 };
 #endif//__HLSL
 
@@ -37,7 +37,7 @@ struct SCMapVSOut
 StructuredBuffer<MapInfoCB> g_map_info : register(REG_T_INSTANCE_BUFFER);
 
 Buffer<uint> g_mtxm : register(REG_T_MTXM);
-Buffer<uint> g_tile_states : register(REG_T_TILE_STATES); // R32_UINT, 메가타일 수
+Buffer<uint> g_megatile_states : register(REG_T_MEGATILE_STATES); // R32_UINT, 메가타일 수
 Texture2D<uint> g_creep_random_tiles : register(REG_T_CREEP_RANDOM_TABLE); // R8_UINT, 메가타일 크기
 Texture2DArray<uint2> g_creep_edge : register(REG_T_CREEP_EDGE_TEXTURE); // R8G8_UINT (R: WPE 인덱스, G: 커버리지)
 Buffer<uint> g_cv5 : register(REG_T_CV5);
@@ -47,13 +47,13 @@ Buffer<uint> g_vr4 : register(REG_T_VR4);
 
 
 
-// g_tile_states 원소 = SCSim::TileData 4바이트를 그대로 담은 uint (리틀 엔디안)
-//   [7:0] visible, [15:8] explored, [31:16] flags (TileFlags)
-HLSL_CONSTEXPR uint kTileStateFlagsShift = 16;
+// g_megatile_states 원소 = SCSim::MegatileState 4바이트를 그대로 담은 uint (리틀 엔디안)
+//   [7:0] visible, [15:8] explored, [31:16] flags (MegatileFlags)
+HLSL_CONSTEXPR uint kMegatileStateFlagsShift = 16;
 
 // ---- Creep (OpenBW ui.h draw_tiles 기준) ----
 // Creep 바닥 타일: CV5 그룹 1의 메가타일 0 ~ (kCreepTileCount - 1)
-HLSL_CONSTEXPR uint kTileFlagHasCreep = 0x40;
+HLSL_CONSTEXPR uint kMegatileFlagHasCreep = 0x40;
 	
 HLSL_CONSTEXPR uint kCreepCV5Group = 1;
 HLSL_CONSTEXPR uint kCreepTileBaseCount = 6; // 0~5: 기본 (선택 확률 96%)
