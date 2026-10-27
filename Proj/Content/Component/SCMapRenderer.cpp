@@ -28,8 +28,6 @@ namespace sc
 	static_assert(offsetof(SCSim::MegatileState, explored) == 1);
 	static_assert(offsetof(SCSim::MegatileState, flags) * 8 == kMegatileStateFlagsShift);
 
-
-
 	SCMapRenderer::SCMapRenderer()
 		: Super(SCMapRenderer::kClassConcreteName)
 	{}

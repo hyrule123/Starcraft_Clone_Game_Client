@@ -69,11 +69,18 @@ extern "C" {
 	// 반환: 개수, 실패 시 -1이며 *out_units = nullptr
 	SCSIM_API int32_t SCSim_GetUnits(SCSim::Context* ctx, const SCSim::UnitData** out_units);
 
+	// 무효·사망 ID면 실패, hidden 유닛도 조회 가능(GetUnit과 동일)
+	SCSIM_API bool SCSim_GetUnitVitals(SCSim::Context* ctx, uint32_t unit_id, SCSim::UnitVitals* out);
+
 	// 살아 있는 스프라이트·이미지 전체(숨김 포함)를 컨텍스트 소유 버퍼에 채움
 	// 스프라이트 순서는 정해져 있지 않음. 이미지는 스프라이트별로 OpenBW 목록 순서(앞 = 맨 위층)
 	// 포인터는 컨텍스트 수명 동안 유효, 내용은 다음 NextFrame / GetSprites 호출 전까지 유효
 	// 버퍼 오버플로(정상 상태에서는 발생하지 않음) 시 실패
 	SCSIM_API bool SCSim_GetSprites(SCSim::Context* ctx, SCSim::SpriteSnapshot* out);
+
+	// Sprite 타입 별로 sprites.dat 전체(sprite_type id = 인덱스)를 컨텍스트 소유 버퍼로, 포인터는 컨텍스트 수명 동안 유효
+	// 성공 시 개수를 반환, 실패 시 -1
+	SCSIM_API int32_t SCSim_GetSpriteTypes(SCSim::Context* ctx, const SCSim::SpriteTypeData** out); 
 
 	// 플레이어 12명분(Player 순서)을 컨텍스트 소유 버퍼에 채움
 	// 포인터는 컨텍스트 수명 동안 유효, 내용은 다음 GetPlayers 호출 전까지 유효

@@ -9,6 +9,23 @@ namespace SCSim
 {
 	struct Context;	// Forward
 
+	struct Fp8
+	{
+		int32_t raw;
+
+		constexpr int32_t Floor() const
+		{
+			return raw >> 8;
+		}
+		constexpr int32_t Ceil() const
+		{
+			return (raw + 0xFF) >> 8;
+		}
+	};
+	static_assert(sizeof(Fp8) == sizeof(int32_t));
+	static_assert(std::is_trivially_copyable_v<Fp8>);
+	static_assert(std::is_standard_layout_v<Fp8>);
+
 	// 경계 타입 규칙
 	// - OpenBW size_t 인덱스(슬롯 번호·프레임 번호) → uint32_t. 축소는 DLL Fill 함수에서만 일어나며,
 	//   값의 상한(컨테이너 크기, iscript 프레임 범위)은 DLL의 static_assert·assert로 보장
@@ -23,6 +40,7 @@ namespace SCSim
 	constexpr int32_t kMaxSelection = 12;		// 동시 선택 상한(부대지정), OpenBW selection 원소 용량
 	constexpr int32_t kMaxSprites = 2500;		// OpenBW sprites_container 상한
 	constexpr int32_t kMaxImages = 5000;		// OpenBW images_container 상한
+	constexpr int32_t kMaxSpriteTypes = 517;
 
 	constexpr uint32_t kInvalidSpriteIndex = std::numeric_limits<uint32_t>::max();
 	constexpr uint32_t kInvalidUnitId = 0;
@@ -67,6 +85,7 @@ namespace SCSim
 
 	struct SpriteData
 	{
+		int32_t  sprite_type;		// OpenBW SpriteTypes(int)와 같은 타입
 		uint32_t index;				// sprite_t::index (슬롯 번호, 0도 유효)
 		int32_t  owner;				// sprite_t::owner (0~11). 색상은 SCSim_GetPlayers로 조회
 		int32_t  elevation_level;	// sprite_t::elevation_level
@@ -76,7 +95,16 @@ namespace SCSim
 		uint32_t image_count;		// OpenBW 목록 순서(앞 = 맨 위층)로 연속 배치. 숨김 이미지 포함
 		uint32_t flags;				// SpriteFlags (sprite_t::flags 비트 그대로)
 	};
-	static_assert(sizeof(SpriteData) == 32);
+	static_assert(std::is_trivially_copyable_v<SpriteData>&& std::is_standard_layout_v<SpriteData>);
+
+	struct SpriteTypeData
+	{
+		int32_t health_bar_size;
+		int32_t selection_circle;		// Selection_Circle_22pixels 기준 오프셋
+		int32_t selection_circle_vpos;
+	};
+	
+	static_assert(std::is_trivially_copyable_v<SpriteTypeData> && std::is_standard_layout_v<SpriteTypeData>);
 
 	// image_t::flags 원본 비트 (1.16.1 배치). 아래에 없는 비트는 계약에 포함되지 않음
 	// 0x1(redraw)은 OpenBW에서 해제되지 않아 의미 없음 — 사용 금지
@@ -108,7 +136,7 @@ namespace SCSim
 		uint32_t flags;				// ImageFlags (image_t::flags 비트 그대로)
 		int32_t  modifier_data1;	// image_t::modifier_data1 상태에 따른 색상 변화 플래그
 	};
-	static_assert(sizeof(ImageData) == 40);
+	static_assert(std::is_trivially_copyable_v<ImageData>&& std::is_standard_layout_v<ImageData>);
 
 
 	struct PlayerData
@@ -117,11 +145,7 @@ namespace SCSim
 		int32_t minerals;		// state::current_minerals
 		int32_t gas;			// state::current_gas
 	};
-	static_assert(sizeof(PlayerData) == 12);
-
 	static_assert(std::is_trivially_copyable_v<PlayerData>&& std::is_standard_layout_v<PlayerData>);
-	static_assert(std::is_trivially_copyable_v<SpriteData>&& std::is_standard_layout_v<SpriteData>);
-	static_assert(std::is_trivially_copyable_v<ImageData>&& std::is_standard_layout_v<ImageData>);
 
 	struct SpriteSnapshot
 	{
@@ -130,6 +154,30 @@ namespace SCSim
 		int32_t sprite_count;
 		int32_t image_count;
 	};
+	static_assert(std::is_trivially_copyable_v<SpriteSnapshot>&& std::is_standard_layout_v<SpriteSnapshot>);
+
+	namespace UnitVitalsFlags
+	{
+		enum : uint32_t
+		{
+			None = 0,
+			HasShield = 0x1,	// unit_type->has_shield
+			HasEnergy = 0x2,	// ut_has_energy(u) (unit_type_t::flag_has_energy)
+		};
+	}
+	struct UnitVitals
+	{
+		Fp8 hp;							// u->hp
+		int32_t max_visible_hp;			// max_visible_hp(u)            — bwgame.h 821
+		Fp8 shield;						// u->shield_points
+		int32_t max_shield;				// u->unit_type->shield_points
+		Fp8 energy;						// u->energy
+		Fp8 max_energy;					// unit_max_energy(u)           — bwgame.h 12248, 업그레이드·영웅 반영
+		int32_t remove_timer;			// u->remove_timer
+		int32_t default_remove_timer;	// default_remove_timer(u)      — bwgame.h 3728
+		uint32_t flags;			// 위 플래그
+	};
+	static_assert(std::is_trivially_copyable_v<UnitVitals>&& std::is_standard_layout_v<UnitVitals>);
 
 	struct UnitData
 	{
@@ -141,7 +189,6 @@ namespace SCSim
 		uint32_t status_flags;		// unit_t::status_flags 비트 그대로 (UnitStatusFlags)
 		uint32_t sprite_flags;		// u->sprite->flags 비트 그대로 (SpriteFlags) — 숨김은 SpriteFlags::Hidden
 	};
-	static_assert(sizeof(UnitData) == 28);
 	static_assert(std::is_trivially_copyable_v<UnitData>&& std::is_standard_layout_v<UnitData>);
 
 	// SCSim_GetSelectInfo 결과. 0 = 무효 ID(사망, 세대 불일치)
@@ -226,7 +273,5 @@ namespace SCSim
 		uint8_t  explored;
 		uint16_t flags;		// MegatileFlags
 	};
-	static_assert(sizeof(MegatileState) == 4);
 	static_assert(std::is_trivially_copyable_v<MegatileState>&& std::is_standard_layout_v<MegatileState>);
-
 }

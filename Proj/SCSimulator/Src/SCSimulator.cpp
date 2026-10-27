@@ -26,6 +26,9 @@ struct SCSim::Context
 
     std::array<SCSim::UnitData, SCSim::kMaxUnits> units{};  // GetUnits 결과 버퍼
 
+    // GetSpriteTypes 결과 버퍼. sprites.dat 전체(global_state, 컨텍스트 수명 동안 불변)
+	std::array<SCSim::SpriteTypeData, SCSim::kMaxSpriteTypes> sprite_type_buffer = {};
+
     std::array<SCSim::SpriteData, SCSim::kMaxSprites> sprite_buffer = {};
     std::array<SCSim::ImageData, SCSim::kMaxImages> image_buffer = {};
     // OpenBW players 배열과 같은 크기 (Player::kCount와의 일치는 하단 static_assert로 검증)
@@ -123,6 +126,8 @@ namespace // Snapshot
         SCSim::SpriteData& out)
     {
         out = {};
+		
+		out.sprite_type = static_cast<int32_t>(sprite.sprite_type->id);
         out.index = static_cast<uint32_t>(sprite.index);
         out.owner = sprite.owner;
         out.elevation_level = sprite.elevation_level;
@@ -832,6 +837,65 @@ extern "C" {
         return -1;
     }
 
+    bool SCSim_GetUnitVitals(SCSim::Context* ctx, uint32_t unit_id, SCSim::UnitVitals* out)
+    {
+        if (!CheckContext(ctx, "SCSim_GetUnitVitals"))
+        {
+            return false;
+        }
+        if (!out)
+        {
+            SetError("SCSim_GetUnitVitals: out is null");
+            return false;
+        }
+        *out = {};
+
+        try
+        {
+            bwgame::action_functions funcs(ctx->sim.st(), ctx->action_st);
+
+            // 사망·세대 불일치면 nullptr. hidden 유닛도 조회됨
+            const bwgame::unit_t* u = funcs.get_unit(bwgame::unit_id_32(unit_id));
+            if (!u)
+            {
+                SetError("SCSim_GetUnitVitals: invalid or dead unit_id " + std::to_string(unit_id));
+                return false;
+            }
+
+            // fp8 raw는 fixed_point 내부에서 32비트로 부호 확장된 값만 가짐 → int32_t 축소 안전
+            out->hp.raw = static_cast<int32_t>(u->hp.raw_value);
+            out->max_visible_hp = funcs.max_visible_hp(u);
+            out->shield.raw = static_cast<int32_t>(u->shield_points.raw_value);
+            out->max_shield = u->unit_type->shield_points;
+            out->energy.raw = static_cast<int32_t>(u->energy.raw_value);
+            out->max_energy.raw = static_cast<int32_t>(funcs.unit_max_energy(u).raw_value);
+            out->remove_timer = u->remove_timer;
+            out->default_remove_timer = funcs.default_remove_timer(u);
+
+            uint32_t flags = SCSim::UnitVitalsFlags::None;
+            if (u->unit_type->has_shield)
+            {
+                flags |= SCSim::UnitVitalsFlags::HasShield;
+            }
+            if (funcs.ut_has_energy(u))
+            {
+                flags |= SCSim::UnitVitalsFlags::HasEnergy;
+            }
+            out->flags = flags;
+            return true;
+        }
+        catch (const std::exception& e)
+        {
+            SetError(std::string("SCSim_GetUnitVitals: ") + e.what());
+        }
+        catch (...)
+        {
+            SetError("SCSim_GetUnitVitals: unknown exception");
+        }
+        *out = {};
+        return false;
+    }
+
     bool SCSim_GetSprites(SCSim::Context* ctx, SCSim::SpriteSnapshot* out)
     {
         if (!CheckContext(ctx, "SCSim_GetSprites"))
@@ -898,6 +962,42 @@ extern "C" {
             SetError("SCSim_GetSprites: unknown exception");
         }
         return false;
+    }
+
+    int32_t SCSim_GetSpriteTypes(SCSim::Context* ctx, const SCSim::SpriteTypeData** out)
+    {
+        if (!out)
+        {
+            SetError("SCSim_GetSpriteTypes: out is null");
+            return -1;
+        }
+        *out = nullptr;
+        if (!CheckContext(ctx, "SCSim_GetSpriteTypes"))
+        {
+            return -1;
+        }
+
+        // sprites.dat 로더(load_sprites_dat)의 개수는 함수 지역 상수라 static_assert 불가 → 런타임 검사
+        const auto& sprite_types = ctx->sim.st().global->sprite_types.vec;
+        if (sprite_types.size() != static_cast<size_t>(SCSim::kMaxSpriteTypes))
+        {
+            SetError("SCSim_GetSpriteTypes: unexpected sprite type count " + std::to_string(sprite_types.size()));
+            return -1;
+        }
+
+        // 불변 데이터의 단순 값 복사라 예외·부분 진행 상태가 없음. 517 × 12B라 매 호출 복사해도 부담 없음
+        for (size_t i = 0; i < sprite_types.size(); ++i)
+        {
+            const bwgame::sprite_type_t& src = sprite_types[i];
+            SCSim::SpriteTypeData& dst = ctx->sprite_type_buffer[i];
+            dst = {};
+            dst.health_bar_size = src.health_bar_size;
+            dst.selection_circle = src.selection_circle;
+            dst.selection_circle_vpos = src.selection_circle_vpos;
+        }
+
+        *out = ctx->sprite_type_buffer.data();
+        return SCSim::kMaxSpriteTypes;
     }
 
     int32_t SCSim_GetPlayers(SCSim::Context* ctx, const SCSim::PlayerData** out_players)
@@ -1004,7 +1104,7 @@ extern "C" {
 
 
 
-namespace //type traits
+namespace //type traits, OpenBW와 일치 검증
 {
     template<typename T>
     struct ContainerMaxSize;
@@ -1034,6 +1134,16 @@ namespace //type traits
     static_assert(std::is_same_v<decltype(bwgame::state::current_minerals)::value_type, int32_t>);
     static_assert(std::is_same_v<decltype(bwgame::state::current_gas)::value_type, int32_t>);
     static_assert(std::is_same_v<std::underlying_type_t<bwgame::ImageTypes>, decltype(SCSim::ImageData::image_type)>);
+
+    // SpriteType
+    static_assert(static_cast<int32_t>(bwgame::SpriteTypes::None) == SCSim::kMaxSpriteTypes);
+    static_assert(std::is_same_v<std::underlying_type_t<bwgame::SpriteTypes>, decltype(SCSim::SpriteData::sprite_type)>);
+
+    // Fp8
+    static_assert(std::is_same_v<decltype(bwgame::unit_t::hp), bwgame::fp8>);
+    static_assert(std::is_same_v<decltype(bwgame::unit_t::shield_points), bwgame::fp8>);
+    static_assert(std::is_same_v<decltype(bwgame::unit_t::energy), bwgame::fp8>);
+    static_assert(bwgame::fp8::fractional_bits == 8 && sizeof(bwgame::fp8::raw_type) == sizeof(int32_t));
 
     // ---- 플래그 타입 검증 ----
     // 1) 공개 enum과 OpenBW enum의 기반 타입이 같은지
