@@ -21,9 +21,9 @@ namespace sc
 
         void SetUnitID(uint32_t id) { unit_id_ = id; }
         uint32_t GetUnitID() const { return unit_id_; }
+        SCUnit* GetSCUnit() const { return sc_unit_; }
 
     private:
-        SCUnit* GetSCUnit() const { return sc_unit_; }
 		SCUnitBehavior* GetSCUnitBehavior() const { return sc_unit_behavior_; }
 
     private:

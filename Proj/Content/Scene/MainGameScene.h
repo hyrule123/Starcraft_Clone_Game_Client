@@ -3,9 +3,10 @@
 
 #include <Engine/ThirdParty/ankerl/unordered_dense.h>
 
-#include <SCSimulator/Include/SCSimulatorAPI.h>
+#include <SCSimulator/Include/SCSimulatorTypes.h>
 
 #include <array>
+#include <span>
 
 namespace engine
 {
@@ -20,6 +21,7 @@ namespace sc
     
     class SCSpriteObj;
     class SCImageObj;
+    class SCSelectionCircleObj;
 
     class SCMapRenderer;
 
@@ -31,7 +33,9 @@ namespace sc
     struct SpriteSlot
     {
         engine::weak_handle_ptr<SCSpriteObj> object;	// 슬롯이 처음 쓰일 때 생성, 이후 계속 유지
-        uint32_t serial = 0;		// 마지막으로 본 싱크 번호
+        uint32_t serial = 0;				// 마지막으로 본 싱크 번호
+        uint32_t selected_serial = 0;	// == sprite_sync_serial_ 이면 선택됨
+        uint32_t selected_slot = 0;		// selected_serial이 유효할 때만 의미 있음 (Pool 인덱스)
     };
 
     struct ImageSlot
@@ -39,6 +43,13 @@ namespace sc
         engine::weak_handle_ptr<SCImageObj> object;
         uint32_t serial = 0;
         uint32_t sprite_index = SCSim::kInvalidSpriteIndex;	// 현재 부모 스프라이트 슬롯 (재부모화 판정)
+    };
+
+    struct SelectionCircleSlot
+    {
+		engine::weak_handle_ptr<SCSelectionCircleObj> object;
+        uint32_t unit_id = SCSim::kInvalidUnitId;				    // 마킹 단계에서 기록 (체력 바 Vitals 조회용)
+        uint32_t drawn_serial = 0;							        // 실제로 원을 그린 싱크. 아니면 정리 루프에서 SetActive(false)
     };
 
     class MainGameScene :
@@ -68,6 +79,9 @@ namespace sc
         const SCSim::UnitData* sc_units_ = {};
         int32_t sc_units_count_ = 0;
 
+        // 소유자: SCSim::Context, 이 클래스와 수명을 같이 하므로 에러 위험 없음
+        std::span<const SCSim::SpriteTypeData> sprite_types_ = {};
+
         // Unit ID - UnitEntry pair
         ankerl::unordered_dense::map<uint32_t, UnitEntry> unit_objects_ = {};
         uint32_t sync_serial_ = 0;
@@ -83,8 +97,13 @@ namespace sc
 
         uint32_t sprite_sync_serial_ = 0;
 
+        // Selection Circle
+		std::array<SelectionCircleSlot, SCSim::kMaxSelection> selection_circle_pool_ = {};
+
         std::shared_ptr<engine::ConstantBuffer> sc_common_info_buffer_ = {};
 
         engine::weak_handle_ptr<SCMapRenderer> map_renderer_ = {};
+
+        SCSim::Player local_player_ = {};
     };
 }

@@ -108,6 +108,9 @@
     <ClInclude Include="GameObject\SCUnitObj.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GameObject\SCSelectionCircleObj.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -186,6 +189,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GameObject\SCUnitObj.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GameObject\SCSelectionCircleObj.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

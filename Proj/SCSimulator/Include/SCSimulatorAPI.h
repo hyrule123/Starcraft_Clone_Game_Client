@@ -79,6 +79,7 @@ extern "C" {
 	SCSIM_API bool SCSim_GetSprites(SCSim::Context* ctx, SCSim::SpriteSnapshot* out);
 
 	// Sprite 타입 별로 sprites.dat 전체(sprite_type id = 인덱스)를 컨텍스트 소유 버퍼로, 포인터는 컨텍스트 수명 동안 유효
+	// 데이터 버퍼의 크기는 크지 않으나, 1회 로드 시 불변 -> 초기화 시 1회만 호출
 	// 성공 시 개수를 반환, 실패 시 -1
 	SCSIM_API int32_t SCSim_GetSpriteTypes(SCSim::Context* ctx, const SCSim::SpriteTypeData** out); 
 

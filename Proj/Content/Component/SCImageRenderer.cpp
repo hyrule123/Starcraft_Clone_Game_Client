@@ -56,6 +56,7 @@ namespace sc
 			case ImageModifier::Normal:
 			case ImageModifier::NormalNoHallu:
 			case ImageModifier::WarpTexture:
+			case ImageModifier::SelectionCircle:
 				return SCImageVariant::Opaque;
 
 			case ImageModifier::Cloaking:

@@ -1145,6 +1145,11 @@ namespace //type traits, OpenBW와 일치 검증
     static_assert(std::is_same_v<decltype(bwgame::unit_t::energy), bwgame::fp8>);
     static_assert(bwgame::fp8::fractional_bits == 8 && sizeof(bwgame::fp8::raw_type) == sizeof(int32_t));
 
+    // SelectionCircle
+    static_assert(static_cast<int32_t>(bwgame::ImageTypes::IMAGEID_Selection_Circle_22pixels) == SCSim::kImageTypeSelectionCircleBase);
+    static_assert(static_cast<int32_t>(bwgame::ImageTypes::IMAGEID_Selection_Circle_224pixels)
+        == SCSim::kImageTypeSelectionCircleBase + SCSim::kSelectionCircleSizeCount - 1);
+
     // ---- 플래그 타입 검증 ----
     // 1) 공개 enum과 OpenBW enum의 기반 타입이 같은지
     static_assert(std::is_same_v<

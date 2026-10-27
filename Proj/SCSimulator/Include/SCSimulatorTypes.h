@@ -103,8 +103,11 @@ namespace SCSim
 		int32_t selection_circle;		// Selection_Circle_22pixels 기준 오프셋
 		int32_t selection_circle_vpos;
 	};
-	
 	static_assert(std::is_trivially_copyable_v<SpriteTypeData> && std::is_standard_layout_v<SpriteTypeData>);
+	
+	// kImageTypeSelectionCircleBase + selection_circle
+	constexpr int32_t kImageTypeSelectionCircleBase = 561;	// IMAGEID_Selection_Circle_22pixels. + selection_circle(0~9)
+	constexpr int32_t kSelectionCircleSizeCount = 10;		// 22 ~ 224px
 
 	// image_t::flags 원본 비트 (1.16.1 배치). 아래에 없는 비트는 계약에 포함되지 않음
 	// 0x1(redraw)은 OpenBW에서 해제되지 않아 의미 없음 — 사용 금지

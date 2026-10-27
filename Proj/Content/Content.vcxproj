@@ -244,6 +244,7 @@
     <ClInclude Include="SCData\SCTileSetPcxLUT.h" />
     <ClInclude Include="GameObject\SCSpriteObj.h" />
     <ClInclude Include="Script\SCUnit.h" />
+    <ClInclude Include="GameObject\SCSelectionCircleObj.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Scene\MainGameScene.h" />
   </ItemGroup>
@@ -279,6 +280,7 @@
     <ClCompile Include="SCData\SCTileSetPcxLUT.cpp" />
     <ClCompile Include="GameObject\SCSpriteObj.cpp" />
     <ClCompile Include="Script\SCUnit.cpp" />
+    <ClCompile Include="GameObject\SCSelectionCircleObj.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Content.rc" />
