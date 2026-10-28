@@ -16,6 +16,8 @@ namespace engine
 	class Mesh;
 	class DepthStencilState;
 	class TypedBuffer;
+	class InputLayout;
+	class RasterizerState;
 }
 
 namespace sc
@@ -39,10 +41,14 @@ namespace sc
 		std::shared_ptr<engine::Mesh> GetMapMesh() const { return map_mesh_; }
 		std::shared_ptr<engine::Material> GetNewMapMaterial() const;
 
+		// 체력 바 공용 Material (텍스처 없음 → 모든 바가 공유, 인스턴싱으로 한 번에 그림)
+		std::shared_ptr<engine::Material> GetHpBarMaterial() const { return hp_bar_material_; }
+
 	private:
 		void CreateCommonPaletteBuffer(const MPQFileSystem& mpq_fs);
 		void CreateDepthStencilStates();
 		void CreateOriginalMaterials();
+		void CreateHpBarMaterial();
 		void CreateMesh();
 		void CreateMapMaterial();
 
@@ -60,12 +66,23 @@ namespace sc
 		std::array<std::shared_ptr<engine::Material>, (size_t)SCImageVariant::kCount> orig_materials_ = {};
 		std::shared_ptr<engine::Mesh> image_mesh_ = {};
 
+		std::shared_ptr<engine::Mesh> map_mesh_ = {};
+		std::shared_ptr<engine::Material> map_material_ = {};
+
+		// 체력 바
+		std::shared_ptr<engine::Material> hp_bar_material_ = {};
+
+		// 이미지 파이프라인 공용 상태 (체력 바 파이프라인도 재사용 — 같은 ImageVSInput)
+		std::shared_ptr<engine::InputLayout> image_input_layout_ = {};
+		std::shared_ptr<engine::RasterizerState> image_rss_ = {};
+
+
+
 		// GPU
 		std::shared_ptr<engine::DepthStencilState> depth_key_write_dss_ = {};
 		std::shared_ptr<engine::DepthStencilState> depth_key_test_dss_ = {};
 
-		std::shared_ptr<engine::Mesh> map_mesh_ = {};
-		std::shared_ptr<engine::Material> map_material_ = {};
+
 
 		// Common
 		std::shared_ptr<engine::TypedBuffer> common_palettes_buffer_ = {};

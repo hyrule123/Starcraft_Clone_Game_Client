@@ -1,10 +1,11 @@
 #pragma once
 #include <Engine/Core/CoreMinimal.h>
 
-#include <Content/SCData/SCImageLibrary.h>
+#include <string_view>
+
 #include <Content/SCData/SCImageData.h>
 
-#include <string_view>
+#include <Content/HLSL/SCImage/SCImageCommon.hlsli>
 
 namespace engine
 {
@@ -20,7 +21,8 @@ namespace sc
     struct BakedGrp
     {
         std::shared_ptr<engine::Texture2DArray> texture = {};      // GRP 하나를 디코딩해 Texture2DArray로 만들어 등록
-        std::shared_ptr<engine::StructuredBuffer> frame_rects = {};	// 캔버스 내 프레임의 위치 정보(캔버스 좌상단으로부터 오프셋, 크기)
+        std::shared_ptr<engine::StructuredBuffer> frame_rects_gpu_buf = {};	// 캔버스 내 프레임의 위치 정보(캔버스 좌상단으로부터 오프셋, 크기)
+        std::vector<GrpFrameRect> frame_rects = {};
     };
 
     // images.dat 기준으로 게임에서 쓰는 모든 GRP를 R8G8_UINT Texture2DArray로 구워
@@ -51,7 +53,14 @@ namespace sc
         size_t GrpCount() const { return manifest_.sources.size(); }
 
         // GRP가 없는 이미지 타입이면 내부에 nullptr이 들어있음.
-		BakedGrp GetGrp(int32_t image_type) const;
+		const BakedGrp& GetGrp(int32_t image_type) const;
+
+		const GrpFrameRect& GetFrameRect(int32_t image_type, uint32_t frame_index) const
+		{
+			const BakedGrp& grp = GetGrp(image_type);
+			ASSERT_F(grp.frame_rects.size() > frame_index, "Invalid frame index {} for image type {}", frame_index, image_type);
+			return grp.frame_rects[frame_index];
+		}
 
     private:
         ImageDefTable defs_ = {};

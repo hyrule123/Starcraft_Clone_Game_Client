@@ -216,6 +216,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="GameObject\SCUnitObj.h" />
+    <ClInclude Include="GameObject\SCHpBarObj.h" />
+    <ClInclude Include="Component\SCHpBarRenderer.h" />
     <ClInclude Include="Script\BuildTestScript.h" />
     <ClInclude Include="Script\EmpTestScript.h" />
     <ClInclude Include="GameObject\SCImageObj.h" />
@@ -250,6 +252,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameObject\SCUnitObj.cpp" />
+    <ClCompile Include="GameObject\SCHpBarObj.cpp" />
+    <ClCompile Include="Component\SCHpBarRenderer.cpp" />
     <ClCompile Include="Script\BuildTestScript.cpp" />
     <ClCompile Include="Script\EmpTestScript.cpp" />
     <ClCompile Include="GameObject\SCImageObj.cpp" />
@@ -295,6 +299,18 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="HLSL\SCImage\SCHpBar_PS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="HLSL\SCImage\SCHpBar_VS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
     <FxCompile Include="HLSL\SCImage\SCImageDistortionSync_PS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
@@ -351,6 +367,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="HLSL\SCCommon.hlsli" />
+    <None Include="HLSL\SCImage\SCHpBar.hlsli" />
     <None Include="HLSL\SCImage\SCEffectPass.hlsli" />
     <None Include="HLSL\SCImage\SCImageCommon.hlsli" />
     <None Include="HLSL\SCImage\SCPcxLut.hlsli" />

@@ -120,7 +120,7 @@ namespace sc
 
 		default:
 		{
-			ASSERT_F(false, "처리되지 않은 Pass ID: {}", static_cast<uint32_t>(args.pass));
+			CHECK_F(false, "처리되지 않은 Pass ID: {}", static_cast<uint32_t>(args.pass));
 			break;
 		}
 

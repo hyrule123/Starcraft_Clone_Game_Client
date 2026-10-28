@@ -22,6 +22,7 @@ namespace sc
     class SCSpriteObj;
     class SCImageObj;
     class SCSelectionCircleObj;
+    class SCHpBarObj;
 
     class SCMapRenderer;
 
@@ -45,11 +46,13 @@ namespace sc
         uint32_t sprite_index = SCSim::kInvalidSpriteIndex;	// 현재 부모 스프라이트 슬롯 (재부모화 판정)
     };
 
-    struct SelectionCircleSlot
+    struct SelectionSlot
     {
-		engine::weak_handle_ptr<SCSelectionCircleObj> object;
+		engine::weak_handle_ptr<SCSelectionCircleObj> circle_obj;
+		engine::weak_handle_ptr<SCHpBarObj> hp_bar_obj;
         uint32_t unit_id = SCSim::kInvalidUnitId;				    // 마킹 단계에서 기록 (체력 바 Vitals 조회용)
-        uint32_t drawn_serial = 0;							        // 실제로 원을 그린 싱크. 아니면 정리 루프에서 SetActive(false)
+        uint32_t circle_drawn_serial = 0;							// 실제로 원을 그린 싱크. 아니면 정리 루프에서 SetActive(false)
+		uint32_t hp_bar_drawn_serial = 0;						    // 실제로 바를 그린 싱크. 아니면 정리 루프에서 SetActive(false)
     };
 
     class MainGameScene :
@@ -97,8 +100,8 @@ namespace sc
 
         uint32_t sprite_sync_serial_ = 0;
 
-        // Selection Circle
-		std::array<SelectionCircleSlot, SCSim::kMaxSelection> selection_circle_pool_ = {};
+        // Selection
+		std::array<SelectionSlot, SCSim::kMaxSelection> selection_pool_ = {};
 
         std::shared_ptr<engine::ConstantBuffer> sc_common_info_buffer_ = {};
 

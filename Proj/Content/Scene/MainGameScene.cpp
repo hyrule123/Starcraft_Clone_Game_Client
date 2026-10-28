@@ -31,6 +31,7 @@
 #include <Content/GameObject/SCImageObj.h>
 #include <Content/GameObject/SCUnitObj.h>
 #include <Content/GameObject/SCSelectionCircleObj.h>
+#include <Content/GameObject/SCHpBarObj.h>
 
 #include <Content/Script/SCUnit.h>
 
@@ -548,7 +549,7 @@ namespace sc
 			sprt_slot.selected_slot = static_cast<uint32_t>(i);	// 선택 순서
 
 			// Unit ID만 기록, Serial은 아래에서 설정됨
-			SelectionCircleSlot& circle_slot = selection_circle_pool_[i];
+			SelectionSlot& circle_slot = selection_pool_[i];
 			circle_slot.unit_id = unit_id;
 		}
 
@@ -675,32 +676,81 @@ namespace sc
 				img_slot.serial = sprite_sync_serial_;
 				img_obj->SetActive(true);
 			}
+			const uint32_t hp_bar_order = order++;	// 체력 바는 스프라이트 최전방에 그린다
 
-			// 선택 원: has_circle일 때만 (전부 그림자·숨김이면 원작도 원을 안 그림)
-			// 체력 바: 무적이 아니면 MakeDepthKey(rank, order)
-			// → Selected Rendering Batcher에 전송
-			if (is_selected && has_circle)
+			
+			// 선택 원: is_selected && has_circle일 때만 (전부 그림자·숨김이면 원작도 원을 안 그림)
+			// 체력 바: is_selected && 무적 아님 && Vital 데이터 있음
+			if (is_selected)
 			{
-				ASSERT(sprt_slot.selected_slot < selection_circle_pool_.size());
-				SelectionCircleSlot& sel = selection_circle_pool_[sprt_slot.selected_slot];
-				sel.drawn_serial = sprite_sync_serial_;
+				ASSERT(sprt_slot.selected_slot < selection_pool_.size());
+				SelectionSlot& sel = selection_pool_[sprt_slot.selected_slot];
 
-				// 없을 시 생성
-				SCSelectionCircleObj* sel_obj = sel.object.get();
-				if (sel_obj == nullptr)
-				{
-					sel_obj = AddGameObject<SCSelectionCircleObj>();
-					sel.object = sel_obj;
-				}
-
-				ASSERT(sel_obj);
 				ASSERT(0 <= sprt_data.sprite_type && static_cast<size_t>(sprt_data.sprite_type) < sprite_types_.size());
 				const SCSim::SpriteTypeData& sprt_type_data = sprite_types_[sprt_data.sprite_type];
 
-				// 맨 마지막에 enum 상수를 넣어 그룹별 색상 확인 가능
-				sel_obj->ApplySelection(sprt_data.x, sprt_data.y, sprt_type_data, circle_depth_key, GetSelectionColorGroup(sprt_data.owner, local_player_));
+				if (has_circle)
+				{
+					// 없을 시 생성
+					SCSelectionCircleObj* sel_obj = sel.circle_obj.get();
+					if (sel_obj == nullptr)
+					{
+						sel_obj = AddGameObject<SCSelectionCircleObj>();
+						sel.circle_obj = sel_obj;
+					}
 
-				sel_obj->SetActive(true);
+					ASSERT(sel_obj);
+
+					// 맨 마지막에 enum 상수를 넣어 그룹별 색상 확인 가능
+					sel_obj->ApplySelection(sprt_data.x, sprt_data.y, sprt_type_data, circle_depth_key, GetSelectionColorGroup(sprt_data.owner, local_player_));
+
+					sel_obj->SetActive(true);
+					sel.circle_drawn_serial = sprite_sync_serial_;
+				}
+
+				const auto iter = unit_objects_.find(sel.unit_id);
+				if (iter != unit_objects_.end())
+				{
+
+					ASSERT(iter->second.object);
+					const SCSim::UnitData& unit_data = iter->second.object->GetSCUnit()->GetSnapshot();
+					
+					// 무적이 아닐 때만 HP Bar 렌더링
+					if ((unit_data.status_flags & SCSim::UnitStatusFlags::Invincible) == 0)
+					{
+						SCSim::UnitVitals unit_vitals = {};
+						bool get_vital_ok = SCSim_GetUnitVitals(sc_sim_ctx_, unit_data.id, &unit_vitals);
+
+						if (get_vital_ok)
+						{
+							SCHpBarObj* hp_obj = sel.hp_bar_obj.get();
+							if (hp_obj == nullptr)
+							{
+								hp_obj = AddGameObject<SCHpBarObj>();
+								sel.hp_bar_obj = hp_obj;
+							}
+							ASSERT(hp_obj);
+
+							hp_obj->ApplyHpBar(
+								{
+									.sprite_x = sprt_data.x,
+									.sprite_y = sprt_data.y,
+									.depth_key = MakeDepthKey(rank, hp_bar_order),
+									.sprite_type_data = sprt_type_data,
+									.unit_data = unit_data,
+									.vitals = unit_vitals,
+								}
+								);
+
+							hp_obj->SetActive(true);
+							sel.hp_bar_drawn_serial = sprite_sync_serial_;
+						}
+						else
+						{
+							DEBUG_LOG("Failed to get unit vitals for unit_id={}: {}", unit_data.id, SCSim_GetLastError());
+						}
+					}
+				}
 			}
 		}
 
@@ -727,11 +777,19 @@ namespace sc
 			}
 		}
 
-		for (SelectionCircleSlot& slot : selection_circle_pool_)
+		for (SelectionSlot& slot : selection_pool_)
 		{
-			if (slot.drawn_serial != sprite_sync_serial_)
+			if (slot.circle_drawn_serial != sprite_sync_serial_)
 			{
-				if (SCSelectionCircleObj* obj = slot.object.get())
+				if (SCSelectionCircleObj* obj = slot.circle_obj.get())
+				{
+					obj->SetActive(false);
+				}
+			}
+
+			if (slot.hp_bar_drawn_serial != sprite_sync_serial_)
+			{
+				if (SCHpBarObj* obj = slot.hp_bar_obj.get())
 				{
 					obj->SetActive(false);
 				}

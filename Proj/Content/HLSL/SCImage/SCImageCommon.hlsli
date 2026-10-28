@@ -38,7 +38,6 @@ struct SCImageInstance
 	uint player_color_idx; // players[owner].color (0~15)
 	uint remapping;		// ImageDef::remapping (light LUT 번호, modifier 9용)
 };
-
 #ifdef __cplusplus
 static_assert(sizeof(SCImageInstance) == 40, "SCImageInstance Layout changed.");
 #endif
@@ -52,10 +51,15 @@ struct GrpFrameRect
 static_assert(sizeof(GrpFrameRect) == 16, "GrpFrameRect Layout changed.");
 #endif
 
-
-
-// 깊이 키 → z 변환 배율 (2^-24). z = (key + 1) * kScDepthScale, 키 24비트 이내에서 정확히 표현
-HLSL_CONSTEXPR float kScDepthScale = 1.0f / 16777216.0f;
+struct ImageVSInput
+{
+	// 위치는 인스턴스 위치와 캔버스 크기, UV로 전부 계산됨
+	float2 uv SEMANTIC(TEXCOORD);
+	
+#ifdef __HLSL
+	uint instance_id : INSTANCE_ID;
+#endif //__HLSL
+};
 
 HLSL_CONSTEXPR uint kImageFlagHorizontallyFlipped = 0x2;	// C++ (SCImageRenderer) 쪽에서 검증
 HLSL_CONSTEXPR uint kImageFlagYFrozen = 0x4;
@@ -79,17 +83,6 @@ HLSL_CONSTEXPR int kModifierWarpFlash = 17;
 HLSL_CONSTEXPR int kModifierWarpTexture = 12;
 // ****************
 
-
-struct ImageVSInput
-{
-	// 위치는 인스턴스 위치와 캔버스 크기, UV로 전부 계산됨
-	float2 uv SEMANTIC(TEXCOORD);
-	
-#ifdef __HLSL
-	uint instance_id : INSTANCE_ID;
-#endif //__HLSL
-};
-
 #ifdef __HLSL
 struct ImageVSOutput
 {
@@ -110,6 +103,11 @@ Buffer<float4> g_wpe : register(REG_T_SC_WPE_PALETTE); // R8G8B8A8_UNORM, 256개
 
 // GRP의 텍스처(array)별 캔버스 내 프레임의 오프셋, 크기
 StructuredBuffer<GrpFrameRect> g_grp_frame_rects : register(REG_T_SC_GRP_FRAME_RECTS);
+
+float DepthKeyToClipZ(uint depth_key, float clip_w)
+{
+	return float(depth_key + 1u) * kScDepthScale * clip_w;
+}
 
 float2 ScToWorld(float sc_x, float sc_y)
 {

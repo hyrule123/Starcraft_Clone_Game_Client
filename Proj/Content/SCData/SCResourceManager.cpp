@@ -27,6 +27,7 @@
 #include <algorithm>
 
 #include <Content/HLSL/SCImage/SCImageCommon.hlsli>
+#include <Content/HLSL/SCImage/SCHpBar.hlsli>
 
 namespace
 {
@@ -63,6 +64,7 @@ namespace sc
 		CreateCommonPaletteBuffer(mpq_file_system_);
 		CreateDepthStencilStates();
 		CreateOriginalMaterials();
+		CreateHpBarMaterial();
 		CreateMapMaterial();
 		materials_.resize(sc_image_library_.GrpCount());
 		CreateMesh();
@@ -142,6 +144,7 @@ namespace sc
 
 		std::shared_ptr<VertexShader> vs = ResourceManager::GetInst().LoadFromFile<VertexShader>("Shader/SCImage_VS.cso");
 
+		// Input Layout: 공유해서 사용하므로 캐싱
 		std::array<D3D11_INPUT_ELEMENT_DESC, 2> desc = {};
 		desc[0].SemanticName = "TEXCOORD";
 		desc[0].SemanticIndex = 0;
@@ -156,7 +159,9 @@ namespace sc
 		std::shared_ptr<InputLayout> il = EntityManager::CreateEntity<InputLayout>();
 		bool result = il->Create({ desc }, vs.get());
 		CHECK_F(result, "Failed to create InputLayout.");
+		image_input_layout_ = il;
 
+		// Rasterizer State: 공유해서 사용하므로 캐싱
 		std::shared_ptr<RasterizerState> rss = EntityManager::CreateEntity<RasterizerState>();
 		D3D11_RASTERIZER_DESC rsDesc = {};
 		rsDesc.FillMode = D3D11_FILL_SOLID;			// 선으로만 그림
@@ -164,6 +169,7 @@ namespace sc
 		rsDesc.FrontCounterClockwise = false;
 		rsDesc.DepthClipEnable = false;				//Depth Clip OFF
 		if (!rss->Create(rsDesc)) { CHECK(false); }
+		image_rss_ = rss;
 
 
 		// 공통: VS / InputLayout / RSS / 인스턴스 stride는 모든 이미지 파이프라인이 공유
@@ -223,6 +229,36 @@ namespace sc
 		RenderManager::GetInst().GetPerFrameBindingTable().AddShaderResource(
 			ShaderStage::Pixel, REG_T_SC_WARP_TEXTURE, warp_texture);
 #pragma endregion //WARP TEXTURE BINDING
+	}
+
+	void SCResourceManager::CreateHpBarMaterial()
+	{
+		using namespace engine;
+
+		// 이미지 파이프라인 상태를 재사용하므로 CreateOriginalMaterials 이후여야 함
+		CHECK_F(image_input_layout_ && image_rss_, "CreateHpBarMaterial must be called after CreateOriginalMaterials");
+		CHECK_F(depth_key_write_dss_, "CreateHpBarMaterial must be called after CreateDepthStencilStates");
+		CHECK_F(hp_bar_material_ == nullptr, "Double initialization");
+
+		std::shared_ptr<VertexShader> vs = ResourceManager::GetInst().LoadFromFile<VertexShader>("Shader/SCHpBar_VS.cso");
+		CHECK_F(vs, "Failed to load SCHpBar_VS.");
+
+		std::shared_ptr<PipelineState> state = EntityManager::CreateEntity<PipelineState>();
+
+		// 입력 레이아웃: SCImage_VS 바이트코드로 만든 것을 공유 — SCHpBar_VS도 같은 ImageVSInput(TEXCOORD + INSTANCE_ID)
+		state->SetInputLayout(image_input_layout_);
+		state->SetVertexShader(vs);
+
+		const bool ps_result = state->SetPixelShader("Shader/SCHpBar_PS.cso");
+		CHECK_F(ps_result, "Failed to load SCHpBar_PS.");
+
+		state->SetInstanceDataStride(sizeof(SCHpBarInstance));
+		state->SetRasterizerState(image_rss_);
+		state->SetDepthStencilState(depth_key_write_dss_);	// Opaque와 같은 깊이 키 기록 — 다른 이미지와의 앞뒤는 depth_key가 결정
+		state->SetDrawFlags(DrawFlags{});					// 배칭 허용 (텍스처 없음, 서로 겹쳐도 깊이로 해결)
+
+		hp_bar_material_ = EntityManager::CreateEntity<Material>();
+		hp_bar_material_->SetPipelineState(kSCOpaquePassID, std::move(state));
 	}
 
 	void SCResourceManager::CreateMesh()
@@ -288,12 +324,12 @@ namespace sc
 		if (mtrl == nullptr)
 		{
 			mtrl = orig_materials_[(size_t)variant]->Clone();
-			BakedGrp grp = sc_image_library_.GetGrp(image_type);
-			ASSERT_F(grp.texture && grp.frame_rects, "Failed to get texture for image type: {}", image_type);
+			const BakedGrp& grp = sc_image_library_.GetGrp(image_type);
+			ASSERT_F(grp.texture && grp.frame_rects_gpu_buf, "Failed to get texture for image type: {}", image_type);
 
 			GPUBufferBindingTable& binding_table = mtrl->GetPerMaterialBindingTable();
-			binding_table.AddShaderResource(engine::ShaderStage::Vertex | engine::ShaderStage::Pixel, REG_T_SC_GRP_SPRITE, std::move(grp.texture));
-			binding_table.AddShaderResource(engine::ShaderStage::Vertex | engine::ShaderStage::Pixel, REG_T_SC_GRP_FRAME_RECTS, std::move(grp.frame_rects));
+			binding_table.AddShaderResource(engine::ShaderStage::Vertex | engine::ShaderStage::Pixel, REG_T_SC_GRP_SPRITE, grp.texture);
+			binding_table.AddShaderResource(engine::ShaderStage::Vertex | engine::ShaderStage::Pixel, REG_T_SC_GRP_FRAME_RECTS, grp.frame_rects_gpu_buf);
 		}
 
 		return mtrl;

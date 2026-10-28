@@ -95,7 +95,7 @@ namespace sc
 		Super::Awake();
 
 		// Mesh와 Material 설정은 ApplySnapshot에서 처리
-		ASSERT(IsRenderReady());
+		CHECK(IsRenderReady());
 	}
 	void SCImageRenderer::ApplySnapshot(const SCSim::ImageData& img_data, const SCImageParam& img_param)
 	{
@@ -209,7 +209,7 @@ namespace sc
 			break;
 		}
 		default:
-			ASSERT_F(false, "처리되지 않은 Pass ID: {}", static_cast<uint32_t>(args.pass));
+			CHECK_F(false, "처리되지 않은 Pass ID: {}", static_cast<uint32_t>(args.pass));
 			break;
 		}
 	}

@@ -17,7 +17,6 @@ namespace sc
     {
         constexpr DXGI_FORMAT kGrpTextureFormat = DXGI_FORMAT_R8G8_UINT;
     }
-
     
     BakedGrp SCImageLibrary::BakeGrp(std::vector<uint8_t> grp_bytes, std::vector<uint8_t>& pixels)
     {
@@ -72,7 +71,7 @@ namespace sc
         const bool rects_created = rects_buf->CreateImmutableBuffer(std::span<const GrpFrameRect>(frame_rects));
         if (!rects_created) { return {}; }
 
-        return { texture, rects_buf };
+        return { .texture = std::move(texture), .frame_rects_gpu_buf = std::move(rects_buf), .frame_rects = std::move(frame_rects) };
     }
 
     SCImageLibrary::SCImageLibrary()
@@ -128,7 +127,7 @@ namespace sc
 
         for (const GrpSource& source : manifest->sources)
         {
-            const std::optional<std::vector<uint8_t>> grp_bytes = fs.ReadFile(source.mpq_path);
+            std::optional<std::vector<uint8_t>> grp_bytes = fs.ReadFile(source.mpq_path);
             if (!grp_bytes.has_value())
             {
                 LOG("SCImageLibrary: GRP 읽기 실패 {}", source.mpq_path);
@@ -136,7 +135,7 @@ namespace sc
             }
 
             BakedGrp baked = BakeGrp(std::move(*grp_bytes), pixels);
-            if (baked.texture == nullptr || baked.frame_rects == nullptr)
+            if (baked.texture == nullptr || baked.frame_rects_gpu_buf == nullptr)
             {
                 LOG("SCImageLibrary: GRP 굽기 실패 {}", source.mpq_path);
                 return false;
@@ -166,11 +165,15 @@ namespace sc
         return defs_.Get(image_type);  // 범위 검사는 ImageDefTable::Get의 ASSERT
     }
 
-    BakedGrp SCImageLibrary::GetGrp(int32_t image_type) const
+    const BakedGrp& SCImageLibrary::GetGrp(int32_t image_type) const
     {
         ASSERT(0 <= image_type && static_cast<size_t>(image_type) < kImageTypeCount);
         const int32_t source_index = manifest_.image_to_source[image_type];
-        if (source_index == GrpManifest::kNoGrp) { return {}; }
+        if (source_index == GrpManifest::kNoGrp) 
+        { 
+            const static BakedGrp empty = {}; 
+            return empty;
+        }
         return grp_resources_[source_index];
     }
 }

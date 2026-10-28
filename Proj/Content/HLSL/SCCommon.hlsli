@@ -31,6 +31,9 @@ cbuffer CB_SCCommonInfo : register(REG_B_SC_COMMON_INFO)
 }
 #endif
 
+// 깊이 키 → z 변환 배율 (2^-24). z = (key + 1) * kScDepthScale, 키 24비트 이내에서 정확히 표현
+HLSL_CONSTEXPR float kScDepthScale = 1.0f / 16777216.0f;
+
 // CV5 그룹 하나의 메가타일 수 (MTXM 값 = 그룹 << 4 | 그룹 내 번호)
 HLSL_CONSTEXPR uint kCV5MegatilesPerGroup = 16;
 HLSL_CONSTEXPR uint kMegatilePixelSize = 32;

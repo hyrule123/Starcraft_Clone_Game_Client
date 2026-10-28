@@ -53,7 +53,7 @@ ImageVSOutput main(ImageVSInput input)
 	
 	output.position = mul(float4(vtx_world, 0.0, 1.0), g_camera.view_proj);
 	
-	output.position.z = float(inst.depth_key + 1u) * kScDepthScale * output.position.w; // SC 자체 정렬 기준이 들어있는 depth_key로 변경한다.
+	output.position.z = DepthKeyToClipZ(inst.depth_key, output.position.w); // SC 자체 정렬 기준이 들어있는 depth_key로 변경한다.
 
 	output.modifier = inst.modifier;
 	output.modifier_data1 = inst.modifier_data1;
@@ -62,3 +62,4 @@ ImageVSOutput main(ImageVSInput input)
 	output.player_color_idx = inst.player_color_idx;
 	return output;
 }
+

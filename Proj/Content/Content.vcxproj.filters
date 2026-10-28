@@ -111,6 +111,12 @@
     <ClInclude Include="GameObject\SCSelectionCircleObj.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GameObject\SCHpBarObj.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Component\SCHpBarRenderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -194,6 +200,12 @@
     <ClCompile Include="GameObject\SCSelectionCircleObj.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GameObject\SCHpBarObj.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Component\SCHpBarRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Content.rc">
@@ -218,6 +230,8 @@
     <FxCompile Include="HLSL\SCBlit_PS.hlsl" />
     <FxCompile Include="HLSL\SCImage\SCImageDistortion_PS.hlsl" />
     <FxCompile Include="HLSL\SCImage\SCImageDistortionSync_PS.hlsl" />
+    <FxCompile Include="HLSL\SCImage\SCHpBar_VS.hlsl" />
+    <FxCompile Include="HLSL\SCImage\SCHpBar_PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="HLSL\SCMap\SCMapRender.hlsli" />
@@ -227,5 +241,6 @@
     <None Include="HLSL\SCCommon.hlsli" />
     <None Include="HLSL\SCImage\SCEffectPass.hlsli" />
     <None Include="HLSL\SCImage\SCPcxLut.hlsli" />
+    <None Include="HLSL\SCImage\SCHpBar.hlsli" />
   </ItemGroup>
 </Project>
