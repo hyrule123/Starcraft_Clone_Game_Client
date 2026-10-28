@@ -40,7 +40,7 @@ namespace sc
 		std::shared_ptr<engine::Material> GetNewMapMaterial() const;
 
 	private:
-		void CreateTunitBuffer(const MPQFileSystem& mpq_fs);
+		void CreateCommonPaletteBuffer(const MPQFileSystem& mpq_fs);
 		void CreateDepthStencilStates();
 		void CreateOriginalMaterials();
 		void CreateMesh();
@@ -68,7 +68,7 @@ namespace sc
 		std::shared_ptr<engine::Material> map_material_ = {};
 
 		// Common
-		std::shared_ptr<engine::TypedBuffer> tunit_buffer_ = {};
+		std::shared_ptr<engine::TypedBuffer> common_palettes_buffer_ = {};
 
 		// etc
 		std::filesystem::path mpq_dir_ = {};

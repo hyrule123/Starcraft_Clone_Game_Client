@@ -22,6 +22,13 @@ namespace sc
         // width × height, 행 우선, 여백 없음
         std::span<const uint8_t> pixels() const { return pixels_; }
 
+		void Clear()
+		{
+			pixels_.clear();
+			width_ = 0;
+			height_ = 0;
+		}
+
     private:
         std::vector<uint8_t> pixels_;
         uint32_t width_ = 0;

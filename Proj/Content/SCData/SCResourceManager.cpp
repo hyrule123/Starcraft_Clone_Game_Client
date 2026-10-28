@@ -60,7 +60,7 @@ namespace sc
 
 		sc_map_loader_.Init(mpq_file_system_);
 
-		CreateTunitBuffer(mpq_file_system_);
+		CreateCommonPaletteBuffer(mpq_file_system_);
 		CreateDepthStencilStates();
 		CreateOriginalMaterials();
 		CreateMapMaterial();
@@ -72,24 +72,34 @@ namespace sc
 		return map_material_->Clone();
 	}
 
-	void SCResourceManager::CreateTunitBuffer(const MPQFileSystem& mpq_fs)
+	void SCResourceManager::CreateCommonPaletteBuffer(const MPQFileSystem& mpq_fs)
 	{
 		using namespace engine;
 
-		// TUnit
-		auto tunit_data = mpq_fs.ReadFile(L"game\\tunit.pcx");
-		CHECK(tunit_data.has_value());
+		std::array<uint8_t, kPaletteTotalCount> palettes = {};
 
-		PcxFile tunit_pcx;
-		bool result = tunit_pcx.Load(*tunit_data);
-		CHECK(result);
+		// path의 PCX(count×1)를 palettes[offset, offset + count)에 복사
+		auto load_palette = [&](const wchar_t* path, uint32_t offset, uint32_t count)
+			{
+				auto file = mpq_fs.ReadFile(path);
+				CHECK(file.has_value());
 
-		tunit_buffer_ = EntityManager::CreateEntity<TypedBuffer>();
-		result = tunit_buffer_->CreateImmutableBuffer(DXGI_FORMAT_R8_UINT, tunit_pcx.pixels());
-		CHECK(result);
+				PcxFile pcx;
+				CHECK(pcx.Load(*file));
+				CHECK(pcx.width() == count && pcx.height() == 1);	// 외부 데이터 → Release에서도 검사
+
+				std::copy_n(pcx.pixels().begin(), count, palettes.begin() + offset);
+			};
+
+		load_palette(L"game\\tunit.pcx", kPaletteTUnitOffset, kPaletteTUnitCount);
+		load_palette(L"game\\tselect.pcx", kPaletteTSelectOffset, kPaletteTSelectCount);
+		load_palette(L"game\\thpbar.pcx", kPaletteTHpBarOffset, kPaletteTHpBarCount);
+
+		common_palettes_buffer_ = EntityManager::CreateEntity<TypedBuffer>();
+		CHECK(common_palettes_buffer_->CreateImmutableBuffer(DXGI_FORMAT_R8_UINT, palettes));
 
 		auto& per_frame_table = RenderManager::GetInst().GetPerFrameBindingTable();
-		per_frame_table.AddShaderResource(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_SC_TUNIT, tunit_buffer_);
+		per_frame_table.AddShaderResource(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_SC_COMMON_PALETTES, common_palettes_buffer_);
 	}
 
 	void SCResourceManager::CreateDepthStencilStates()

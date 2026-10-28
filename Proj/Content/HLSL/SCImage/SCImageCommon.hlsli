@@ -11,7 +11,7 @@
 #define REG_T_SC_GRP_FRAME_RECTS REG_T_PER_MATERIAL_1
 
 // 건물 완료 시 생성되는 효과에 사용되는 Warp Texture. (Per Frame에 바인딩) -> SCImageRenderer::kModifierWarpTexture
-#define REG_T_SC_WARP_TEXTURE REG_T_PER_FRAME_4
+#define REG_T_SC_WARP_TEXTURE REG_T_PER_FRAME_6
 #define REG_T_SC_PCX_TILESET_LUT	REG_T_PER_FRAME_7
 #define REG_T_SC_PCX_TILESET_LUT_OFFSETS REG_T_PER_FRAME_8
 #define REG_T_SC_CLOAK_FADE_SELECTOR REG_T_PER_FRAME_9
@@ -103,7 +103,7 @@ struct ImageVSOutput
 Texture2DArray<uint2> g_grp_sprite : register(REG_T_SC_GRP_SPRITE);
 Texture2DArray<uint2> g_warp_texture : register(REG_T_SC_WARP_TEXTURE);
 
-Buffer<uint> g_tunit : register(REG_T_SC_TUNIT); // R8_UINT, 128개
+Buffer<uint> g_common_palettes : register(REG_T_SC_COMMON_PALETTES); // R8_UINT, tunit, tselect 등. 상수 오프셋 값을 통해 조회
 Buffer<float4> g_wpe : register(REG_T_SC_WPE_PALETTE); // R8G8B8A8_UNORM, 256개
 
 // GRP의 텍스처(array)별 캔버스 내 프레임의 오프셋, 크기
@@ -122,7 +122,7 @@ uint ApplyPlayerColor(uint index, uint color_idx)
 {
 	if (index >= 8 && index < 16)
 	{
-		index = g_tunit[color_idx * 8 + (index - 8)];
+		index = g_common_palettes[kPaletteTUnitOffset + color_idx * 8 + (index - 8)];
 	}
 	return index;
 }
