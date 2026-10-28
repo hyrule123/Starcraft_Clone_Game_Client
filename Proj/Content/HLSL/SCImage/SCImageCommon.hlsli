@@ -60,7 +60,7 @@ HLSL_CONSTEXPR float kScDepthScale = 1.0f / 16777216.0f;
 HLSL_CONSTEXPR uint kImageFlagHorizontallyFlipped = 0x2;	// C++ (SCImageRenderer) 쪽에서 검증
 HLSL_CONSTEXPR uint kImageFlagYFrozen = 0x4;
 
-// *** Modifiers ***
+// *** Modifiers ***: image_t::modifier 값
 //	Effect Pass
 HLSL_CONSTEXPR int kModifierCloaking = 2;
 HLSL_CONSTEXPR int kModifierCloaked = 3;
@@ -70,7 +70,9 @@ HLSL_CONSTEXPR int kModifierEnemyCloaked = 6; // 탐지 못 한 적의 은폐 (O
 HLSL_CONSTEXPR int kModifierEnemyDecloaking = 7;
 HLSL_CONSTEXPR int kModifierDistortion = 8;
 HLSL_CONSTEXPR int kModifierRemapping = 9;
-HLSL_CONSTEXPR int kModifierShadow = 10; // image_t::modifier 값
+HLSL_CONSTEXPR int kModifierSelectionCircle = 13;
+HLSL_CONSTEXPR int kModifierShadow = 10;
+
 HLSL_CONSTEXPR int kModifierWarpFlash = 17;
 
 //	Opaque Pass

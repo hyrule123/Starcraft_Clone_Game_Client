@@ -105,6 +105,23 @@ namespace // depth key
 
 namespace sc
 {
+	namespace
+	{
+		SelectionColorGroup GetSelectionColorGroup(int32_t owner, SCSim::Player local_player)
+		{
+			if (owner == static_cast<int32_t>(local_player))
+			{
+				return SelectionColorGroup::Own;
+			}
+			if (owner == static_cast<int32_t>(SCSim::Player::Neutral))	// 중립(자원, 크리터 등).
+			{
+				return SelectionColorGroup::NeutralOrAlly;
+			}
+			// TODO: 동맹 정보 노출 후 동맹이면 NeutralOrAlly
+			return SelectionColorGroup::Enemy;
+		}
+	}
+
 	MainGameScene::MainGameScene()
 		: Scene(MainGameScene::kClassConcreteName)
 		, local_player_(SCSim::Player::_1)
@@ -680,8 +697,8 @@ namespace sc
 				ASSERT(0 <= sprt_data.sprite_type && static_cast<size_t>(sprt_data.sprite_type) < sprite_types_.size());
 				const SCSim::SpriteTypeData& sprt_type_data = sprite_types_[sprt_data.sprite_type];
 
-				// TODO: color 그룹 설정 코드
-				sel_obj->ApplySelection(sprt_data.x, sprt_data.y, sprt_type_data, circle_depth_key, 0);
+				// 맨 마지막에 enum 상수를 넣어 그룹별 색상 확인 가능
+				sel_obj->ApplySelection(sprt_data.x, sprt_data.y, sprt_type_data, circle_depth_key, GetSelectionColorGroup(sprt_data.owner, local_player_));
 
 				sel_obj->SetActive(true);
 			}

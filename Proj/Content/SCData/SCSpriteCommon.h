@@ -61,4 +61,14 @@ namespace sc
         // GRP 원본 인덱스 8~15를 tunit[player_color_idx * 8 + (index - 8)]로 치환하는 데 사용.
         uint32_t player_color_idx = 0;
     };
+
+    //tselect.pcx 8색 그룹(화면 확인 완료)
+    enum class SelectionColorGroup : uint32_t
+    {
+        Own = 0,			// 초록
+        NeutralOrAlly = 1,	// 노랑
+        Enemy = 2,			// 빨강
+        kCount
+    };
+    static_assert(static_cast<uint32_t>(SelectionColorGroup::kCount) * 8 == kPaletteTSelectCount);
 }

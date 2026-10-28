@@ -3,6 +3,8 @@
 
 #include <Engine/HLSL/Core/CoreMinimal.hlsli>
 
+// 맵, 이미지 공용 레지스터 모음
+
 #define REG_B_SC_COMMON_INFO		REG_B_PER_FRAME_1
 
 #define REG_T_SC_COMMON_PALETTES	REG_T_PER_FRAME_4

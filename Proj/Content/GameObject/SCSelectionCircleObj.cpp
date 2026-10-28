@@ -23,7 +23,7 @@ namespace sc
 		renderer_ = AddComponent<SCImageRenderer>();
 		renderer_->SetMesh(SCResourceManager::GetInst().GetImageMesh());
 	}
-	void SCSelectionCircleObj::ApplySelection(int32_t sprite_x, int32_t sprite_y, const SCSim::SpriteTypeData& sprite_type_data, uint32_t depth_key, uint32_t color_group)
+	void SCSelectionCircleObj::ApplySelection(int32_t sprite_x, int32_t sprite_y, const SCSim::SpriteTypeData& sprite_type_data, uint32_t depth_key, SelectionColorGroup color_group)
 	{
 		// 참고: 이 오브젝트는 부모 SpriteObj와 명시적으로 붙지 않음(NO Transform->AddChild()), 루트 오브젝트 유지
 		// 현재 구조 상, 명시적으로 붙이면 Destroy 시 삭제될수 있기 때문
@@ -35,13 +35,13 @@ namespace sc
 		{
 			transform->SetLocalPosition(circle_world_pos);
 		}
-
+		ASSERT(static_cast<uint32_t>(color_group) < static_cast<uint32_t>(kPaletteTSelectCount / 8));
 		ASSERT(0 <= sprite_type_data.selection_circle && sprite_type_data.selection_circle < SCSim::kSelectionCircleSizeCount);
 		SCSim::ImageData img_data = {};
 		img_data.image_type = SCSim::kImageTypeSelectionCircleBase + sprite_type_data.selection_circle;
 		img_data.frame = 0;
 		img_data.modifier = static_cast<int32_t>(SCSim::ImageModifier::SelectionCircle);
 
-		renderer_->ApplySnapshot(img_data, SCImageParam{ .depth_key = depth_key, .player_color_idx = color_group });
+		renderer_->ApplySnapshot(img_data, SCImageParam{ .depth_key = depth_key, .player_color_idx = static_cast<uint32_t>(color_group) });
 	}
 }
