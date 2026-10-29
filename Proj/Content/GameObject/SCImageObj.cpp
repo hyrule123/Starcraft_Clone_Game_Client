@@ -3,6 +3,8 @@
 
 #include <Engine/Game/Component/Transform.h>
 
+#include <SCSimulator/Include/SCSimulatorAPI.h>
+
 #include <Content/Component/SCImageRenderer.h>
 
 #include <Content/SCData/SCResourceManager.h>

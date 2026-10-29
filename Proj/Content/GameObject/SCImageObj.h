@@ -1,9 +1,9 @@
 #pragma once
 #include <Engine/Game/GameObject.h>
 
-#include <Content/SCData/SCSpriteCommon.h>
+#include <Content/SCData/Image/SCSpriteCommon.h>
 
-#include <SCSimulator/Include/SCSimulatorAPI.h>
+#include <SCSimulator/Include/SCSimulatorTypes.h>
 
 namespace sc
 {

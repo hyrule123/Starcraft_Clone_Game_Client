@@ -5,7 +5,9 @@
 
 #include <Engine/Game/Component/Transform.h>
 
-#include <Content/SCData/SCSpriteCommon.h>
+#include <SCSimulator/Include/SCSimulatorAPI.h>
+
+#include <Content/SCData/Image/SCSpriteCommon.h>
 
 #include <limits>
 

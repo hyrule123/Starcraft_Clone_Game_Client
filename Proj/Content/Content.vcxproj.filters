@@ -36,40 +36,40 @@
     <ClInclude Include="SCData\SCResourceManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCData\MPQ\MPQArchive.h">
+    <ClInclude Include="SCData\Format\MPQ\MPQArchive.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCData\SCMapBakeComputePass.h">
+    <ClInclude Include="SCData\Map\SCMapBakeComputePass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCData\SCMapCommon.h">
+    <ClInclude Include="SCData\Map\SCMapCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Component\SCMapRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCData\SCImageData.h">
+    <ClInclude Include="SCData\Format\SCImageData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCData\GrpFile.h">
+    <ClInclude Include="SCData\Format\GrpFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCData\MPQ\MPQFileSystem.h">
+    <ClInclude Include="SCData\Format\MPQ\MPQFileSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCData\SCImageLibrary.h">
+    <ClInclude Include="SCData\Image\SCImageLibrary.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCData\PCXFile.h">
+    <ClInclude Include="SCData\Format\PcxFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCData\SCTileSetPcxLUT.h">
+    <ClInclude Include="SCData\Map\SCTileSetPcxLUT.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCData\MPQ\MPQFile.h">
+    <ClInclude Include="SCData\Format\MPQ\MPQFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCData\SCSpriteCommon.h">
+    <ClInclude Include="SCData\Image\SCSpriteCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Script\CameraMoveScript.h">
@@ -87,7 +87,7 @@
     <ClInclude Include="SCData\SCEffectPass.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SCData\SCMapLoader.h">
+    <ClInclude Include="SCData\Map\SCMapLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Script\EmpTestScript.h">
@@ -117,6 +117,9 @@
     <ClInclude Include="Component\SCHpBarRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SCData\SCCommon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -131,34 +134,34 @@
     <ClCompile Include="SCData\SCResourceManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SCData\MPQ\MPQArchive.cpp">
+    <ClCompile Include="SCData\Format\MPQ\MPQArchive.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SCData\SCMapBakeComputePass.cpp">
+    <ClCompile Include="SCData\Map\SCMapBakeComputePass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Component\SCMapRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SCData\SCImageData.cpp">
+    <ClCompile Include="SCData\Format\SCImageData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SCData\GrpFile.cpp">
+    <ClCompile Include="SCData\Format\GrpFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SCData\MPQ\MPQFileSystem.cpp">
+    <ClCompile Include="SCData\Format\MPQ\MPQFileSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SCData\SCImageLibrary.cpp">
+    <ClCompile Include="SCData\Image\SCImageLibrary.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SCData\PCXFile.cpp">
+    <ClCompile Include="SCData\Format\PcxFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SCData\SCTileSetPcxLUT.cpp">
+    <ClCompile Include="SCData\Map\SCTileSetPcxLUT.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SCData\MPQ\MPQFile.cpp">
+    <ClCompile Include="SCData\Format\MPQ\MPQFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Script\CameraMoveScript.cpp">
@@ -176,7 +179,7 @@
     <ClCompile Include="SCData\SCEffectPass.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SCData\SCMapLoader.cpp">
+    <ClCompile Include="SCData\Map\SCMapLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Script\EmpTestScript.cpp">

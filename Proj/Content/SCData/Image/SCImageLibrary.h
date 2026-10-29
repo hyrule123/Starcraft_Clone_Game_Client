@@ -3,7 +3,7 @@
 
 #include <string_view>
 
-#include <Content/SCData/SCImageData.h>
+#include <Content/SCData/Format/SCImageData.h>
 
 #include <Content/HLSL/SCImage/SCImageCommon.hlsli>
 

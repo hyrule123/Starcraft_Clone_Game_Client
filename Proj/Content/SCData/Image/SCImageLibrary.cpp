@@ -3,8 +3,8 @@
 
 #include <Content/HLSL/SCImage/SCImageCommon.hlsli>
 
-#include <Content/SCData/GrpFile.h>
-#include <Content/SCData/MPQ/MPQFileSystem.h>
+#include <Content/SCData/Format/GrpFile.h>
+#include <Content/SCData/Format/MPQ/MPQFileSystem.h>
 
 #include <Engine/Resource/GPU/Buffer/Texture2DArray.h>
 #include <Engine/Resource/GPU/Buffer/StructuredBuffer.h>

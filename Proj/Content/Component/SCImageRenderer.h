@@ -2,7 +2,7 @@
 #include <Engine/Game/Component/Renderer.h>
 
 #include <SCSimulator/Include/SCSimulatorTypes.h>
-#include <Content/SCData/SCSpriteCommon.h>
+#include <Content/SCData/Image/SCSpriteCommon.h>
 
 namespace engine
 {

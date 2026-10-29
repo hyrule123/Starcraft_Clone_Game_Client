@@ -1,7 +1,7 @@
 #pragma once
 #include <Engine/Game/Component/Script.h>
 
-#include <SCSimulator/Include/SCSimulatorAPI.h>
+#include <SCSimulator/Include/SCSimulatorTypes.h>
 
 //클래스 설명: SCUnit의 main 컴포넌트(모든 데이터 저장)
 namespace sc

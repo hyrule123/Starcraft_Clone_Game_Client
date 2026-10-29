@@ -1,7 +1,7 @@
 #include "Content/pch.h"
 #include "MPQFileSystem.h"
 
-#include <Content/SCData/MPQ/MPQArchive.h>
+#include <Content/SCData/Format/MPQ/MPQArchive.h>
 
 #include <Engine/Core/Debug.h>
 #include <Engine/Core/Constants.h>

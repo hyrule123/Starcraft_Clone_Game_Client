@@ -5,11 +5,11 @@
 
 #include <Content/HLSL/SCImage/SCHpBar.hlsli>
 #include <Content/SCData/SCResourceManager.h>
-#include <Content/SCData/SCImageLibrary.h>
+#include <Content/SCData/Image/SCImageLibrary.h>
 
 #include <Content/Component/SCHpBarRenderer.h>
 
-#include <Content/SCData/SCSpriteCommon.h>
+#include <Content/SCData/Image/SCSpriteCommon.h>
 
 namespace sc
 {

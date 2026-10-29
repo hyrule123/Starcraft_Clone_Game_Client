@@ -13,4 +13,8 @@
 #pragma comment(lib, "Engine.lib")
 #pragma comment(lib, "SCSimulator.lib")
 
+#include <Engine/Core/CoreMinimal.h>
+
+#include <Content/SCData/SCCommon.h>
+
 #endif //PCH_CONTENT

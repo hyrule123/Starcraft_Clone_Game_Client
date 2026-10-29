@@ -1,7 +1,7 @@
 #pragma once
 #include <Engine/Game/GameObject.h>
 
-#include <SCSimulator/Include/SCSimulatorAPI.h>
+#include <SCSimulator/Include/SCSimulatorTypes.h>
 
 namespace sc
 {

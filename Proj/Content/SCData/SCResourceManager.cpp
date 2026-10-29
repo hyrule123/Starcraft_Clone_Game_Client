@@ -20,9 +20,9 @@
 #include <Engine/Resource/GPU/Vertex.h>
 
 #include <Content/SCData/Constants.h>
-#include <Content/SCData/MPQ/MPQFileSystem.h>
-#include <Content/SCData/PCXFile.h>
-#include <Content/SCData/SCImageLibrary.h>
+#include <Content/SCData/Format/MPQ/MPQFileSystem.h>
+#include <Content/SCData/Format/PcxFile.h>
+#include <Content/SCData/Image/SCImageLibrary.h>
 
 #include <algorithm>
 

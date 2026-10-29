@@ -1,7 +1,7 @@
 #include "Content/pch.h"
 #include "SCTileSetPcxLUT.h"
 
-#include <Content/SCData/PCXFile.h>
+#include <Content/SCData/Format/PcxFile.h>
 
 #include <Content/HLSL/SCImage/SCPcxLut.hlsli>
 

@@ -1,7 +1,7 @@
 #pragma once
 #include <Engine/Core/CoreMinimal.h>
 
-#include <Content/SCData/MPQ/MPQFile.h>
+#include <Content/SCData/Format/MPQ/MPQFile.h>
 
 namespace sc
 {

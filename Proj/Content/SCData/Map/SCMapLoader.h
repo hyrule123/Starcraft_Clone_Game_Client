@@ -1,7 +1,7 @@
 #pragma once
 #include <Engine/Core/CoreMinimal.h>
 
-#include <Content/SCData/SCMapCommon.h>
+#include <Content/SCData/Map/SCMapCommon.h>
 
 #include <array>
 #include <filesystem>

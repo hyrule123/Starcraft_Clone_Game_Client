@@ -14,7 +14,7 @@
 
 #include <Content/HLSL/SCMap/SCMapBaker.hlsli>
 
-#include <Content/SCData/SCTileSetPcxLUT.h>
+#include <Content/SCData/Map/SCTileSetPcxLUT.h>
 
 #include <span>
 

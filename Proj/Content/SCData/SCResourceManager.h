@@ -3,10 +3,10 @@
 
 #include <Engine/Core/Singleton.h>
 
-#include <Content/SCData/SCSpriteCommon.h>
-#include <Content/SCData/MPQ/MPQFileSystem.h>
-#include <Content/SCData/SCImageLibrary.h>
-#include <Content/SCData/SCMapLoader.h>
+#include <Content/SCData/Image/SCSpriteCommon.h>
+#include <Content/SCData/Format/MPQ/MPQFileSystem.h>
+#include <Content/SCData/Image/SCImageLibrary.h>
+#include <Content/SCData/Map/SCMapLoader.h>
 
 #include <array>
 

@@ -1,7 +1,7 @@
 #pragma once
 #include <Engine/Resource/GPU/Shader/ComputePass.h>
 
-#include <Content/SCData/SCMapCommon.h>
+#include <Content/SCData/Map/SCMapCommon.h>
 
 struct ID3D11DeviceContext;
 

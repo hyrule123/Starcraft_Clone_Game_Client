@@ -12,7 +12,7 @@
 
 #include <Content/SCData/Constants.h>
 
-#include <Content/SCData/SCSpriteCommon.h>
+#include <Content/SCData/Image/SCSpriteCommon.h>
 
 namespace sc
 {

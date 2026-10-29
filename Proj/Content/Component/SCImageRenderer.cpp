@@ -2,7 +2,7 @@
 #include "SCImageRenderer.h"
 
 #include <Content/SCData/SCResourceManager.h>
-#include <Content/SCData/SCImageLibrary.h>
+#include <Content/SCData/Image/SCImageLibrary.h>
 
 #include <Content/Scene/MainGameScene.h>
 

@@ -2,7 +2,7 @@
 #include "SCHpBarRenderer.h"
 
 #include <Content/SCData/Constants.h>
-#include <Content/SCData/SCSpriteCommon.h>
+#include <Content/SCData/Image/SCSpriteCommon.h>
 
 #include <Content/HLSL/SCImage/SCHpBar.hlsli>
 

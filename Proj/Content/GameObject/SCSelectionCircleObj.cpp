@@ -5,7 +5,7 @@
 
 #include <Content/SCData/SCResourceManager.h>
 
-#include <Content/SCData/SCSpriteCommon.h>
+#include <Content/SCData/Image/SCSpriteCommon.h>
 
 #include <Engine/Game/Component/Transform.h>
 

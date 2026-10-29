@@ -1,5 +1,5 @@
 #pragma once
-#include <Content/SCData/MPQ/MPQFileSystem.h>
+#include <Content/SCData/Format/MPQ/MPQFileSystem.h>
 
 #include <Engine/Core/CoreMinimal.h>
 

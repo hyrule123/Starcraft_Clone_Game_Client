@@ -9,11 +9,11 @@
 
 #include <SCSimulator/Include/SCSimulatorTypes.h>
 
-#include <Content/SCData/MPQ/MPQArchive.h>
-#include <Content/SCData/MPQ/MPQFileSystem.h>
-#include <Content/SCData/SCMapBakeComputePass.h>
-#include <Content/SCData/SCTileSetPcxLUT.h>
-#include <Content/SCData/SCImageLibrary.h>
+#include <Content/SCData/Format/MPQ/MPQArchive.h>
+#include <Content/SCData/Format/MPQ/MPQFileSystem.h>
+#include <Content/SCData/Map/SCMapBakeComputePass.h>
+#include <Content/SCData/Map/SCTileSetPcxLUT.h>
+#include <Content/SCData/Image/SCImageLibrary.h>
 
 #include <Content/HLSL/SCMap/SCMapRender.hlsli>
 
