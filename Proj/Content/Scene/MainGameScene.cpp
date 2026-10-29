@@ -22,6 +22,7 @@
 #include <Engine/Core/Debug.h>
 
 #include <Content/Component/SCMapRenderer.h>
+#include <Content/Script/CameraMoveScript.h>
 
 #include <Content/SCData/Constants.h>
 #include <Content/SCData/SCResourceManager.h>
@@ -197,6 +198,27 @@ namespace sc
 			map_renderer_ = map_rdr;
 		}
 
+		GameObject* camobj = AddGameObject<GameObject>();
+		camobj->SetName("MainCamera");
+		camobj->GetTransform()->SetLocalPosition(float3(0.0f, 0.0f, -10.0f));
+		auto cam = camobj->AddComponent<Camera>();
+		Camera::ProjectionMatrixDesc proj_desc = cam->GetProjectionMatrixDesc();
+		proj_desc.proj_mode = Camera::ProjectionMode::Orthographic;
+		proj_desc.viewport_width = (float)sc::kResolutionWidth;
+		proj_desc.viewport_height = (float)sc::kResolutionHeight;
+		cam->CreateProjMatrix(proj_desc);
+		CameraMoveScript* cam_script = camobj->AddComponent<CameraMoveScript>();
+		engine::AABB2D map_bounds = {};
+		map_bounds.min = float2(0.0f, 0.0f);
+		auto* map_rdr = map_renderer_.get();
+		CHECK(map_rdr);
+		map_bounds.max = { 
+			static_cast<float>(map_rdr->GetMapWidthMegatile() * static_cast<int32_t>(kMegatilePixelSize)), 
+			static_cast<float>(map_rdr->GetMapHeightMegatile() * static_cast<int32_t>(kMegatilePixelSize)) 
+		};
+		CHECK(map_bounds.IsValid());
+		cam_script->SetClampBounds(map_bounds);
+
 		// ↑ 최소 기본값 세팅
 		// ============================================================================================================
 		// ↓ 테스트용 임시 코드
@@ -352,16 +374,7 @@ namespace sc
 
 		int32_t cur_frame = SCSim_GetCurrentFrame(sc_sim_ctx_);
 
-		GameObject* camobj = AddGameObject<GameObject>();
-		camobj->SetName("MainCamera");
-		camobj->GetTransform()->SetLocalPosition(float3(0.0f, 0.0f, -10.0f));
-		auto cam = camobj->AddComponent<Camera>();
-		Camera::ProjectionMatrixDesc proj_desc = cam->GetProjectionMatrixDesc();
-		proj_desc.proj_mode = Camera::ProjectionMode::Orthographic;
-		proj_desc.viewport_width = (float)sc::kResolutionWidth;
-		proj_desc.viewport_height = (float)sc::kResolutionHeight;
-		cam->CreateProjMatrix(proj_desc);
-		camobj->AddComponent("CameraMoveScript");
+
 	}
 	void MainGameScene::FrameStart()
 	{

@@ -175,6 +175,17 @@ namespace sc
 		SetEnable(true);
 	}
 
+	
+	int32_t SCMapRenderer::GetMapWidthMegatile() const
+	{
+		if (sc_map_) return sc_map_->map_width_megatile; else return -1;
+	}
+
+	int32_t SCMapRenderer::GetMapHeightMegatile() const
+	{
+		if (sc_map_) return sc_map_->map_height_megatile; else return -1;
+	}
+
 	bool SCMapRenderer::ApplyMegatileSnapshot(const SCSim::MegatileState* megatiles, uint32_t map_width_megatile, uint32_t map_height_megatile)
 	{
 		using namespace engine;

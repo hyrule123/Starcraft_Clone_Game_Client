@@ -37,6 +37,12 @@ namespace sc
 
 		void SetSCMap(std::unique_ptr<SCMap> sc_map);
 
+		// Map width: 실패 시 -1
+		int32_t GetMapWidthMegatile() const;
+
+		// Map height: 실패 시 -1
+		int32_t GetMapHeightMegatile() const;
+
 		// SCSim_GetMegatileStates 결과를 그대로 업로드 (매 프레임). 맵 크기가 SCMap과 다르면 false
 		[[nodiscard]] bool ApplyMegatileSnapshot(const SCSim::MegatileState* megatiles, uint32_t map_width_megatile, uint32_t map_height_megatile);
 
