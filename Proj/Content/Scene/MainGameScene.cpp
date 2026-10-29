@@ -108,17 +108,19 @@ namespace sc
 {
 	namespace
 	{
-		SelectionColorGroup GetSelectionColorGroup(int32_t owner, SCSim::Player local_player)
+		// 원작 규칙: 로컬 플레이어 시점의 동맹 관계 (st.alliances[local][owner])
+		// 중립 플레이어(11)·구출 플레이어는 OpenBW가 시작 시 Allied로 설정 → 별도 분기 불필요
+		SelectionColorGroup GetSelectionColorGroup(int32_t owner, SCSim::Player local_player, const SCSim::PlayerData& local_player_data)
 		{
 			if (owner == static_cast<int32_t>(local_player))
 			{
 				return SelectionColorGroup::Own;
 			}
-			if (owner == static_cast<int32_t>(SCSim::Player::Neutral))	// 중립(자원, 크리터 등).
+			ASSERT(owner >= 0 && static_cast<size_t>(owner) < std::size(local_player_data.alliances));
+			if (local_player_data.alliances[owner] != static_cast<int32_t>(SCSim::AllianceState::Enemy))
 			{
 				return SelectionColorGroup::NeutralOrAlly;
 			}
-			// TODO: 동맹 정보 노출 후 동맹이면 NeutralOrAlly
 			return SelectionColorGroup::Enemy;
 		}
 	}
@@ -194,6 +196,25 @@ namespace sc
 			map_rdr->SetSCMap(std::move(sc_map));
 			map_renderer_ = map_rdr;
 		}
+
+		// ↑ 최소 기본값 세팅
+		// ============================================================================================================
+		// ↓ 테스트용 임시 코드
+
+		// Ally 설정
+		const SCSim::PlayerData* p_data_ptr = nullptr;
+		int32_t player_num = SCSim_GetPlayers(sc_sim_ctx_, &p_data_ptr);
+		ASSERT(0 <= player_num);
+		memcpy(player_data_.data(), p_data_ptr, sizeof(SCSim::PlayerData) * static_cast<size_t>(player_num));
+		
+		player_data_[static_cast<size_t>(SCSim::Player::_3)].alliances[static_cast<size_t>(SCSim::Player::_1)] = static_cast<int32_t>(SCSim::AllianceState::Allied);
+		player_data_[static_cast<size_t>(SCSim::Player::_1)].alliances[static_cast<size_t>(SCSim::Player::_3)] = static_cast<int32_t>(SCSim::AllianceState::Allied);
+
+		result = SCSim_SetAlliances(sc_sim_ctx_, SCSim::Player::_3, player_data_[static_cast<size_t>(SCSim::Player::_3)].alliances, static_cast<int32_t>(player_data_.size()));
+		ASSERT(result);
+		result = SCSim_SetAlliances(sc_sim_ctx_, SCSim::Player::_1, player_data_[static_cast<size_t>(SCSim::Player::_1)].alliances, static_cast<int32_t>(player_data_.size()));
+		ASSERT(result);
+
 
 		uint32_t unit_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranMarine, SCSim::Player::_2, 2048, 2048);
 		int32_t selected = SCSim_Select(sc_sim_ctx_, SCSim::Player::_1, &unit_id, 1);
@@ -273,12 +294,18 @@ namespace sc
 			constexpr int32_t kBaseX = 2048;
 			constexpr int32_t kBaseY = 2048;
 
+			std::vector<uint32_t> dt_ids;
+			dt_ids.reserve(kTestCount);
 			for (int32_t i = 0; i < kTestCount; ++i)
 			{
 				uint32_t test_id = SCSim::kInvalidUnitId;
 				test_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::ProtossDarkTemplar, SCSim::Player::_3, kBaseX, kBaseY);
 				CHECK_F(test_id != SCSim::kInvalidUnitId, "SCSim_CreateUnit failed: {}", SCSim_GetLastError());
+				dt_ids.push_back(test_id);
 			}
+
+			// 이 유닛들을 선택
+			SCSim_Select(sc_sim_ctx_, SCSim::Player::_1, dt_ids.data(), static_cast<int32_t>(dt_ids.size()));
 		}
 #endif //SPAWN_DARK_TEMPLAR
 
@@ -702,7 +729,7 @@ namespace sc
 					ASSERT(sel_obj);
 
 					// 맨 마지막에 enum 상수를 넣어 그룹별 색상 확인 가능
-					sel_obj->ApplySelection(sprt_data.x, sprt_data.y, sprt_type_data, circle_depth_key, GetSelectionColorGroup(sprt_data.owner, local_player_));
+					sel_obj->ApplySelection(sprt_data.x, sprt_data.y, sprt_type_data, circle_depth_key, GetSelectionColorGroup(sprt_data.owner, local_player_, player_data_[static_cast<size_t>(local_player_)]));
 
 					sel_obj->SetActive(true);
 					sel.circle_drawn_serial = sprite_sync_serial_;

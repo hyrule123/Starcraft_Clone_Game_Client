@@ -1022,10 +1022,72 @@ extern "C" {
             ctx->player_buffer[i].color = players[i].color;
             ctx->player_buffer[i].minerals = st.current_minerals[i];
             ctx->player_buffer[i].gas = st.current_gas[i];
+            for (size_t j = 0; j < st.alliances[i].size(); ++j)
+            {
+                ctx->player_buffer[i].alliances[j] = st.alliances[i][j];
+            }
         }
 
         *out_players = ctx->player_buffer.data();
         return static_cast<int32_t>(players.size());  // 12 (Player::kCount, 하단 static_assert)
+    }
+
+    bool SCSim_SetAlliances(SCSim::Context* ctx, SCSim::Player owner, const int32_t* alliances, int32_t count)
+    {
+        if (!CheckContext(ctx, "SCSim_SetAlliances"))
+        {
+            return false;
+        }
+        if (!CheckActionPlayerRange(owner, "SCSim_SetAlliances"))	// 명령 주체 0~7
+        {
+            return false;
+        }
+        if (!alliances || count != static_cast<int32_t>(SCSim::Player::kCount))
+        {
+            SetError("SCSim_SetAlliances: alliances is null or count != 12");
+            return false;
+        }
+        // TODO: 동맹 설정 허용 여부 검사 (게임 설정 데이터 미노출로 보류)
+        //  - 원작은 맵·게임 설정으로 동맹 변경 자체를 잠그거나(UMS 고정 동맹 등), 동맹 승리(AlliedVictory) 사용을 막을 수 있음
+        //  - 현재는 값 범위(0~2)와 자기 자신·중립(11) 항목만 검사
+        //  - 설정 데이터(게임 타입, 동맹 잠금, 동맹 승리 허용 여부)를 노출한 뒤 여기서 거부하도록 확장할 것
+        const auto& cur = ctx->sim.st().alliances[static_cast<size_t>(owner)];
+        std::array<int, 12> arr = {};
+        for (size_t i = 0; i < arr.size(); ++i)
+        {
+            const int32_t v = alliances[i];
+            if (v < static_cast<int32_t>(SCSim::AllianceState::Enemy) || v > static_cast<int32_t>(SCSim::AllianceState::AlliedVictory))
+            {
+                SetError("SCSim_SetAlliances: invalid alliance value " + std::to_string(v) + " at " + std::to_string(i));
+                return false;
+            }
+            // 게임 규칙: 자기 자신·중립 플레이어와의 관계는 바꿀 수 없음 (OpenBW는 검사하지 않음 — 자신을 적으로 두면 아군끼리 공격)
+            const bool locked = (i == static_cast<size_t>(owner)) || (i == static_cast<size_t>(SCSim::Player::Neutral));
+            if (locked && v != cur[i])
+            {
+                SetError("SCSim_SetAlliances: cannot change alliance with self or neutral player");
+                return false;
+            }
+            arr[i] = v;
+        }
+
+        try
+        {
+            bwgame::action_functions funcs(ctx->sim.st(), ctx->action_st);
+            funcs.action_set_alliances(static_cast<int>(owner), arr);
+            return true;
+        }
+        catch (const std::exception& e)
+        {
+            ctx->broken = true;	// 행 교체 후 대상 해제 도중 실패 → 상태 불일치
+            SetError(std::string("SCSim_SetAlliances: ") + e.what());
+        }
+        catch (...)
+        {
+            ctx->broken = true;
+            SetError("SCSim_SetAlliances: unknown exception");
+        }
+        return false;
     }
 
     bool SCSim_Debug_SetResources(SCSim::Context* ctx, SCSim::Player owner, int32_t minerals, int32_t gas)
@@ -1149,6 +1211,12 @@ namespace //type traits, OpenBW와 일치 검증
     static_assert(static_cast<int32_t>(bwgame::ImageTypes::IMAGEID_Selection_Circle_22pixels) == SCSim::kImageTypeSelectionCircleBase);
     static_assert(static_cast<int32_t>(bwgame::ImageTypes::IMAGEID_Selection_Circle_224pixels)
         == SCSim::kImageTypeSelectionCircleBase + SCSim::kSelectionCircleSizeCount - 1);
+
+    // Player Data
+    // Alliances: 12 × 12, int — PlayerData::alliances 행과 크기·타입 일치
+    static_assert(std::tuple_size_v<decltype(bwgame::state::alliances)> == static_cast<size_t>(SCSim::Player::kCount));
+    static_assert(std::tuple_size_v<decltype(bwgame::state::alliances)::value_type> == std::extent_v<decltype(SCSim::PlayerData::alliances)>);
+    static_assert(std::is_same_v<decltype(bwgame::state::alliances)::value_type::value_type, int32_t>);
 
     // ---- 플래그 타입 검증 ----
     // 1) 공개 enum과 OpenBW enum의 기반 타입이 같은지

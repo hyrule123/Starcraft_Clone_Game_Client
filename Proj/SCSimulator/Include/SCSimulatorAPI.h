@@ -88,6 +88,12 @@ extern "C" {
 	// 반환: 개수, 실패 시 -1이며 *out_players = nullptr
 	SCSIM_API int32_t SCSim_GetPlayers(SCSim::Context* ctx, const SCSim::PlayerData** out_players);
 
+	// owner(0~7)의 동맹 설정 행 전체를 교체 (원작 동맹 메뉴 → set alliances 액션)
+	// alliances: Player::kCount(12)개, 값은 AllianceState (0 적, 1 동맹, 2 동맹 승리)
+	// 실패: 범위 밖 owner / count != 12 / 값 범위 밖 / 자기 자신·중립(11) 항목 변경 시도
+	// (미구현) 맵·게임 설정에 따른 동맹 잠금 / 동맹 승리 허용 여부는 아직 검사하지 않음
+	SCSIM_API bool SCSim_SetAlliances(SCSim::Context* ctx, SCSim::Player owner, const int32_t* alliances, int32_t count);
+
 	// ---- 디버그 API ----
 	// "입력은 명령 API로만" 원칙의 예외. 원작 트리거 액션으로 가능한 상태 변경만 허용
 

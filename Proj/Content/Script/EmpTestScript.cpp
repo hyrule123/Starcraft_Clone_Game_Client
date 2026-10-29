@@ -44,8 +44,8 @@ namespace sc
 		vessel_id_ = SCSim_CreateUnit(sim_ctx_, SCSim::UnitType::HeroMagellan, kTestPlayer, kSpawnX, kSpawnY);
 		CHECK_F(vessel_id_ != SCSim::kInvalidUnitId, "EmpTestScript: SCSim_CreateUnit failed: {}", SCSim_GetLastError());
 
-		const int32_t selected = SCSim_Select(sim_ctx_, kTestPlayer, &vessel_id_, 1);
-		CHECK_F(selected == 1, "EmpTestScript: SCSim_Select failed: {}", SCSim_GetLastError());
+		//const int32_t selected = SCSim_Select(sim_ctx_, kTestPlayer, &vessel_id_, 1);
+		//CHECK_F(selected == 1, "EmpTestScript: SCSim_Select failed: {}", SCSim_GetLastError());
 	}
 
 	void EmpTestScript::Update()

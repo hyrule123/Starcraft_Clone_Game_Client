@@ -147,8 +147,16 @@ namespace SCSim
 		int32_t color;			// player_t::color (LoadMap에서 0~15 보장)
 		int32_t minerals;		// state::current_minerals
 		int32_t gas;			// state::current_gas
+		int32_t alliances[static_cast<size_t>(Player::kCount)];	// st.alliances[이 플레이어][상대] 원본 (AllianceState 값). 방향성 있음 — [a][b] != [b][a] 가능
 	};
 	static_assert(std::is_trivially_copyable_v<PlayerData>&& std::is_standard_layout_v<PlayerData>);
+	// st.alliances 값 (OpenBW에는 enum 없음 — 트리거 조건 14/15/16의 해석을 따름)
+	enum class AllianceState : int32_t
+	{
+		Enemy = 0,
+		Allied = 1,			// 트리거 용어로는 "neutral" — 중립 플레이어(11)도 게임 시작 시 이 값
+		AlliedVictory = 2,
+	};
 
 	struct SpriteSnapshot
 	{
@@ -242,21 +250,7 @@ namespace SCSim
 		};
 	}
 
-	enum class Player : int32_t {
-		_1 = 0,
-		_2 = 1,
-		_3 = 2,
-		_4 = 3,
-		_5 = 4,
-		_6 = 5,
-		_7 = 6,
-		_8 = 7,
-		_9 = 8,
-		_10 = 9,
-		_11 = 10,
-		Neutral = 11,
-		kCount
-	};
+
 
 	// tile_t::flags 원본 비트 (1.16.1 배치). 아래에 없는 비트는 계약에 포함되지 않음
 	namespace MegatileFlags
@@ -277,4 +271,6 @@ namespace SCSim
 		uint16_t flags;		// MegatileFlags
 	};
 	static_assert(std::is_trivially_copyable_v<MegatileState>&& std::is_standard_layout_v<MegatileState>);
+
+
 }
