@@ -32,7 +32,10 @@ namespace sc
             ClampCameraPosition();
         }
 
+        int2 ScreenToSc(int2 mouse_pos) const;
+
     private:
+        float2 GetViewTopLeft() const;
 		void ClampCameraPosition();
 
     private:

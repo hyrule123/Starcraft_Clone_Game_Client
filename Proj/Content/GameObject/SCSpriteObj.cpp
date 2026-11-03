@@ -31,6 +31,8 @@ namespace sc
 		{
 			transform->SetLocalPosition(world_pos_new);
 		}
+
+		sprt_data_cache_ = sprite_data;
 	}
 }
 

@@ -18,6 +18,9 @@ namespace sc
 		virtual ~SCSpriteObj() override;
 
         void ApplySnapshot(const SCSim::SpriteData& sprite_data);
+
+    private:
+        SCSim::SpriteData sprt_data_cache_ = {};
     };
 }
 

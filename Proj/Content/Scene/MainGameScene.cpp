@@ -1,10 +1,13 @@
 #include "Content/pch.h"
 #include "MainGameScene.h"
 
+#include <ranges>
+
 #include <Engine/Manager/GraphicsDevice.h>
 #include <Engine/Manager/ResourceManager.h>
 #include <Engine/Manager/RenderManager.h>
 #include <Engine/Manager/TimeManager.h>
+#include <Engine/Core/EngineMain.h>
 
 #include <Engine/Resource/GPU/RenderTargetGroup.h>
 #include <Engine/Resource/GPU/Buffer/RenderTarget.h>
@@ -39,9 +42,6 @@
 #include <Content/HLSL/SCCommon.hlsli>
 
 #include <SCSimulator/Include/SCSimulatorAPI.h>
-
-// 적 시점 클로킹 확인 코드 ON/OFF 토글
-#define ENEMY_CLOAK_MODE_CHECK 1
 
 namespace // depth key
 {
@@ -504,6 +504,9 @@ namespace sc
 		sc_common_info_buffer_ = EntityManager::CreateEntity<engine::ConstantBuffer>();
 		ENSURE(sc_common_info_buffer_->Create<SCCommonInfoCB>());
 		RenderManager::GetInst().GetPerFrameBindingTable().AddConstantBuffer(ShaderStage::Vertex | ShaderStage::Pixel, REG_B_SC_COMMON_INFO, sc_common_info_buffer_);
+
+
+		// TODO: 마우스 커서 Clip 켜기
 	}
 	void MainGameScene::SyncUnits()
 	{
@@ -512,15 +515,15 @@ namespace sc
 		const SCSim::UnitData* units = nullptr;
 		int32_t count = SCSim_GetUnits(sc_sim_ctx_, &units);
 		CHECK_F(count >= 0, "SCSim_GetUnits failed: {}", SCSim_GetLastError());
+		sc_units_ = std::span(units, static_cast<size_t>(count));
 
 		++sync_serial_;
 		
-		for (int32_t i = 0; i < count; ++i) 
+		for (const SCSim::UnitData& snapshot : sc_units_)
 		{
-			const SCSim::UnitData& snapshot = units[i];
 			UnitEntry& entry = unit_objects_[snapshot.id];
 
-			if (entry.object == nullptr) 
+			if (entry.object == nullptr)
 			{
 				entry.object = AddGameObject<SCUnitObj>();
 				entry.object->SetUnitID(snapshot.id);
@@ -556,17 +559,22 @@ namespace sc
 
 	void MainGameScene::SyncSprites()
 	{
-		SCSim::SpriteSnapshot snapshot = {};
-		bool result = SCSim_GetSprites(sc_sim_ctx_, &snapshot);
-		CHECK_F(result, "SCSim_GetSprites failed: {}", SCSim_GetLastError());
+		++sprite_sync_serial_;
+
+		{
+			SCSim::SpriteSnapshot snapshot = {};
+			bool result = SCSim_GetSprites(sc_sim_ctx_, &snapshot);
+			CHECK_F(result, "SCSim_GetSprites failed: {}", SCSim_GetLastError());
+
+			sprite_snapshots_ = std::span(snapshot.sprites, static_cast<size_t>(snapshot.sprite_count));
+			image_snapshots_ = std::span(snapshot.images, static_cast<size_t>(snapshot.image_count));
+		}
 
 		const uint32_t* selection = nullptr;
 		int32_t selected = SCSim_GetSelection(sc_sim_ctx_, local_player_, &selection);
 		CHECK_F(0 <= selected, "SCSim_GetSelection failed: {}", SCSim_GetLastError());
 
-		++sprite_sync_serial_;
-
-		// 1) 현재 선택된 스프라이트 마킹해 두기
+		// 1) 현재 선택된 스프라이트에 마킹해 두기
 		for (int32_t i = 0; i < selected; ++i)
 		{
 			const uint32_t unit_id = selection[i];
@@ -593,11 +601,28 @@ namespace sc
 			circle_slot.unit_id = unit_id;
 		}
 
-		// 2) 보이는 스프라이트를 원작 그리기 순서로 정렬
-		uint32_t visible_count = 0;
-		for (int32_t i = 0; i < snapshot.sprite_count; ++i)
+		// 2) 로컬 플레이어 기준 미탐지 적 클로킹 유닛 마킹
+		const uint32_t local_bit = 1u << static_cast<uint32_t>(local_player_);
+		for (const auto& [unit_id, entry] : unit_objects_)
 		{
-			const SCSim::SpriteData& sprt_data = snapshot.sprites[i];
+			const SCSim::UnitData& unit_data = entry.object->GetSCUnit()->GetSnapshot();
+
+			const bool is_other = (unit_data.owner != static_cast<int32_t>(local_player_));
+			const bool is_cloaked = (unit_data.status_flags & (SCSim::UnitStatusFlags::Cloaked | SCSim::UnitStatusFlags::RequiresDetector)) != 0;
+			const bool is_undetected = (unit_data.detected_flags & local_bit) == 0;
+
+			if (is_other && is_cloaked && is_undetected)
+			{
+				ASSERT(unit_data.sprite_index < sprite_slots_.size());
+				sprite_slots_[unit_data.sprite_index].undetected_serial = sprite_sync_serial_;
+			}
+		}
+
+		// 3) 보이는 스프라이트를 원작 그리기 순서로 정렬
+		uint32_t visible_count = 0;
+		for (size_t i = 0; i < sprite_snapshots_.size(); ++i)
+		{
+			const SCSim::SpriteData& sprt_data = sprite_snapshots_[i];
 
 			// 숨김 스프라이트는 serial을 갱신하지 않음 → 아래 정리 루프에서 스프라이트/이미지 모두 비활성화
 			if ((sprt_data.flags & SCSim::SpriteFlags::Hidden) != 0)
@@ -613,16 +638,19 @@ namespace sc
 		}
 		std::sort(sprite_sort_buffer_.begin(), sprite_sort_buffer_.begin() + visible_count);
 
+
 		// 2) 정렬 순서대로 처리. 루프 카운터가 곧 rank (먼저 = 아래)
 		for (uint32_t rank = 0; rank < visible_count; ++rank)
 		{
-			const uint32_t snapshot_pos = static_cast<uint32_t>(sprite_sort_buffer_[rank] & 0xFFFFFFFFull);
-			const SCSim::SpriteData& sprt_data = snapshot.sprites[snapshot_pos];
+			const uint32_t snapshot_idx = static_cast<uint32_t>(sprite_sort_buffer_[rank] & 0xFFFFFFFFull);
+			const SCSim::SpriteData& sprt_data = sprite_snapshots_[snapshot_idx];
 
 			ASSERT(sprt_data.index < sprite_slots_.size());
 			ASSERT(sprt_data.owner >= 0 && static_cast<size_t>(sprt_data.owner) < player_data_.size());
 
 			SpriteSlot& sprt_slot = sprite_slots_[sprt_data.index];	// 슬롯 번호로 조회 (sparse)
+			sprt_slot.rank = rank;
+			sprt_slot.snapshot_idx = snapshot_idx;
 
 			const uint32_t player_color_idx = static_cast<uint32_t>(player_data_[sprt_data.owner].color);
 
@@ -637,7 +665,8 @@ namespace sc
 			sprt_slot.serial = sprite_sync_serial_;
 			sprt_obj->SetActive(true);
 
-			ASSERT(sprt_data.first_image + sprt_data.image_count <= static_cast<uint32_t>(snapshot.image_count));
+			// Sprite는 Image 배열의 Subspan을 소유한다.(사이즈 검사)
+			ASSERT(sprt_data.first_image + sprt_data.image_count <= static_cast<uint32_t>(image_snapshots_.size()));
 
 			// 첫 그림자 '직전'에 원을 끼워 넣어야 함 -> pending_circle = true로 마킹해 두고, 그림자가 아닌 이미지를 처음으로 만나면 끼워 넣고 off
 			const bool is_selected = (sprt_slot.selected_serial == sprite_sync_serial_);
@@ -646,12 +675,11 @@ namespace sc
 			bool has_circle = false;
 
 			uint32_t order = 0;
+
+			// Subspan을 만들고, 역방향으로 순회
 			// 아래 → 위 (OpenBW draw_sprite의 reverse(sprite->images)와 같은 방향)
-			// 언더플로 방지를 위해 k - 1을 사용
-			for (uint32_t k = sprt_data.image_count; k > 0; --k)
+			for (const SCSim::ImageData& img_data : (image_snapshots_.subspan(sprt_data.first_image, sprt_data.image_count) | std::views::reverse))
 			{
-				const uint32_t j = sprt_data.first_image + (k - 1);
-				const SCSim::ImageData& img_data = snapshot.images[j];
 				if ((img_data.flags & SCSim::ImageFlags::Hidden) != 0)
 				{
 					continue;
@@ -688,11 +716,8 @@ namespace sc
 				}
 
 				SCSim::ImageData resolved_img = img_data;
-#if ENEMY_CLOAK_MODE_CHECK
-				// [임시] 탐지 정보 연동 전까지 Player 3(테스트용 다크 템플러)의 Cloaked를 EnemyCloaked로 변환
-				// 탐지 여부를 SCSim에서 받게 되면 '로컬 플레이어가 탐지하지 못한 적'으로 판정을 교체할 것
-				
-				if (sprt_data.owner == static_cast<int32_t>(SCSim::Player::_3))
+				// 미탐지 시 Cloak 상태를 EnemyCloak로 변환
+				if (sprt_slot.undetected_serial == sprite_sync_serial_)
 				{
 					switch (resolved_img.modifier)
 					{
@@ -709,7 +734,6 @@ namespace sc
 						break;
 					}
 				}
-#endif //ENEMY_CLOAK_MODE_CHECK
 
 				// 매 프레임 바뀌기 때문에 ApplySnapshot을 항상 호출해줘야 함
 				img_obj->ApplySnapshot(resolved_img, img_param);
