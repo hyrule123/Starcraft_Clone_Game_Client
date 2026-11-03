@@ -26,6 +26,8 @@ struct SCSim::Context
 
     std::array<SCSim::UnitData, SCSim::kMaxUnits> units{};  // GetUnits 결과 버퍼
 
+    std::array<uint32_t, SCSim::kMaxUnits> found_unit_ids = {};  // FindUnitsInRect 결과 버퍼
+
     // GetSpriteTypes 결과 버퍼. sprites.dat 전체(global_state, 컨텍스트 수명 동안 불변)
 	std::array<SCSim::SpriteTypeData, SCSim::kMaxSpriteTypes> sprite_type_buffer = {};
 
@@ -136,6 +138,7 @@ namespace // Snapshot
         out.first_image = first_image;
         out.image_count = image_count;
         out.flags = static_cast<uint32_t>(sprite.flags);
+        out.visibility_flags = static_cast<uint32_t>(sprite.visibility_flags);
     }
 
     void FillUnit(const bwgame::action_functions& funcs, const bwgame::unit_t* u, SCSim::UnitData& out)
@@ -148,6 +151,8 @@ namespace // Snapshot
         out.y = u->position.y;
         out.status_flags = static_cast<uint32_t>(u->status_flags);
         out.sprite_flags = static_cast<uint32_t>(u->sprite->flags);
+        out.owner = u->owner;
+        out.detected_flags = u->detected_flags;
     }
 }  // namespace
 
@@ -604,6 +609,82 @@ extern "C" {
         return false;
     }
 
+    bool SCSim_RightClick(SCSim::Context* ctx, SCSim::Player owner, int32_t x, int32_t y,
+        uint32_t target_unit_id, SCSim::UnitType target_unit_type, bool queue)
+    {
+        if (!CheckContext(ctx, "SCSim_RightClick"))
+        {
+            return false;
+        }
+        if (!CheckActionPlayerRange(owner, "SCSim_RightClick"))
+        {
+            return false;
+        }
+
+        const int32_t target_type_value = static_cast<int32_t>(target_unit_type);
+        if (target_type_value < 0 || target_type_value > static_cast<int32_t>(SCSim::UnitType::None))
+        {
+            SetError("SCSim_RightClick: invalid target_unit_type " + std::to_string(target_type_value));
+            return false;
+        }
+
+        bwgame::action_functions funcs(ctx->sim.st(), ctx->action_st);
+        bwgame::unit_t* target = nullptr;
+        const bwgame::unit_type_t* target_type = nullptr;
+
+        // 1단계: 인자 해석. 상태를 건드리지 않으므로 실패해도 broken 아님
+        try
+        {
+            if (target_unit_id != SCSim::kInvalidUnitId)
+            {
+                target = funcs.get_unit(bwgame::unit_id_32(target_unit_id));
+                if (!target)
+                {
+                    SetError("SCSim_RightClick: target unit not found " + std::to_string(target_unit_id));
+                    return false;
+                }
+            }
+
+            // None(228)은 OpenBW get_unit_type이 예외를 던지므로 조회하지 않음
+            if (target_unit_type != SCSim::UnitType::None)
+            {
+                target_type = funcs.get_unit_type(static_cast<bwgame::UnitTypes>(target_unit_type));
+            }
+        }
+        catch (const std::exception& e)
+        {
+            SetError(std::string("SCSim_RightClick: ") + e.what());
+            return false;
+        }
+        catch (...)
+        {
+            SetError("SCSim_RightClick: unknown exception");
+            return false;
+        }
+
+        // 2단계: 실제 명령. 도중 실패 시 일부 유닛만 명령을 받았을 수 있음
+        try
+        {
+            if (!funcs.action_default_order(static_cast<int>(owner), { x, y }, target, target_type, queue))
+            {
+                SetError("SCSim_RightClick: order rejected by simulation");
+                return false;
+            }
+            return true;
+        }
+        catch (const std::exception& e)
+        {
+            SetError(std::string("SCSim_RightClick: ") + e.what());
+        }
+        catch (...)
+        {
+            SetError("SCSim_RightClick: unknown exception");
+        }
+
+        ctx->broken = true;
+        return false;
+    }
+
     bool SCSim_Build(SCSim::Context* ctx, SCSim::Player owner, SCSim::OrderType order_type,
         SCSim::UnitType unit_type, uint32_t tile_x, uint32_t tile_y)
     {
@@ -833,6 +914,63 @@ extern "C" {
         catch (...)
         {
             SetError("SCSim_GetUnits: unknown exception");
+        }
+        return -1;
+    }
+
+    int32_t SCSim_FindUnitsInRect(SCSim::Context* ctx, int32_t left, int32_t top,
+        int32_t right, int32_t bottom, const uint32_t** out_unit_ids)
+    {
+        if (!out_unit_ids)
+        {
+            SetError("SCSim_FindUnitsInRect: out_unit_ids is null");
+            return -1;
+        }
+        *out_unit_ids = nullptr;
+        if (!CheckContext(ctx, "SCSim_FindUnitsInRect"))
+        {
+            return -1;
+        }
+        if (left > right || top > bottom)
+        {
+            SetError("SCSim_FindUnitsInRect: invalid rect (" + std::to_string(left) + ", " + std::to_string(top)
+                + ") - (" + std::to_string(right) + ", " + std::to_string(bottom) + ")");
+            return -1;
+        }
+
+        // 조회 전용 — 상태를 건드리지 않으므로 실패해도 broken 아님
+        try
+        {
+            bwgame::action_functions funcs(ctx->sim.st(), ctx->action_st);
+
+            uint32_t* out = ctx->found_unit_ids.data();
+            uint32_t* const out_end = out + ctx->found_unit_ids.size();
+            int32_t count = 0;
+
+            // 원작 드래그 선택과 동일하게 expand 버전 사용 (좁은 영역에서 큰 유닛 누락 방지)
+            // 탐색 중 finder 수정 금지 — 루프 안에서는 ID 기록만 함
+            for (bwgame::unit_t* u : funcs.find_units({ { left, top }, { right, bottom } }))
+            {
+                // finder 원소 수 ≤ 유닛 컨테이너 상한 = 버퍼 크기라 넘칠 수 없지만, 버퍼 쓰기 전에 확인
+                if (out == out_end)
+                {
+                    SetError("SCSim_FindUnitsInRect: buffer overflow");
+                    return -1;
+                }
+                *out++ = funcs.get_unit_id_32(u).raw_value;
+                ++count;
+            }
+
+            *out_unit_ids = ctx->found_unit_ids.data();
+            return count;
+        }
+        catch (const std::exception& e)
+        {
+            SetError(std::string("SCSim_FindUnitsInRect: ") + e.what());
+        }
+        catch (...)
+        {
+            SetError("SCSim_FindUnitsInRect: unknown exception");
         }
         return -1;
     }

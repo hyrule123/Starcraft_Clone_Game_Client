@@ -50,6 +50,14 @@ extern "C" {
 	SCSIM_API bool SCSim_Order(SCSim::Context* ctx, SCSim::Player owner, SCSim::OrderType order_type, int32_t x, int32_t y,
 		uint32_t target_unit_id, SCSim::UnitType target_unit_type, bool queue);
 
+	// 현재 선택된 유닛들에게 원작 우클릭(Right Click 액션) (owner 0~7)
+	// 유닛마다 대상에 맞는 명령(이동·공격·채취·탑승·수리·랠리 등)을 시뮬레이션이 고름
+	// 대상 유닛 없음: kInvalidUnitId, 대상 타입 없음: UnitType::None
+	// 대상 유닛은 그대로 믿음 — 안개·미탐지 유닛을 대상으로 넘기지 않는 것은 Content 책임
+	// 맵 밖 좌표(Order와 달리 보정하지 않음), 빈 선택, 명령을 받을 수 있는 유닛이 없으면 false
+	SCSIM_API bool SCSim_RightClick(SCSim::Context* ctx, SCSim::Player owner, int32_t x, int32_t y,
+		uint32_t target_unit_id, SCSim::UnitType target_unit_type, bool queue);
+
 	// 현재 단일 선택된 유닛에게 건설 명령 (owner 0~7). 원작 Build 액션과 동일한 형식
 	// order_type: PlaceBuilding / PlaceProtossBuilding / CreateProtossBuilding / DroneStartBuild /
 	//             PlaceAddon / BuildNydusExit / BuildingLand 만 허용 (CTF 모드 오더는 지원하지 않음)
@@ -68,6 +76,15 @@ extern "C" {
 	// 포인터는 컨텍스트 수명 동안 유효, 내용은 다음 NextFrame / GetUnits 호출 전까지 유효
 	// 반환: 개수, 실패 시 -1이며 *out_units = nullptr
 	SCSIM_API int32_t SCSim_GetUnits(SCSim::Context* ctx, const SCSim::UnitData** out_units);
+
+	// [left, right) × [top, bottom) 영역과 겹치는 유닛 ID를 컨텍스트 소유 버퍼에 채움 (SC 픽셀 좌표)
+	// 판정은 OpenBW find_units와 동일 — unit finder 박스(units.dat dimensions) 겹침
+	// unit finder 기본 동작으로 숨김·터렛·사망 유닛만 제외. 그 외 필터링 없음(소유자·시야·탐지·선택 가능 여부는 Content 몫)
+	// 순서는 finder 순서(x 경계 정렬) 그대로. 맵 밖 영역은 거부하지 않음(결과가 비거나 일부만 나옴)
+	// 포인터는 컨텍스트 수명 동안 유효, 내용은 다음 FindUnitsInRect 호출 전까지 유효
+	// 반환: 개수(0~kMaxUnits), 실패(left > right 또는 top > bottom 포함) 시 -1이며 *out_unit_ids = nullptr
+	SCSIM_API int32_t SCSim_FindUnitsInRect(SCSim::Context* ctx, int32_t left, int32_t top,
+		int32_t right, int32_t bottom, const uint32_t** out_unit_ids);
 
 	// 무효·사망 ID면 실패, hidden 유닛도 조회 가능(GetUnit과 동일)
 	SCSIM_API bool SCSim_GetUnitVitals(SCSim::Context* ctx, uint32_t unit_id, SCSim::UnitVitals* out);

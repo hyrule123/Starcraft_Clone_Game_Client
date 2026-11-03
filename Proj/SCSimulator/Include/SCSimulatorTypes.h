@@ -94,6 +94,7 @@ namespace SCSim
 		uint32_t first_image;		// SpriteSnapshot::images 내 시작 위치
 		uint32_t image_count;		// OpenBW 목록 순서(앞 = 맨 위층)로 연속 배치. 숨김 이미지 포함
 		uint32_t flags;				// SpriteFlags (sprite_t::flags 비트 그대로)
+		uint32_t visibility_flags;	// sprite_t::visibility_flags 비트 그대로 (플레이어별, 1 = 해당 플레이어에게 보임)
 	};
 	static_assert(std::is_trivially_copyable_v<SpriteData>&& std::is_standard_layout_v<SpriteData>);
 
@@ -199,6 +200,10 @@ namespace SCSim
 		uint32_t sprite_index;		// u->sprite->index
 		uint32_t status_flags;		// unit_t::status_flags 비트 그대로 (UnitStatusFlags)
 		uint32_t sprite_flags;		// u->sprite->flags 비트 그대로 (SpriteFlags) — 숨김은 SpriteFlags::Hidden
+		int32_t  owner;				// unit_t::owner (0~11)
+		uint32_t detected_flags;	// unit_t::detected_flags 비트 그대로 (플레이어별 탐지 비트)
+		// Cloaked 또는 RequiresDetector일 때만 의미 있음 — 그 외에는 갱신되지 않은 값일 수 있음
+		// 미탐지 판정: (status_flags & (Cloaked | RequiresDetector)) && !(detected_flags & (1 << viewer))
 	};
 	static_assert(std::is_trivially_copyable_v<UnitData>&& std::is_standard_layout_v<UnitData>);
 
