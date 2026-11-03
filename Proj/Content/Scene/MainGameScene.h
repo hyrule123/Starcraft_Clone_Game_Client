@@ -1,12 +1,15 @@
 #pragma once
 #include <Engine/Game/Scene.h>
 
-#include <Engine/ThirdParty/ankerl/unordered_dense.h>
-
-#include <SCSimulator/Include/SCSimulatorTypes.h>
-
 #include <array>
 #include <span>
+
+#include <Engine/ThirdParty/ankerl/unordered_dense.h>
+
+#include <Content/SCData/SCSelectionSystem.h>
+#include <Content/SCData/SCCommandSystem.h>
+
+#include <SCSimulator/Include/SCSimulatorTypes.h>
 
 namespace engine
 {
@@ -26,8 +29,10 @@ namespace sc
 
     class SCMapRenderer;
 
+    class CameraMoveScript;
+
     struct UnitEntry {
-        SCUnitObj* object = {};
+        engine::weak_handle_ptr<SCUnitObj> object = {};
         uint32_t serial = 0;
     };
 
@@ -74,6 +79,21 @@ namespace sc
 		bool LoadMap(const std::filesystem::path& map_path, bool create_map_units);
 
         SCSim::Context* GetSCSimContext() const { return sc_sim_ctx_; }
+    
+        // 시스템용 조회 API
+        // unit_objects_ → SCUnit 캐시, 없으면 nullptr
+        const SCSim::UnitData* GetUnitData(uint32_t unit_id) const;	
+
+        // 이번 싱크에 본 슬롯의 SCSpriteObj 캐시, 아니면 nullptr
+        const SCSim::SpriteData* GetSpriteData(uint32_t sprite_index) const;
+
+        // 시야(visibility_flags) + 미탐지 적 클로킹 제외
+        bool IsUnitVisibleToLocal(const SCSim::UnitData& unit) const;	
+
+        // 클릭 판정, 없으면 kInvalidUnitId
+        uint32_t PickUnitAt(int2 sc_pos) const;		
+
+        SCSim::Player GetLocalPlayer() const { return local_player_; }
 
     private:
         void PrepareMapLoader();
@@ -82,11 +102,18 @@ namespace sc
         void SyncSprites();
         void SyncMegatileStates();
 
+        void UpdatePlayerInput();	// FrameStart 끝(싱크 이후)에서 호출
+
+
+
     private:
         SCSim::Context* sc_sim_ctx_ = {};
         float acc_delta_time_ = {}; // for SCSimContext update
 
         bool is_map_loaded_ = {};
+
+        SCSelectionSystem selection_system_;
+        SCCommandSystem command_system_;
 
 #pragma region SNAPSHOTS
         // ===== 초기화 시 1회 =====
@@ -126,5 +153,8 @@ namespace sc
         engine::weak_handle_ptr<SCMapRenderer> map_renderer_ = {};
 
         SCSim::Player local_player_ = {};
+
+        // Camera
+		engine::weak_handle_ptr<CameraMoveScript> camera_move_script_ = {};
     };
 }

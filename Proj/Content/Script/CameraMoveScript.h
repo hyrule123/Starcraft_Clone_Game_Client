@@ -34,6 +34,8 @@ namespace sc
 
         int2 ScreenToSc(int2 mouse_pos) const;
 
+        void SetMoveLocked(bool locked) { is_move_locked_ = locked; }
+
     private:
         float2 GetViewTopLeft() const;
 		void ClampCameraPosition();
@@ -49,6 +51,8 @@ namespace sc
 		// min은 0/0, max는 맵의 최대 좌표. (SC 좌표계)
 		engine::AABB2D sc_clamp_bounds_ = {};
         float2 view_size_ = {};   // View의 사이즈. 현재는 외부로부터 세팅하지 않고, 상수로 지정하고 있음. 나중에 필요 시 함수로 확장
+
+        bool is_move_locked_ = {};
     };
 }
 

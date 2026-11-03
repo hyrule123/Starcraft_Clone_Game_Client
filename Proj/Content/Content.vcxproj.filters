@@ -120,6 +120,12 @@
     <ClInclude Include="SCData\SCCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SCData\SCSelectionSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SCData\SCCommandSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -207,6 +213,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Component\SCHpBarRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SCData\SCSelectionSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SCData\SCCommandSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

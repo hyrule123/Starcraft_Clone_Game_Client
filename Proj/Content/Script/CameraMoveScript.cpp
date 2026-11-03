@@ -42,17 +42,21 @@ namespace sc
 		Super::Update();
 
 		const float delta_time = TimeManager::GetInst().GetDeltaTime();
-		float2 move_dir = float2::Zero;
-		if (InputManager::GetInst().GetKey(KeyCode::kUp)) { move_dir.y -= 1.0f; }
-		if (InputManager::GetInst().GetKey(KeyCode::kDown)) { move_dir.y += 1.0f; }
-		if (InputManager::GetInst().GetKey(KeyCode::kLeft)) { move_dir.x -= 1.0f; }
-		if (InputManager::GetInst().GetKey(KeyCode::kRight)) { move_dir.x += 1.0f; }
-		if (move_dir != float2::Zero)
+		if (is_move_locked_ == false)
 		{
-			move_dir.Normalize();
-			
-			sc_cam_pos_ += float2(move_dir * speed_ * delta_time);
+			float2 move_dir = float2::Zero;
+			if (InputManager::GetInst().GetKey(KeyCode::kUp)) { move_dir.y -= 1.0f; }
+			if (InputManager::GetInst().GetKey(KeyCode::kDown)) { move_dir.y += 1.0f; }
+			if (InputManager::GetInst().GetKey(KeyCode::kLeft)) { move_dir.x -= 1.0f; }
+			if (InputManager::GetInst().GetKey(KeyCode::kRight)) { move_dir.x += 1.0f; }
+			if (move_dir != float2::Zero)
+			{
+				move_dir.Normalize();
+
+				sc_cam_pos_ += float2(move_dir * speed_ * delta_time);
+			}
 		}
+
 		ClampCameraPosition();
 
 		Transform* tr = GetComponent<Transform>();
@@ -74,6 +78,10 @@ namespace sc
 		const uint32_t screen_w = engine::EngineMain::GetInst().GetScreenWidth();
 		const uint32_t screen_h = engine::EngineMain::GetInst().GetScreenHeight();
 		ASSERT(screen_w > 0 && screen_h > 0);
+
+		// 캡처 중 창 밖 좌표 → 클라이언트 영역으로 클램프 (원작은 커서가 화면 밖으로 나갈 수 없음)
+		mouse_pos.x = std::clamp(mouse_pos.x, 0, static_cast<int32_t>(screen_w) - 1);
+		mouse_pos.y = std::clamp(mouse_pos.y, 0, static_cast<int32_t>(screen_h) - 1);
 
 		// 화면 픽셀 → SC 픽셀 비율 (Present가 kResolution을 창 전체로 늘리는 전제, 레터박스 없음)
 		const float w_ratio = static_cast<float>(kResolutionWidth) / static_cast<float>(screen_w);

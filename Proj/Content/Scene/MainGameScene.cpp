@@ -7,12 +7,14 @@
 #include <Engine/Manager/ResourceManager.h>
 #include <Engine/Manager/RenderManager.h>
 #include <Engine/Manager/TimeManager.h>
+#include <Engine/Manager/InputManager.h>
 #include <Engine/Core/EngineMain.h>
 
 #include <Engine/Resource/GPU/RenderTargetGroup.h>
 #include <Engine/Resource/GPU/Buffer/RenderTarget.h>
 #include <Engine/Resource/GPU/Buffer/DepthStencilTarget.h>
 #include <Engine/Resource/GPU/Buffer/ConstantBuffer.h>
+#include <Engine/Resource/GPU/Buffer/Texture2DArray.h>
 #include <Engine/Resource/GPU/Shader/PixelShader.h>
 
 #include <Engine/Render/RenderPass/MeshRenderPass.h>
@@ -129,6 +131,8 @@ namespace sc
 	MainGameScene::MainGameScene()
 		: Scene(MainGameScene::kClassConcreteName)
 		, local_player_(SCSim::Player::_1)
+		, selection_system_(this)
+		, command_system_(this)
 	{
 	}
 
@@ -189,26 +193,26 @@ namespace sc
 		}
 
 		{	// [테스트] action_select 다중 선택 검사 — 건물/유닛 순서
-			const uint32_t marine_a = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranMarine, SCSim::Player::_1, 500, 500);
-			const uint32_t marine_b = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::TerranMarine, SCSim::Player::_1, 500, 500);
+			const uint32_t marine_a = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::HeroEdmundDukeTankMode, SCSim::Player::_1, 500, 500);
+			const uint32_t marine_b = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::HeroEdmundDukeTankMode, SCSim::Player::_2, 500, 500);
 
-			const uint32_t barracks_a = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::ProtossPylon, SCSim::Player::_1, 700, 700);
-			const uint32_t barracks_b = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::ProtossPylon, SCSim::Player::_1, 700, 400);
+			const uint32_t pylon_a = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::ProtossPylon, SCSim::Player::_1, 700, 700);
+			const uint32_t pylon_b = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::ProtossPylon, SCSim::Player::_1, 600, 200);
 
-			LOG("ids: marine_a={}, marine_b={}, barracks_a={}, barracks_b={}", marine_a, marine_b, barracks_a, barracks_b);
+			LOG("ids: marine_a={}, marine_b={}, pylon_a={}, pylon_b={}", marine_a, marine_b, pylon_a, pylon_b);
 
 			// 1. {유닛, 건물} → 예상 1
-			const uint32_t case1[] = { marine_a, barracks_a };
+			const uint32_t case1[] = { marine_a, pylon_a };
 			int32_t selected = SCSim_Select(sc_sim_ctx_, SCSim::Player::_1, case1, 2);
 			LOG("case1 {{unit, building}}: {}", selected);
 
 			// 2. {건물, 건물} → 예상 1
-			const uint32_t case2[] = { barracks_a, barracks_b };
+			const uint32_t case2[] = { pylon_a, pylon_b };
 			selected = SCSim_Select(sc_sim_ctx_, SCSim::Player::_1, case2, 2);
 			LOG("case2 {{building, building}}: {}", selected);
 
 			// 3. {건물, 유닛, 유닛} → 예상 3 (혼합 선택)
-			const uint32_t case3[] = { barracks_a, marine_a, marine_b };
+			const uint32_t case3[] = { pylon_a, marine_a, marine_b };
 			selected = SCSim_Select(sc_sim_ctx_, SCSim::Player::_1, case3, 3);
 			LOG("case3 {{building, unit, unit}}: {}", selected);
 		}
@@ -262,7 +266,7 @@ namespace sc
 			for (int32_t i = 0; i < kTestCount; ++i)
 			{
 				uint32_t test_id = SCSim::kInvalidUnitId;
-				test_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::ProtossDarkTemplar, SCSim::Player::_3, kBaseX, kBaseY);
+				test_id = SCSim_CreateUnit(sc_sim_ctx_, SCSim::UnitType::ProtossDarkTemplar, SCSim::Player::_2, kBaseX, kBaseY);
 				CHECK_F(test_id != SCSim::kInvalidUnitId, "SCSim_CreateUnit failed: {}", SCSim_GetLastError());
 				dt_ids.push_back(test_id);
 			}
@@ -289,11 +293,11 @@ namespace sc
 #endif //SPAWN_ULTRALISK
 
 
-		{	// [테스트] EMP Shockwave (E 키)
-			GameObject* emp_test_obj = AddGameObject<GameObject>();
-			emp_test_obj->SetName("EmpTest");
-			emp_test_obj->AddComponent("EmpTestScript");
-		}
+		//{	// [테스트] EMP Shockwave (E 키)
+		//	GameObject* emp_test_obj = AddGameObject<GameObject>();
+		//	emp_test_obj->SetName("EmpTest");
+		//	emp_test_obj->AddComponent("EmpTestScript");
+		//}
 
 		{	// [테스트] 프로토스 건설 → WarpTexture / WarpFlash 확인 (B 키): 11시 방향
 			GameObject* build_test_obj = AddGameObject<GameObject>();
@@ -321,6 +325,17 @@ namespace sc
 	{
 		Super::FrameStart();
 
+		if (is_map_loaded_ == false)
+		{
+			static bool s_first = false;
+			if (!s_first)
+			{
+				DEBUG_LOG("Map is not loaded yet. Skipping Update Logic.");
+				s_first = true;
+			}
+			return;
+		}
+
 		ASSERT(sc_sim_ctx_ != nullptr);
 		acc_delta_time_ += engine::TimeManager::GetInst().GetDeltaTime();
 		while (acc_delta_time_ >= sc::kFrameTime)
@@ -346,6 +361,9 @@ namespace sc
 		SyncUnits();
 		SyncSprites();
 		SyncMegatileStates();
+
+
+		UpdatePlayerInput();
 	}
 	bool MainGameScene::LoadMap(const std::filesystem::path& map_path, bool create_map_units)
 	{
@@ -410,6 +428,7 @@ namespace sc
 		proj_desc.viewport_height = (float)sc::kResolutionHeight;
 		cam->CreateProjMatrix(proj_desc);
 		CameraMoveScript* cam_script = camobj->AddComponent<CameraMoveScript>();
+		camera_move_script_ = cam_script;
 		engine::AABB2D map_bounds = {};
 		map_bounds.min = float2(0.0f, 0.0f);
 		auto* map_rdr = map_renderer_.get();
@@ -424,6 +443,163 @@ namespace sc
 		is_map_loaded_ = true;
 		return true;
 	}
+	const SCSim::UnitData* MainGameScene::GetUnitData(uint32_t unit_id) const
+	{
+		if (!is_map_loaded_) { return nullptr; }
+
+		const auto iter = unit_objects_.find(unit_id);
+		if (iter == unit_objects_.end()) { return nullptr; }
+
+		const SCUnitObj* unit_obj = iter->second.object.get();
+		if (unit_obj == nullptr) { return nullptr; }
+
+		return &(unit_obj->GetSCUnit()->GetSnapshot());
+	}
+
+	const SCSim::SpriteData* MainGameScene::GetSpriteData(uint32_t sprite_index) const
+	{
+		if (!is_map_loaded_) { return nullptr; }
+
+		// 슬롯은 비어도 오브젝트를 유지(풀링)하므로, 이번 싱크에 본 슬롯이 아니면 캐시가 낡은 값일 수 있음
+		const SpriteSlot& slot = sprite_slots_[sprite_index];
+		if (slot.serial != sprite_sync_serial_) { return nullptr; }
+
+		const SCSpriteObj* sprt_obj = slot.object.get();
+		if (sprt_obj == nullptr) { return nullptr; }
+
+		return &(sprt_obj->GetSpriteData());
+	}
+
+	bool MainGameScene::IsUnitVisibleToLocal(const SCSim::UnitData& unit) const
+	{
+		// 숨김 유닛(탑승·생산 중 등)은 이번 싱크에 스프라이트를 보지 않았으므로 nullptr → 보이지 않음
+		const SCSim::SpriteData* sprt_data = GetSpriteData(unit.sprite_index);
+		if (sprt_data == nullptr)
+		{
+			return false;
+		}
+
+		// 내 유닛은 시야·탐지와 무관하게 보임
+		if (unit.owner == static_cast<int32_t>(local_player_))
+		{
+			return true;
+		}
+
+		// 안개
+		const uint32_t local_bit = 1u << static_cast<uint32_t>(local_player_);
+		if ((sprt_data->visibility_flags & local_bit) == 0)
+		{
+			return false;
+		}
+
+		// 미탐지 적 클로킹 (SyncSprites에서 표시). GetSpriteData가 통과했으므로 인덱스는 유효
+		const SpriteSlot& slot = sprite_slots_[unit.sprite_index];
+		if (slot.undetected_serial == sprite_sync_serial_)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	uint32_t MainGameScene::PickUnitAt(int2 sc_pos) const
+	{
+		// 원작 select_get_unit_at의 탐색 영역: square_at(pos, 32) + 오른쪽·아래로 최대 유닛 크기
+		constexpr int32_t kPickSearchMargin = 32;
+
+		// 마우스 주변에 사각형을 만들어 이 범위 안 유닛을 탐색
+		const int32_t left = sc_pos.x - kPickSearchMargin;
+		const int32_t top = sc_pos.y - kPickSearchMargin;
+		const int32_t right = sc_pos.x + kPickSearchMargin + game_info_.max_unit_width;
+		const int32_t bottom = sc_pos.y + kPickSearchMargin + game_info_.max_unit_height;
+		const uint32_t* unit_ids = nullptr;
+		const int32_t count = SCSim_FindUnitsInRect(sc_sim_ctx_, left, top, right, bottom, &unit_ids);
+		if (count <= 0 || unit_ids == nullptr)
+		{
+			return SCSim::kInvalidUnitId;
+		}
+
+		const SCImageLibrary& img_lib = SCResourceManager::GetInst().GetSCImageLibrary();
+
+		
+		uint32_t candidate = SCSim::kInvalidUnitId;
+		uint32_t cand_rank = 0;
+
+		for (int32_t i = 0; i < count; ++i)
+		{
+			const SCSim::UnitData* unit_data = GetUnitData(unit_ids[i]);
+			if (unit_data == nullptr) { continue; }
+			if (!IsSelectableUnitType(unit_data->unit_type)) { continue; }
+			if (!IsUnitVisibleToLocal(*unit_data)) { continue; }
+
+			ASSERT(unit_data->sprite_index < sprite_slots_.size());
+			const SpriteSlot& sprt_slot = sprite_slots_[unit_data->sprite_index];
+			if (sprt_slot.serial != sprite_sync_serial_) { continue; }
+
+			// 스프라이트 → 이미지 범위는 스냅샷에만 있음. Hidden 이미지도 포함(원작 sprite_clickable_bounds와 동일)
+			const SCSim::SpriteData& sprt_data = sprite_snapshots_[sprt_slot.snapshot_idx];
+			const std::span<const SCSim::ImageData> images = image_snapshots_.subspan(sprt_data.first_image, sprt_data.image_count);
+
+			// Image 경계의 합집합을 구한다.
+			bool has_bounds = false;
+			int32_t l = std::numeric_limits<int32_t>::max();
+			int32_t t = std::numeric_limits<int32_t>::max();
+			int32_t r = std::numeric_limits<int32_t>::min();
+			int32_t b = std::numeric_limits<int32_t>::min();
+
+			for (const SCSim::ImageData& img : images)
+			{
+				if ((img.flags & SCSim::ImageFlags::Clickable) == 0) { continue; }
+
+				const BakedGrp& grp = img_lib.GetGrp(img.image_type);
+				if (grp.texture == nullptr) { continue; }
+
+				ASSERT(img.frame < grp.frame_rects.size());
+				const GrpFrameRect& fr = grp.frame_rects[img.frame];
+
+				// 부호 없는 값은 계산 전에 int32_t로 (음수 좌표가 나올 수 있음)
+				const int32_t fr_x = static_cast<int32_t>(fr.offset.x);
+				const int32_t fr_y = static_cast<int32_t>(fr.offset.y);
+				const int32_t fr_w = static_cast<int32_t>(fr.size.x);
+				const int32_t fr_h = static_cast<int32_t>(fr.size.y);
+				const int32_t half_w = static_cast<int32_t>(grp.texture->GetWidth() >> 1);
+				const int32_t half_h = static_cast<int32_t>(grp.texture->GetHeight() >> 1);
+
+				const int32_t base_x = sprt_data.x + img.offset_x;
+				const int32_t base_y = sprt_data.y + img.offset_y;
+
+				// OpenBW get_image_map_position과 동일
+				const int32_t img_l = ((img.flags & SCSim::ImageFlags::HorizontallyFlipped) != 0)
+					? base_x + half_w - (fr_x + fr_w)
+					: base_x + fr_x - half_w;
+				const int32_t img_t = ((img.flags & SCSim::ImageFlags::YFrozen) != 0)
+					? img.frozen_y_value
+					: base_y + fr_y - half_h;
+
+				l = std::min(l, img_l);
+				t = std::min(t, img_t);
+				r = std::max(r, img_l + fr_w);
+				b = std::max(b, img_t + fr_h);
+				has_bounds = true;
+			}
+
+			if (!has_bounds) { continue; }
+
+			// 마우스로 찍은 위치에 Frame 합집합이 존재하면 후보군
+			// [l, r) × [t, b)
+			if (sc_pos.x < l || r <= sc_pos.x || sc_pos.y < t || b <= sc_pos.y) { continue; }
+
+			// rank가 높은(더 위에 그려지는) 오브젝트를 최종 후보군으로 선택
+			if (candidate == SCSim::kInvalidUnitId || cand_rank < sprt_slot.rank)
+			{
+				candidate = unit_ids[i];
+				cand_rank = sprt_slot.rank;
+			}
+		}
+
+		return candidate;
+	}
+
 	void MainGameScene::PrepareMapLoader()
 	{}
 	void MainGameScene::DefaultEngineSetting()
@@ -540,28 +716,31 @@ namespace sc
 		for (const SCSim::UnitData& snapshot : sc_units_)
 		{
 			UnitEntry& entry = unit_objects_[snapshot.id];
-
-			if (entry.object == nullptr)
+			
+			SCUnitObj* unit_obj = entry.object.get();
+			if (unit_obj == nullptr)
 			{
-				entry.object = AddGameObject<SCUnitObj>();
-				entry.object->SetUnitID(snapshot.id);
+				unit_obj = AddGameObject<SCUnitObj>();
+				unit_obj->SetUnitID(snapshot.id);
+				entry.object = unit_obj;
 			}
+			ASSERT(unit_obj != nullptr);
 
 			// Serial Update
 			entry.serial = sync_serial_;
 
-			entry.object->GetSCUnit()->SetSnapshot(snapshot);
+			unit_obj->GetSCUnit()->SetSnapshot(snapshot);
 
 			const bool hidden = (snapshot.sprite_flags & SCSim::SpriteFlags::Hidden) != 0;
 
-			entry.object->SetActive(!hidden);
+			unit_obj->SetActive(!hidden);
 		}
 
 		// 이번에 못 본 유닛 = 죽었거나 사라짐
 		for (auto it = unit_objects_.begin(); it != unit_objects_.end(); ) 
 		{
 			if (it->second.serial != sync_serial_) {
-				if (SCUnitObj* obj = it->second.object) 
+				if (SCUnitObj* obj = it->second.object.get()) 
 				{
 					obj->Destroy();
 				}
@@ -604,8 +783,11 @@ namespace sc
 				DEBUG_LOG("Unit Sync 맞춰지지 않음: unit_id={}", unit_id);
 				continue; 
 			}
+			
+			SCUnitObj* unit_obj = iter->second.object.get();
+			ASSERT(unit_obj != nullptr); // SyncUnits 이후이므로 반드시 있어야 함
 
-			const SCSim::UnitData& unit_data = iter->second.object->GetSCUnit()->GetSnapshot();
+			const SCSim::UnitData& unit_data = unit_obj->GetSCUnit()->GetSnapshot();
 
 			ASSERT(unit_data.sprite_index < sprite_slots_.size());
 
@@ -623,7 +805,11 @@ namespace sc
 		const uint32_t local_bit = 1u << static_cast<uint32_t>(local_player_);
 		for (const auto& [unit_id, entry] : unit_objects_)
 		{
-			const SCSim::UnitData& unit_data = entry.object->GetSCUnit()->GetSnapshot();
+			SCUnitObj* unit_obj = entry.object.get();
+			
+			if (unit_obj == nullptr) { continue; }
+
+			const SCSim::UnitData& unit_data = unit_obj->GetSCUnit()->GetSnapshot();
 
 			const bool is_other = (unit_data.owner != static_cast<int32_t>(local_player_));
 			const bool is_cloaked = (unit_data.status_flags & (SCSim::UnitStatusFlags::Cloaked | SCSim::UnitStatusFlags::RequiresDetector)) != 0;
@@ -793,9 +979,10 @@ namespace sc
 				const auto iter = unit_objects_.find(sel.unit_id);
 				if (iter != unit_objects_.end())
 				{
+					SCUnitObj* unit_obj = iter->second.object.get();
+					ASSERT(unit_obj != nullptr);
 
-					ASSERT(iter->second.object);
-					const SCSim::UnitData& unit_data = iter->second.object->GetSCUnit()->GetSnapshot();
+					const SCSim::UnitData& unit_data = unit_obj->GetSCUnit()->GetSnapshot();
 					
 					// 무적이 아닐 때만 HP Bar 렌더링
 					if ((unit_data.status_flags & SCSim::UnitStatusFlags::Invincible) == 0)
@@ -894,6 +1081,32 @@ namespace sc
 
 		const bool uploaded = renderer->ApplyMegatileSnapshot(megatiles, map_width_megatile, map_height_megatile);
 		CHECK_F(uploaded, "Failed to upload tile snapshot");
+	}
+	void MainGameScene::UpdatePlayerInput()
+	{
+		CameraMoveScript* cam_script = camera_move_script_.get();
+		ASSERT(cam_script != nullptr);
+
+		PlayerInputFrame input_frame = {};
+
+		const engine::int32_2 mouse_pos = engine::InputManager::GetInst().GetMousePos();
+		input_frame.mouse_sc = cam_script->ScreenToSc(mouse_pos);
+
+		
+		input_frame.hover_unit_id = PickUnitAt(input_frame.mouse_sc);
+		input_frame.left_down = engine::InputManager::GetInst().GetKeyDown(engine::KeyCode::kMouseLeft);
+		input_frame.left_up = engine::InputManager::GetInst().GetKeyUp(engine::KeyCode::kMouseLeft);
+		input_frame.right_down = engine::InputManager::GetInst().GetKeyDown(engine::KeyCode::kMouseRight);
+		input_frame.shift = engine::InputManager::GetInst().GetKey(engine::KeyCode::kShift);
+
+		selection_system_.Update(input_frame);
+
+		const bool is_dragging = selection_system_.IsDragging();
+		cam_script->SetMoveLocked(is_dragging);
+		if (!is_dragging)
+		{
+			command_system_.Update(input_frame);
+		}
 	}
 }
 

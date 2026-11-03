@@ -218,6 +218,7 @@
     <ClInclude Include="GameObject\SCUnitObj.h" />
     <ClInclude Include="GameObject\SCHpBarObj.h" />
     <ClInclude Include="Component\SCHpBarRenderer.h" />
+    <ClInclude Include="SCData\SCCommandSystem.h" />
     <ClInclude Include="SCData\SCCommon.h" />
     <ClInclude Include="Script\BuildTestScript.h" />
     <ClInclude Include="Script\EmpTestScript.h" />
@@ -248,6 +249,7 @@
     <ClInclude Include="GameObject\SCSpriteObj.h" />
     <ClInclude Include="Script\SCUnit.h" />
     <ClInclude Include="GameObject\SCSelectionCircleObj.h" />
+    <ClInclude Include="SCData\SCSelectionSystem.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Scene\MainGameScene.h" />
   </ItemGroup>
@@ -255,6 +257,7 @@
     <ClCompile Include="GameObject\SCUnitObj.cpp" />
     <ClCompile Include="GameObject\SCHpBarObj.cpp" />
     <ClCompile Include="Component\SCHpBarRenderer.cpp" />
+    <ClCompile Include="SCData\SCCommandSystem.cpp" />
     <ClCompile Include="Script\BuildTestScript.cpp" />
     <ClCompile Include="Script\EmpTestScript.cpp" />
     <ClCompile Include="GameObject\SCImageObj.cpp" />
@@ -286,6 +289,7 @@
     <ClCompile Include="GameObject\SCSpriteObj.cpp" />
     <ClCompile Include="Script\SCUnit.cpp" />
     <ClCompile Include="GameObject\SCSelectionCircleObj.cpp" />
+    <ClCompile Include="SCData\SCSelectionSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Content.rc" />
