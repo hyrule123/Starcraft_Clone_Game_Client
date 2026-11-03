@@ -19,6 +19,8 @@ namespace sc
 
         void ApplySnapshot(const SCSim::SpriteData& sprite_data);
 
+		const SCSim::SpriteData& GetSpriteData() const { return sprt_data_cache_; }
+
     private:
         SCSim::SpriteData sprt_data_cache_ = {};
     };

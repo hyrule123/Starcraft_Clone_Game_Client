@@ -158,66 +158,7 @@ namespace sc
 		CHECK_F(sc_sim_ctx_ != nullptr, "Failed to create SCSimContext: {}", SCSim_GetLastError());
 
 		std::filesystem::path map_path = res_dir / "SCMap" / "(4)Fighting Spirit 1.4.scx";
-		bool result = SCSim_LoadMap(sc_sim_ctx_, map_path.string().c_str(), true);
-		if (!result)
-		{
-			const char* err = SCSim_GetLastError();
-			ENSURE_F(false, "Failed to load map: {}", err ? err : "Unknown error");
-
-			return;
-		}
-
-		// SpriteTypeData(불변값이므로 1회만 시행)
-		const SCSim::SpriteTypeData* types = nullptr;
-		const int32_t type_count = SCSim_GetSpriteTypes(sc_sim_ctx_, &types);
-		CHECK_F(type_count >= 0, "SCSim_GetSpriteTypes failed: {}", SCSim_GetLastError());
-		sprite_types_ = std::span(types, static_cast<size_t>(type_count));
-
-		{
-			// Map Loading
-			SCMapLoader& map_loader = SCResourceManager::GetInst().GetMapLoader();
-
-			bool result = true;
-			std::shared_ptr<Texture2D> map_tex;
-
-			//CPU
-			//auto sc_map = map_loader.LoadMapDataGPU(map_path);
-			//ASSERT(result);
-
-			//GPU
-			std::unique_ptr<SCMap> sc_map = map_loader.LoadSCMap(map_path);
-
-			//Save Map Texture to File
-			//map_path = ResourceManager::GetInst().GetResourceDir();
-			//map_path /= "MapTest.png";
-			//map_tex->SaveToFile(map_path);
-
-			GameObject* map_obj = AddGameObject<GameObject>();
-			SCMapRenderer* map_rdr = map_obj->AddComponent<SCMapRenderer>();
-			map_rdr->SetSCMap(std::move(sc_map));
-			map_renderer_ = map_rdr;
-		}
-
-		GameObject* camobj = AddGameObject<GameObject>();
-		camobj->SetName("MainCamera");
-		camobj->GetTransform()->SetLocalPosition(float3(0.0f, 0.0f, -10.0f));
-		auto cam = camobj->AddComponent<Camera>();
-		Camera::ProjectionMatrixDesc proj_desc = cam->GetProjectionMatrixDesc();
-		proj_desc.proj_mode = Camera::ProjectionMode::Orthographic;
-		proj_desc.viewport_width = (float)sc::kResolutionWidth;
-		proj_desc.viewport_height = (float)sc::kResolutionHeight;
-		cam->CreateProjMatrix(proj_desc);
-		CameraMoveScript* cam_script = camobj->AddComponent<CameraMoveScript>();
-		engine::AABB2D map_bounds = {};
-		map_bounds.min = float2(0.0f, 0.0f);
-		auto* map_rdr = map_renderer_.get();
-		CHECK(map_rdr);
-		map_bounds.max = { 
-			static_cast<float>(map_rdr->GetMapWidthMegatile() * static_cast<int32_t>(kMegatilePixelSize)), 
-			static_cast<float>(map_rdr->GetMapHeightMegatile() * static_cast<int32_t>(kMegatilePixelSize)) 
-		};
-		CHECK(map_bounds.IsValid());
-		cam_script->SetClampBounds(map_bounds);
+		bool result = LoadMap(map_path, true);
 
 		// ↑ 최소 기본값 세팅
 		// ============================================================================================================
@@ -406,6 +347,83 @@ namespace sc
 		SyncSprites();
 		SyncMegatileStates();
 	}
+	bool MainGameScene::LoadMap(const std::filesystem::path& map_path, bool create_map_units)
+	{
+		using namespace engine;
+
+		const auto& res_dir = ResourceManager::GetInst().GetResourceDir();
+
+		// SCSimulator Load
+		bool result = SCSim_LoadMap(sc_sim_ctx_, map_path.string().c_str(), true);
+		if (!result)
+		{
+			ERR_MSG("Failed to load map: {}", SCSim_GetLastError());
+			return false;
+		}
+
+		// GameInfo
+		result = SCSim_GetGameInfo(sc_sim_ctx_, &game_info_);
+		if (!result)
+		{
+			ERR_MSG("Failed to get game info: {}", SCSim_GetLastError());
+			return false;
+		}
+
+		// SpriteTypeData(불변값이므로 1회만 시행)
+		const SCSim::SpriteTypeData* types = nullptr;
+		const int32_t type_count = SCSim_GetSpriteTypes(sc_sim_ctx_, &types);
+		CHECK_F(type_count >= 0, "SCSim_GetSpriteTypes failed: {}", SCSim_GetLastError());
+		sprite_types_ = std::span(types, static_cast<size_t>(type_count));
+
+		{
+			// Map Loading
+			SCMapLoader& map_loader = SCResourceManager::GetInst().GetMapLoader();
+
+			bool result = true;
+			std::shared_ptr<Texture2D> map_tex;
+
+			//CPU
+			//auto sc_map = map_loader.LoadMapDataGPU(map_path);
+			//ASSERT(result);
+
+			//GPU
+			std::unique_ptr<SCMap> sc_map = map_loader.LoadSCMap(map_path);
+
+			//Save Map Texture to File
+			//map_path = ResourceManager::GetInst().GetResourceDir();
+			//map_path /= "MapTest.png";
+			//map_tex->SaveToFile(map_path);
+
+			GameObject* map_obj = AddGameObject<GameObject>();
+			SCMapRenderer* map_rdr = map_obj->AddComponent<SCMapRenderer>();
+			map_rdr->SetSCMap(std::move(sc_map));
+			map_renderer_ = map_rdr;
+		}
+
+		GameObject* camobj = AddGameObject<GameObject>();
+		camobj->SetName("MainCamera");
+		camobj->GetTransform()->SetLocalPosition(float3(0.0f, 0.0f, -10.0f));
+		auto cam = camobj->AddComponent<Camera>();
+		Camera::ProjectionMatrixDesc proj_desc = cam->GetProjectionMatrixDesc();
+		proj_desc.proj_mode = Camera::ProjectionMode::Orthographic;
+		proj_desc.viewport_width = (float)sc::kResolutionWidth;
+		proj_desc.viewport_height = (float)sc::kResolutionHeight;
+		cam->CreateProjMatrix(proj_desc);
+		CameraMoveScript* cam_script = camobj->AddComponent<CameraMoveScript>();
+		engine::AABB2D map_bounds = {};
+		map_bounds.min = float2(0.0f, 0.0f);
+		auto* map_rdr = map_renderer_.get();
+		CHECK(map_rdr);
+		map_bounds.max = {
+			static_cast<float>(map_rdr->GetMapWidthMegatile() * static_cast<int32_t>(kMegatilePixelSize)),
+			static_cast<float>(map_rdr->GetMapHeightMegatile() * static_cast<int32_t>(kMegatilePixelSize))
+		};
+		CHECK(map_bounds.IsValid());
+		cam_script->SetClampBounds(map_bounds);
+
+		is_map_loaded_ = true;
+		return true;
+	}
 	void MainGameScene::PrepareMapLoader()
 	{}
 	void MainGameScene::DefaultEngineSetting()
@@ -574,7 +592,7 @@ namespace sc
 		int32_t selected = SCSim_GetSelection(sc_sim_ctx_, local_player_, &selection);
 		CHECK_F(0 <= selected, "SCSim_GetSelection failed: {}", SCSim_GetLastError());
 
-		// 1) 현재 선택된 스프라이트에 마킹해 두기
+		// 현재 선택된 스프라이트에 마킹해 두기
 		for (int32_t i = 0; i < selected; ++i)
 		{
 			const uint32_t unit_id = selection[i];
@@ -601,7 +619,7 @@ namespace sc
 			circle_slot.unit_id = unit_id;
 		}
 
-		// 2) 로컬 플레이어 기준 미탐지 적 클로킹 유닛 마킹
+		// 로컬 플레이어 기준 미탐지 적 클로킹 유닛 마킹
 		const uint32_t local_bit = 1u << static_cast<uint32_t>(local_player_);
 		for (const auto& [unit_id, entry] : unit_objects_)
 		{
@@ -618,7 +636,7 @@ namespace sc
 			}
 		}
 
-		// 3) 보이는 스프라이트를 원작 그리기 순서로 정렬
+		// 보이는 스프라이트를 원작 그리기 순서로 정렬
 		uint32_t visible_count = 0;
 		for (size_t i = 0; i < sprite_snapshots_.size(); ++i)
 		{
@@ -639,7 +657,7 @@ namespace sc
 		std::sort(sprite_sort_buffer_.begin(), sprite_sort_buffer_.begin() + visible_count);
 
 
-		// 2) 정렬 순서대로 처리. 루프 카운터가 곧 rank (먼저 = 아래)
+		// 정렬 순서대로 처리. 루프 카운터가 곧 rank (먼저 = 아래)
 		for (uint32_t rank = 0; rank < visible_count; ++rank)
 		{
 			const uint32_t snapshot_idx = static_cast<uint32_t>(sprite_sort_buffer_[rank] & 0xFFFFFFFFull);

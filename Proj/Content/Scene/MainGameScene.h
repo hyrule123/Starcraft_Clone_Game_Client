@@ -39,6 +39,7 @@ namespace sc
         uint32_t selected_slot = 0;		// selected_serial이 유효할 때만 의미 있음 (Pool 인덱스)
         uint32_t undetected_serial = 0;
 
+        // serial == sprite_sync_serial_일 때만 유효
         uint32_t rank = 0;		    // 이번 싱크 그리기 순위, 클수록 카메라와 가까움(앞)
         uint32_t snapshot_idx = 0;	// 이번 싱크 SpriteSnapshot::sprites 내 위치
     };
@@ -70,6 +71,8 @@ namespace sc
         virtual void Init() override;
         virtual void FrameStart() override;
 
+		bool LoadMap(const std::filesystem::path& map_path, bool create_map_units);
+
         SCSim::Context* GetSCSimContext() const { return sc_sim_ctx_; }
 
     private:
@@ -80,13 +83,15 @@ namespace sc
         void SyncMegatileStates();
 
     private:
-        SCSim::Context* sc_sim_ctx_ = nullptr;
-        float acc_delta_time_ = 0.0f; // for SCSimContext update
+        SCSim::Context* sc_sim_ctx_ = {};
+        float acc_delta_time_ = {}; // for SCSimContext update
 
-#pragma region SNAPSHOTS       
+        bool is_map_loaded_ = {};
 
+#pragma region SNAPSHOTS
         // ===== 초기화 시 1회 =====
         // 소유자: SCSim::Context, 이 클래스와 수명을 같이 하므로 에러 위험 없음
+		SCSim::GameInfo game_info_ = {};
         std::span<const SCSim::SpriteTypeData> sprite_types_ = {};
         // =======================
         
@@ -95,7 +100,7 @@ namespace sc
 		std::span<const SCSim::SpriteData> sprite_snapshots_ = {};
 		std::span<const SCSim::ImageData> image_snapshots_ = {};
         // ====================
-#pragma region SNAPSHOTS
+#pragma endregion SNAPSHOTS
 
         // Unit ID - UnitEntry pair 
         uint32_t sync_serial_ = 0;
