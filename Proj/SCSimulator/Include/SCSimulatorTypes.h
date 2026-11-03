@@ -9,6 +9,14 @@ namespace SCSim
 {
 	struct Context;	// Forward
 
+	// 맵 로드 후 불변인 게임 전역 정보. 초기화 시 1회 조회
+	struct GameInfo
+	{
+		int32_t max_unit_width;		// game_state::max_unit_width  — units.dat 전체 유닛 dimensions 최대 폭
+		int32_t max_unit_height;	// game_state::max_unit_height — 최대 높이
+	};
+	static_assert(std::is_trivially_copyable_v<GameInfo>&& std::is_standard_layout_v<GameInfo>);
+
 	struct Fp8
 	{
 		int32_t raw;

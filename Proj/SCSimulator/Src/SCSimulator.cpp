@@ -157,6 +157,10 @@ namespace // Snapshot
 }  // namespace
 
 extern "C" {
+    const char* SCSim_GetLastError() 
+    {
+        return last_error.c_str();
+    }
 
     SCSim::Context* SCSim_Create(const char* mpq_dir)
     {
@@ -178,10 +182,6 @@ extern "C" {
 
     void SCSim_Destroy(SCSim::Context* ctx) {
         delete ctx;  // nullptr이면 아무것도 하지 않음
-    }
-
-    const char* SCSim_GetLastError() {
-        return last_error.c_str();
     }
 
     bool SCSim_LoadMap(SCSim::Context* ctx, const char* map_path, bool create_map_units)
@@ -251,6 +251,68 @@ extern "C" {
 
         ctx->broken = true;
         return false;
+    }
+
+    bool SCSim_GetGameInfo(SCSim::Context* ctx, SCSim::GameInfo* out)
+    {
+        if (!out)
+        {
+            SetError("SCSim_GetGameInfo: out is null");
+            return false;
+        }
+        if (!CheckContext(ctx, "SCSim_GetGameInfo"))
+        {
+            return false;
+        }
+
+        // 단순 값 복사라 예외·부분 진행 상태가 없음. game_state는 맵 로드(CheckContext 통과) 후 항상 존재
+        const auto& st = ctx->sim.st();
+        if (!st.game)
+        {
+            SetError("SCSim_GetGameInfo: game state is null");
+            return false;
+        }
+
+        *out = {};
+        out->max_unit_width = st.game->max_unit_width;
+        out->max_unit_height = st.game->max_unit_height;
+        return true;
+    }
+
+    int32_t SCSim_GetSpriteTypes(SCSim::Context* ctx, const SCSim::SpriteTypeData** out)
+    {
+        if (!out)
+        {
+            SetError("SCSim_GetSpriteTypes: out is null");
+            return -1;
+        }
+        *out = nullptr;
+        if (!CheckContext(ctx, "SCSim_GetSpriteTypes"))
+        {
+            return -1;
+        }
+
+        // sprites.dat 로더(load_sprites_dat)의 개수는 함수 지역 상수라 static_assert 불가 → 런타임 검사
+        const auto& sprite_types = ctx->sim.st().global->sprite_types.vec;
+        if (sprite_types.size() != static_cast<size_t>(SCSim::kMaxSpriteTypes))
+        {
+            SetError("SCSim_GetSpriteTypes: unexpected sprite type count " + std::to_string(sprite_types.size()));
+            return -1;
+        }
+
+        // 불변 데이터의 단순 값 복사라 예외·부분 진행 상태가 없음. 517 × 12B라 매 호출 복사해도 부담 없음
+        for (size_t i = 0; i < sprite_types.size(); ++i)
+        {
+            const bwgame::sprite_type_t& src = sprite_types[i];
+            SCSim::SpriteTypeData& dst = ctx->sprite_type_buffer[i];
+            dst = {};
+            dst.health_bar_size = src.health_bar_size;
+            dst.selection_circle = src.selection_circle;
+            dst.selection_circle_vpos = src.selection_circle_vpos;
+        }
+
+        *out = ctx->sprite_type_buffer.data();
+        return SCSim::kMaxSpriteTypes;
     }
 
     uint32_t SCSim_CreateUnit(SCSim::Context* ctx, SCSim::UnitType unit_type, SCSim::Player owner, int32_t x, int32_t y)
@@ -1100,42 +1162,6 @@ extern "C" {
             SetError("SCSim_GetSprites: unknown exception");
         }
         return false;
-    }
-
-    int32_t SCSim_GetSpriteTypes(SCSim::Context* ctx, const SCSim::SpriteTypeData** out)
-    {
-        if (!out)
-        {
-            SetError("SCSim_GetSpriteTypes: out is null");
-            return -1;
-        }
-        *out = nullptr;
-        if (!CheckContext(ctx, "SCSim_GetSpriteTypes"))
-        {
-            return -1;
-        }
-
-        // sprites.dat 로더(load_sprites_dat)의 개수는 함수 지역 상수라 static_assert 불가 → 런타임 검사
-        const auto& sprite_types = ctx->sim.st().global->sprite_types.vec;
-        if (sprite_types.size() != static_cast<size_t>(SCSim::kMaxSpriteTypes))
-        {
-            SetError("SCSim_GetSpriteTypes: unexpected sprite type count " + std::to_string(sprite_types.size()));
-            return -1;
-        }
-
-        // 불변 데이터의 단순 값 복사라 예외·부분 진행 상태가 없음. 517 × 12B라 매 호출 복사해도 부담 없음
-        for (size_t i = 0; i < sprite_types.size(); ++i)
-        {
-            const bwgame::sprite_type_t& src = sprite_types[i];
-            SCSim::SpriteTypeData& dst = ctx->sprite_type_buffer[i];
-            dst = {};
-            dst.health_bar_size = src.health_bar_size;
-            dst.selection_circle = src.selection_circle;
-            dst.selection_circle_vpos = src.selection_circle_vpos;
-        }
-
-        *out = ctx->sprite_type_buffer.data();
-        return SCSim::kMaxSpriteTypes;
     }
 
     int32_t SCSim_GetPlayers(SCSim::Context* ctx, const SCSim::PlayerData** out_players)

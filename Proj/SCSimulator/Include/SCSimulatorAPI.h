@@ -12,19 +12,33 @@
 #endif
 
 extern "C" {
+	// 같은 스레드에서 다음 SCSim_ 호출 전까지 유효. 실패한 호출만 덮어씀
+	SCSIM_API const char* SCSim_GetLastError();
 
+#pragma region CREATION/DESTROY
 	// 실패 시 nullptr. 원인은 SCSim_GetLastError()로 확인
 	SCSIM_API SCSim::Context* SCSim_Create(const char* mpq_dir);
 	SCSIM_API void          SCSim_Destroy(SCSim::Context* ctx);
+#pragma endregion CREATION/DESTROY
+
+#pragma region ONCE PER LIFETIME
+	SCSIM_API bool SCSim_LoadMap(SCSim::Context* ctx, const char* map_path, bool create_map_units);
+
+	// 맵 로드 후 불변인 게임 전역 정보를 out에 채움. 초기화 시 1회 조회
+	// 실패 시 false
+	SCSIM_API bool SCSim_GetGameInfo(SCSim::Context* ctx, SCSim::GameInfo* out);
+
+	// Sprite 타입 별로 sprites.dat 전체(sprite_type id = 인덱스)를 컨텍스트 소유 버퍼로, 포인터는 컨텍스트 수명 동안 유효
+	// 데이터 버퍼의 크기는 크지 않으나, 1회 로드 시 불변 -> 초기화 시 1회만 호출
+	// 성공 시 개수를 반환, 실패 시 -1
+	SCSIM_API int32_t SCSim_GetSpriteTypes(SCSim::Context* ctx, const SCSim::SpriteTypeData** out);
+#pragma endregion ONCE PER LIFETIME
 
 	// 실패 시 kInvalidUnitId. 맵 밖 좌표는 거부되지 않고 경계 안으로 보정됨
 	SCSIM_API uint32_t SCSim_CreateUnit(SCSim::Context* ctx, SCSim::UnitType unit_type,
 		SCSim::Player owner, int32_t x, int32_t y);
 
-	// 같은 스레드에서 다음 SCSim_ 호출 전까지 유효. 실패한 호출만 덮어씀
-	SCSIM_API const char* SCSim_GetLastError();
-
-	SCSIM_API bool SCSim_LoadMap(SCSim::Context* ctx, const char* map_path, bool create_map_units);
+	
 
 	SCSIM_API bool SCSim_NextFrame(SCSim::Context* ctx);
 	SCSIM_API int32_t SCSim_GetCurrentFrame(const SCSim::Context* ctx);
@@ -94,11 +108,6 @@ extern "C" {
 	// 포인터는 컨텍스트 수명 동안 유효, 내용은 다음 NextFrame / GetSprites 호출 전까지 유효
 	// 버퍼 오버플로(정상 상태에서는 발생하지 않음) 시 실패
 	SCSIM_API bool SCSim_GetSprites(SCSim::Context* ctx, SCSim::SpriteSnapshot* out);
-
-	// Sprite 타입 별로 sprites.dat 전체(sprite_type id = 인덱스)를 컨텍스트 소유 버퍼로, 포인터는 컨텍스트 수명 동안 유효
-	// 데이터 버퍼의 크기는 크지 않으나, 1회 로드 시 불변 -> 초기화 시 1회만 호출
-	// 성공 시 개수를 반환, 실패 시 -1
-	SCSIM_API int32_t SCSim_GetSpriteTypes(SCSim::Context* ctx, const SCSim::SpriteTypeData** out); 
 
 	// 플레이어 12명분(Player 순서)을 컨텍스트 소유 버퍼에 채움
 	// 포인터는 컨텍스트 수명 동안 유효, 내용은 다음 GetPlayers 호출 전까지 유효
