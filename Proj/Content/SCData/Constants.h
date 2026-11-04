@@ -3,7 +3,7 @@
 #include <Engine/Core/Math.h>
 #include <limits>
 
-#include <Engine/Render/RenderTypes.h>
+#include <Engine/Render/RenderPass/RenderPassTypes.h>
 
 namespace sc
 {

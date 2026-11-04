@@ -74,7 +74,11 @@ namespace sc
         virtual ~MainGameScene() override;
 
         virtual void Init() override;
-        virtual void FrameStart() override;
+        virtual void OnActivate() override;
+
+        virtual void OnFrameStart() override;
+
+        virtual void OnShutdown() override;
 
 		bool LoadMap(const std::filesystem::path& map_path, bool create_map_units);
 
@@ -95,16 +99,15 @@ namespace sc
 
         SCSim::Player GetLocalPlayer() const { return local_player_; }
 
+		engine::weak_handle_ptr<engine::Camera> GetMainCamera() const { return main_camera_; }
+
     private:
-        void PrepareMapLoader();
         void DefaultEngineSetting();
         void SyncUnits();
         void SyncSprites();
         void SyncMegatileStates();
 
         void UpdatePlayerInput();	// FrameStart 끝(싱크 이후)에서 호출
-
-
 
     private:
         SCSim::Context* sc_sim_ctx_ = {};
@@ -155,6 +158,7 @@ namespace sc
         SCSim::Player local_player_ = {};
 
         // Camera
+		engine::weak_handle_ptr<engine::Camera> main_camera_ = {};
 		engine::weak_handle_ptr<CameraMoveScript> camera_move_script_ = {};
     };
 }

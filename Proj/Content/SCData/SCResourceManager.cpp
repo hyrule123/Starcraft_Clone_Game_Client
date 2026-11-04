@@ -46,7 +46,7 @@ namespace sc
 	{
 		using namespace engine;
 
-		CHECK_F(has_initialized_ == false, "Double initialization");
+		if (has_initialized_) { return; }
 
 		has_initialized_ = true;
 

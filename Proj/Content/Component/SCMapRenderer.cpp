@@ -1,13 +1,6 @@
 #include "Content/pch.h"
 #include "SCMapRenderer.h"
 
-#include <Content/SCData/Constants.h>
-#include <Content/SCData/SCResourceManager.h>
-
-#include <Content/HLSL/SCMap/SCMapRender.hlsli>
-
-#include <SCSimulator/Include/SCSimulatorTypes.h>
-
 #include <Engine/Core/Debug.h>
 
 #include <Engine/Resource/GPU/Material.h>
@@ -19,6 +12,15 @@
 
 #include <Engine/Game/Component/Transform.h>
 #include <Engine/Game/Component/Camera.h>
+
+#include <Content/SCData/Constants.h>
+#include <Content/SCData/SCResourceManager.h>
+
+#include <Content/HLSL/SCMap/SCMapRender.hlsli>
+
+#include <Content/Scene/MainGameScene.h>
+
+#include <SCSimulator/Include/SCSimulatorTypes.h>
 
 namespace sc
 {
@@ -43,6 +45,18 @@ namespace sc
 		SetMaterial(0, SCResourceManager::GetInst().GetNewMapMaterial());
 
 		SetEnable(false);
+	}
+	void SCMapRenderer::OnEnable()
+	{
+		Super::OnEnable();
+
+		using namespace engine;
+		// PER FRAME
+		auto& per_frame_table = RenderManager::GetInst().GetPerFrameBindingTable();
+		per_frame_table.AddShaderResource(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_SC_WPE_PALETTE, sc_map_->wpe_color_palettes);
+		per_frame_table.AddShaderResource(ShaderStage::Pixel, REG_T_SC_PCX_TILESET_LUT, sc_map_->pcx_tileset_LUT);
+		per_frame_table.AddShaderResource(ShaderStage::Pixel, REG_T_SC_PCX_TILESET_LUT_OFFSETS, sc_map_->pcx_tileset_LUT_offsets);
+		per_frame_table.AddShaderResource(ShaderStage::Pixel, REG_T_SC_CLOAK_FADE_SELECTOR, sc_map_->cloak_fade_selector);
 	}
 	void SCMapRenderer::LateUpdate()
 	{
@@ -71,8 +85,10 @@ namespace sc
 			const float height = (float)sc_map_->map_height_megatile * kMegatilePixelSize;
 			const float2 center = float2(width * 0.5f, - (height * 0.5f));
 
-			Camera* cam = RenderManager::GetInst().GetMainCamera().get();
-			CHECK(cam);
+			MainGameScene* main_scene = dynamic_cast<MainGameScene*>(GetOwnerScene());
+			ASSERT(main_scene);
+			Camera* cam = main_scene->GetMainCamera().get();
+			ASSERT(cam);
 
 			const auto& desc = cam->GetProjectionMatrixDesc();
 			float3 cam_pos = cam->GetComponent<Transform>()->GetLocalPosition();
@@ -90,11 +106,11 @@ namespace sc
 			needs_scale_matching_ = false;
 		}
 	}
-	void SCMapRenderer::OnDestroy()
+	void SCMapRenderer::OnDisable()
 	{
-		using namespace engine;
+		Super::OnDisable();
 
-		Super::OnDestroy();
+		using namespace engine;
 		auto& per_frame_table = RenderManager::GetInst().GetPerFrameBindingTable();
 
 		per_frame_table.RemoveShaderResource(REG_T_SC_WPE_PALETTE);
@@ -102,6 +118,7 @@ namespace sc
 		per_frame_table.RemoveShaderResource(REG_T_SC_PCX_TILESET_LUT_OFFSETS);
 		per_frame_table.RemoveShaderResource(REG_T_SC_CLOAK_FADE_SELECTOR);
 	}
+
 	void SCMapRenderer::WriteInstanceData(const engine::Renderer::InstanceWriteArgs& args)
 	{
 		using namespace engine;
@@ -159,17 +176,6 @@ namespace sc
 		static_assert(sizeof(SCSim::MegatileState) == GetDXGIFormatByteStride(DXGI_FORMAT_R32_UINT), "MegatileState size does not match DXGI_FORMAT_R32_UINT");
 		CHECK_F(megatile_states_->CreateDynamicBuffer(DXGI_FORMAT_R32_UINT, megatile_count), "Failed to create megatile state buffer");
 		mtrl_table.AddShaderResource(ShaderStage::Pixel, REG_T_MEGATILE_STATES, megatile_states_);
-
-
-		// PER FRAME
-		auto& per_frame_table = RenderManager::GetInst().GetPerFrameBindingTable();
-		per_frame_table.AddShaderResource(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_SC_WPE_PALETTE, sc_map_->wpe_color_palettes);
-
-		per_frame_table.AddShaderResource(ShaderStage::Pixel, REG_T_SC_PCX_TILESET_LUT, sc_map_->pcx_tileset_LUT);
-
-		per_frame_table.AddShaderResource(ShaderStage::Pixel, REG_T_SC_PCX_TILESET_LUT_OFFSETS, sc_map_->pcx_tileset_LUT_offsets);
-
-		per_frame_table.AddShaderResource(ShaderStage::Pixel, REG_T_SC_CLOAK_FADE_SELECTOR, sc_map_->cloak_fade_selector);
 
 		needs_scale_matching_ = true;
 		SetEnable(true);

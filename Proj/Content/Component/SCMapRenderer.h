@@ -28,10 +28,11 @@ namespace sc
 
 		virtual void Init() override;
 		//virtual void Awake() override;
+		virtual void OnEnable() override;
 
 		virtual void LateUpdate() override;
 
-		virtual void OnDestroy() override;
+		virtual void OnDisable() override;
 
 		virtual void WriteInstanceData(const InstanceWriteArgs& args) override;
 
