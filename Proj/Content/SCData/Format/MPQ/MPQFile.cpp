@@ -102,7 +102,10 @@ namespace sc
 	{
 		if (handle_)
 		{
-			SFileCloseFile(handle_);
+			if (SFileCloseFile(handle_) == false)
+			{
+				MPQErrMessage("Failed to close inner file.");
+			}
 			handle_ = nullptr;
 		}
 	}

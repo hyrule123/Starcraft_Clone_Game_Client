@@ -48,9 +48,11 @@ namespace sc
 	}
 	void SCMapRenderer::OnEnable()
 	{
+		using namespace engine;
 		Super::OnEnable();
 
-		using namespace engine;
+		ASSERT(sc_map_ != nullptr);
+
 		// PER FRAME
 		auto& per_frame_table = RenderManager::GetInst().GetPerFrameBindingTable();
 		per_frame_table.AddShaderResource(ShaderStage::Vertex | ShaderStage::Pixel, REG_T_SC_WPE_PALETTE, sc_map_->wpe_color_palettes);
@@ -85,7 +87,7 @@ namespace sc
 			const float height = (float)sc_map_->map_height_megatile * kMegatilePixelSize;
 			const float2 center = float2(width * 0.5f, - (height * 0.5f));
 
-			MainGameScene* main_scene = dynamic_cast<MainGameScene*>(GetOwnerScene());
+			engine::Scene* main_scene = GetOwnerScene();
 			ASSERT(main_scene);
 			Camera* cam = main_scene->GetMainCamera().get();
 			ASSERT(cam);

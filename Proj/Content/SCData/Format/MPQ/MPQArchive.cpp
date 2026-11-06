@@ -40,7 +40,7 @@ namespace sc
 		CloseArchive();
 
 		//파일 로드
-		bool result = SFileOpenArchive(file_path.wstring().c_str(), 0, 0, &archive_handle_);
+		bool result = SFileOpenArchive(file_path.wstring().c_str(), 0, MPQ_OPEN_READ_ONLY, &archive_handle_);
 		if (result == false)
 		{
 			MPQErrMessage("Failed to open MPQ archive.");

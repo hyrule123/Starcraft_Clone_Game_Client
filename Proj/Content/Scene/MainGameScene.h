@@ -99,15 +99,13 @@ namespace sc
 
         SCSim::Player GetLocalPlayer() const { return local_player_; }
 
-		engine::weak_handle_ptr<engine::Camera> GetMainCamera() const { return main_camera_; }
-
     private:
         void DefaultEngineSetting();
         void SyncUnits();
         void SyncSprites();
         void SyncMegatileStates();
 
-        void UpdatePlayerInput();	// FrameStart 끝(싱크 이후)에서 호출
+        void UpdatePlayerInput();	// OnFrameStart 끝(싱크 이후)에서 호출
 
     private:
         SCSim::Context* sc_sim_ctx_ = {};
@@ -158,7 +156,6 @@ namespace sc
         SCSim::Player local_player_ = {};
 
         // Camera
-		engine::weak_handle_ptr<engine::Camera> main_camera_ = {};
 		engine::weak_handle_ptr<CameraMoveScript> camera_move_script_ = {};
     };
 }

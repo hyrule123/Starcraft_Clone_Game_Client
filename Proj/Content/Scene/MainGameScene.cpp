@@ -142,6 +142,11 @@ namespace sc
 
 	MainGameScene::~MainGameScene()
 	{
+		if (sc_sim_ctx_)
+		{
+			SCSim_Destroy(sc_sim_ctx_);
+			sc_sim_ctx_ = nullptr;
+		}
 	}
 
 	void MainGameScene::Init()
@@ -379,12 +384,6 @@ namespace sc
 		Super::OnShutdown();
 
 		engine::RenderManager::GetInst().GetPerFrameBindingTable().RemoveConstantBuffer(REG_B_SC_COMMON_INFO);
-
-		if (sc_sim_ctx_)
-		{
-			SCSim_Destroy(sc_sim_ctx_);
-			sc_sim_ctx_ = nullptr;
-		}
 	}
 	bool MainGameScene::LoadMap(const std::filesystem::path& map_path, bool create_map_units)
 	{
@@ -693,7 +692,6 @@ namespace sc
 		camobj->GetTransform()->SetLocalPosition(float3(0.0f, 0.0f, -10.0f));
 
 		Camera* cam = camobj->AddComponent<Camera>();
-		main_camera_ = cam;
 		Camera::ProjectionMatrixDesc proj_desc = cam->GetProjectionMatrixDesc();
 		proj_desc.proj_mode = Camera::ProjectionMode::Orthographic;
 		proj_desc.viewport_width = (float)sc::kResolutionWidth;
@@ -716,7 +714,6 @@ namespace sc
 		SetCollisionMask(0, 0, true);
 
 		// Common Info Buffer
-		// 씬 종료 훅이 생기면 RemoveConstantBuffer 필요
 		sc_common_info_buffer_ = EntityManager::CreateEntity<engine::ConstantBuffer>();
 		ENSURE(sc_common_info_buffer_->Create<SCCommonInfoCB>());
 		RenderManager::GetInst().GetPerFrameBindingTable().AddConstantBuffer(ShaderStage::Vertex | ShaderStage::Pixel, REG_B_SC_COMMON_INFO, sc_common_info_buffer_);
@@ -1112,7 +1109,6 @@ namespace sc
 
 		const engine::int32_2 mouse_pos = engine::InputManager::GetInst().GetMousePos();
 		input_frame.mouse_sc = cam_script->ScreenToSc(mouse_pos);
-
 		
 		input_frame.hover_unit_id = PickUnitAt(input_frame.mouse_sc);
 		input_frame.left_down = engine::InputManager::GetInst().GetKeyDown(engine::KeyCode::kMouseLeft);
