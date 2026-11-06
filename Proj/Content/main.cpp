@@ -8,16 +8,32 @@
 
 #include <Engine/Manager/SceneManager.h>
 
+#include <Content/SCData/SCResourceManager.h>
+
+#include <Content/Scene/MainGameScene.h>
+#include <thread>
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
                      _In_ int       nCmdShow)
 {
-    using namespace engine;
-    EngineMain::GetInst().Init(hInstance);
+    engine::EngineMain::GetInst().Init(hInstance);
 
-    SceneManager::GetInst().ChangeScene("MainGameScene");
+    sc::SCResourceManager::GetInst().Init();
 
-    return EngineMain::GetInst().Run();
+    std::unique_ptr<sc::MainGameScene> scene;
+
+    {
+        std::jthread worker([&scene]()
+            {
+                scene = engine::EntityManager::CreateEntity<sc::MainGameScene>();
+            });
+    }	// 스코프 종료 시 join
+
+    engine::SceneManager::GetInst().ChangeScene(std::move(scene));
+
+    //engine::SceneManager::GetInst().ChangeScene("MainGameScene");
+
+    return engine::EngineMain::GetInst().Run();
 }

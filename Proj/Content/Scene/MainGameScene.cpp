@@ -154,15 +154,34 @@ namespace sc
 		using namespace engine;
 
 		Super::Init();
-		SCResourceManager::GetInst().Init();
-	}
-	void MainGameScene::OnActivate()
-	{
-		using namespace engine;
 
-		Super::OnActivate();
-		DefaultEngineSetting();
+		// ===== Collision =====
+		GetCollisionSystem2D()->SetCellSize(sc::kCellSize);
+		SetCollisionMask(0, 0, true);
 
+		// ===== Camera =====
+		GameObject* camobj = AddGameObject<GameObject>();
+		camobj->SetName("MainCamera");
+		camobj->GetTransform()->SetLocalPosition(float3(0.0f, 0.0f, -10.0f));
+
+		Camera* cam = camobj->AddComponent<Camera>();
+		Camera::ProjectionMatrixDesc proj_desc = cam->GetProjectionMatrixDesc();
+		proj_desc.proj_mode = Camera::ProjectionMode::Orthographic;
+		proj_desc.viewport_width = (float)sc::kResolutionWidth;
+		proj_desc.viewport_height = (float)sc::kResolutionHeight;
+		cam->CreateProjMatrix(proj_desc);
+
+		CameraMoveScript* cam_script = camobj->AddComponent<CameraMoveScript>();
+		camera_move_script_ = cam_script;
+
+		SetMainCamera(cam);
+
+		// ===== Common Info Buffer =====
+		// per-frame 테이블 등록은 OnActivate()에서 진행
+		sc_common_info_buffer_ = EntityManager::CreateEntity<engine::ConstantBuffer>();
+		ENSURE(sc_common_info_buffer_->Create<SCCommonInfoCB>());
+
+		// ===== Simulator / Map =====
 		const auto& res_dir = ResourceManager::GetInst().GetResourceDir();
 		const auto& mpq_dir = SCResourceManager::GetInst().GetMPQDir();
 
@@ -171,12 +190,13 @@ namespace sc
 
 		std::filesystem::path map_path = res_dir / "SCMap" / "(4)Fighting Spirit 1.4.scx";
 		bool result = LoadMap(map_path, true);
+		CHECK_F(result, "Failed to load map: {}", map_path.string());
 
 		// ↑ 최소 기본값 세팅
 		// ============================================================================================================
 		// ↓ 테스트용 임시 코드
 
-		// Ally 설정
+				// Ally 설정
 		const SCSim::PlayerData* p_data_ptr = nullptr;
 		int32_t player_num = SCSim_GetPlayers(sc_sim_ctx_, &p_data_ptr);
 		ASSERT(0 <= player_num);
@@ -326,9 +346,92 @@ namespace sc
 		}
 
 		int32_t cur_frame = SCSim_GetCurrentFrame(sc_sim_ctx_);
-
-
 	}
+
+	void MainGameScene::OnActivate()
+	{
+		using namespace engine;
+
+		Super::OnActivate();
+
+		// ===== Render Targets =====
+		RenderTargetPool& rt_pool = RenderManager::GetInst().GetRenderTargetPool();
+
+		ColorTargetDesc wpe_color_desc = {};
+		wpe_color_desc.create_srv = true;
+		wpe_color_desc.create_uav = true;
+		wpe_color_desc.format = DXGI_FORMAT_R32_UINT;
+		wpe_color_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32_t)sc::kResolutionWidth, .height = (uint32_t)sc::kResolutionHeight, .scale = 1.0f };
+
+		std::shared_ptr<RenderTarget> sc_rt = rt_pool.AcquireColor("ScWpeRenderTarget", wpe_color_desc);
+		std::shared_ptr<RenderTarget> sc_wpe_mirror = rt_pool.AcquireColor("ScWpeMirror", wpe_color_desc);
+
+		DepthTargetDesc wpe_depth_desc = {};
+		wpe_depth_desc.format = DXGI_FORMAT_D32_FLOAT;
+		wpe_depth_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32_t)sc::kResolutionWidth, .height = (uint32_t)sc::kResolutionHeight, .scale = 1.0f };
+
+		std::shared_ptr<DepthStencilTarget> sc_dst = rt_pool.AcquireDepth("ScWpeDepthTarget", wpe_depth_desc);
+
+		std::shared_ptr<RenderTargetGroup> sc_wpe_rtg = EntityManager::CreateEntity<RenderTargetGroup>();
+		sc_wpe_rtg->SetRenderTargets({ sc_rt, });
+		sc_wpe_rtg->SetDepthStencilTarget(sc_dst);
+
+		ColorTargetDesc color_desc = {};
+		color_desc.create_srv = true;
+		color_desc.create_uav = false;
+		color_desc.format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		color_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32_t)sc::kResolutionWidth, .height = (uint32_t)sc::kResolutionHeight, .scale = 1.0f };
+
+		DepthTargetDesc color_depth_desc = {};
+		color_depth_desc.format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		color_depth_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32_t)sc::kResolutionWidth, .height = (uint32_t)sc::kResolutionHeight, .scale = 1.0f };
+
+		std::shared_ptr<RenderTargetGroup> sc_color_rtg = EntityManager::CreateEntity<RenderTargetGroup>();
+		sc_color_rtg->SetRenderTargets({ rt_pool.AcquireColor("ScColorRenderTarget", color_desc), });
+		sc_color_rtg->SetDepthStencilTarget(rt_pool.AcquireDepth("ScColorDepthTarget", color_depth_desc));
+
+		// ===== Render Passes =====
+		RenderManager& render_manager = RenderManager::GetInst();
+
+		// SC Opaque Pass
+		ClearSettings opaque_clear_setting = {};
+		opaque_clear_setting.flags = ClearTarget::Color | ClearTarget::DepthStencil;
+		opaque_clear_setting.depth = 0.0f; // 0으로 클리어(Greater equal 사용)
+		opaque_clear_setting.color = { 0.0f, 0.0f, 0.0f, 0.0f };
+		opaque_clear_setting.stencil = 0;
+
+		std::unique_ptr<MeshRenderPass> sc_opaque = EntityManager::CreateEntity<MeshRenderPass>(kSCOpaquePassID, MeshRenderPass::SortPolicy::State);
+		sc_opaque->SetOutputTargetOverride(sc_wpe_rtg, opaque_clear_setting);
+		render_manager.RegisterRenderPass(std::move(sc_opaque));
+
+		// SC Effect Pass
+		std::unique_ptr<SCEffectPass> sc_effect_pass = EntityManager::CreateEntity<SCEffectPass>(kSCEffectPassID, MeshRenderPass::SortPolicy::Custom);
+		sc_effect_pass->SetWPETargets(sc_rt, sc_dst, sc_wpe_mirror);
+		render_manager.RegisterRenderPass(std::move(sc_effect_pass));
+
+		// SC Blit Pass
+		std::unique_ptr<BlitPass> sc_blit = EntityManager::CreateEntity<BlitPass>(kScBlitPass);
+		sc_blit->SetInputTexture(sc_rt);
+		sc_blit->SetPixelShader(ResourceManager::GetInst().LoadUncached<PixelShader>("Shader/ScBlit_PS.cso"));
+		render_manager.RegisterRenderPass(std::move(sc_blit));
+
+		// ===== View =====
+		ClearSettings color_rtg_clear_setting = {};
+		color_rtg_clear_setting.flags = ClearTarget::Color | ClearTarget::DepthStencil;
+		color_rtg_clear_setting.depth = 1.0f;
+		color_rtg_clear_setting.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+		color_rtg_clear_setting.stencil = 0;
+
+		SetMainRenderTarget(sc_color_rtg);
+		SetMainViewClearSettings(color_rtg_clear_setting);
+		SetRenderPassOrder({ kSCOpaquePassID, sc::kSCEffectPassID, kScBlitPass, render_pass::ID::Present });
+
+		// ===== Per Frame Binding =====
+		render_manager.GetPerFrameBindingTable().AddConstantBuffer(ShaderStage::Vertex | ShaderStage::Pixel, REG_B_SC_COMMON_INFO, sc_common_info_buffer_);
+
+		// TODO: 마우스 커서 Clip 켜기
+	}
+
 	void MainGameScene::OnFrameStart()
 	{
 		Super::OnFrameStart();
@@ -375,7 +478,6 @@ namespace sc
 		SyncUnits();
 		SyncSprites();
 		SyncMegatileStates();
-
 
 		UpdatePlayerInput();
 	}
@@ -611,115 +713,6 @@ namespace sc
 		return candidate;
 	}
 
-	void MainGameScene::DefaultEngineSetting()
-	{
-		using namespace engine;
-
-		auto device = GraphicsDevice::GetInst().GetDevice();
-
-		// Render Target creation
-		RenderTargetPool& rt_pool = RenderManager::GetInst().GetRenderTargetPool();
-
-		ColorTargetDesc color_desc = {};
-		color_desc.create_srv = true;
-		color_desc.create_uav = true;
-		color_desc.format = DXGI_FORMAT_R32_UINT;
-		color_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32_t)sc::kResolutionWidth, .height = (uint32_t)sc::kResolutionHeight, .scale = 1.0f };
-
-		std::shared_ptr<RenderTarget> sc_rt = rt_pool.AcquireColor("ScWpeRenderTarget", color_desc);
-
-		std::shared_ptr<RenderTargetGroup> sc_rendertarget_group = EntityManager::CreateEntity<RenderTargetGroup>();
-
-		DepthTargetDesc sc_depth_desc = {};
-		sc_depth_desc.format = DXGI_FORMAT_D32_FLOAT;
-		sc_depth_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32_t)sc::kResolutionWidth, .height = (uint32_t)sc::kResolutionHeight, .scale = 1.0f };
-		std::shared_ptr<DepthStencilTarget> sc_dst = rt_pool.AcquireDepth("ScWpeDepthTarget", sc_depth_desc);
-
-		sc_rendertarget_group->SetRenderTargets({sc_rt, });
-		sc_rendertarget_group->SetDepthStencilTarget(sc_dst);
-
-		// Sc Opaque Pass
-		std::unique_ptr<MeshRenderPass> sc_opaque = EntityManager::CreateEntity<MeshRenderPass>(kSCOpaquePassID, MeshRenderPass::SortPolicy::State);
-
-		ClearSettings opaque_clear_setting = {};
-		opaque_clear_setting.flags = ClearTarget::Color | ClearTarget::DepthStencil;
-		opaque_clear_setting.depth = 0.0f; // 0으로 클리어(Greater equal 사용)
-		opaque_clear_setting.color = { 0.0f, 0.0f, 0.0f, 0.0f };
-		opaque_clear_setting.stencil = 0;
-
-		sc_opaque->SetOutputTargetOverride(sc_rendertarget_group, opaque_clear_setting);
-
-		RenderManager::GetInst().RegisterRenderPass(std::move(sc_opaque));
-
-		std::shared_ptr<RenderTarget> sc_wpe_mirror = rt_pool.AcquireColor("ScWpeMirror", color_desc);
-
-		// SC Effect Pass
-		std::unique_ptr<SCEffectPass> sc_effect_pass = EntityManager::CreateEntity<SCEffectPass>(kSCEffectPassID, MeshRenderPass::SortPolicy::Custom);
-		sc_effect_pass->SetWPETargets(sc_rt, sc_dst, sc_wpe_mirror);
-		RenderManager::GetInst().RegisterRenderPass(std::move(sc_effect_pass));
-
-		// Sc Blit Pass
-		{
-			std::unique_ptr<BlitPass> sc_blit = EntityManager::CreateEntity<BlitPass>(kScBlitPass);
-			sc_blit->SetInputTexture(sc_rt);
-			sc_blit->SetPixelShader(ResourceManager::GetInst().LoadFromFileWithoutAdd<PixelShader>("Shader/ScBlit_PS.cso"));
-			RenderManager::GetInst().RegisterRenderPass(std::move(sc_blit));
-		}
-
-		color_desc = {};
-		color_desc.create_srv = true;
-		color_desc.create_uav = false;
-		color_desc.format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		color_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32_t)sc::kResolutionWidth, .height = (uint32_t)sc::kResolutionHeight, .scale = 1.0f };
-
-		DepthTargetDesc color_depth_desc = {};
-		color_depth_desc.format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-		color_depth_desc.size = RenderTargetSize{ .base = RenderTargetSizeBase::Fixed, .width = (uint32_t)sc::kResolutionWidth, .height = (uint32_t)sc::kResolutionHeight, .scale = 1.0f };
-
-		std::shared_ptr<RenderTargetGroup> sc_color_rtg = EntityManager::CreateEntity<RenderTargetGroup>();
-		sc_color_rtg->SetRenderTargets({ rt_pool.AcquireColor("ScColorRenderTarget", color_desc), });
-		sc_color_rtg->SetDepthStencilTarget(rt_pool.AcquireDepth("ScColorDepthTarget", color_depth_desc));
-
-		ClearSettings color_rtg_clear_setting = {};
-		color_rtg_clear_setting.flags = ClearTarget::Color | ClearTarget::DepthStencil;
-		color_rtg_clear_setting.depth = 1.0f;
-		color_rtg_clear_setting.color = { 0.0f, 0.0f, 0.0f, 1.0f };
-		color_rtg_clear_setting.stencil = 0;
-
-		// ===== Camera =====
-		GameObject* camobj = AddGameObject<GameObject>();
-		camobj->SetName("MainCamera");
-		camobj->GetTransform()->SetLocalPosition(float3(0.0f, 0.0f, -10.0f));
-
-		Camera* cam = camobj->AddComponent<Camera>();
-		Camera::ProjectionMatrixDesc proj_desc = cam->GetProjectionMatrixDesc();
-		proj_desc.proj_mode = Camera::ProjectionMode::Orthographic;
-		proj_desc.viewport_width = (float)sc::kResolutionWidth;
-		proj_desc.viewport_height = (float)sc::kResolutionHeight;
-		cam->CreateProjMatrix(proj_desc);
-
-		CameraMoveScript* cam_script = camobj->AddComponent<CameraMoveScript>();
-		camera_move_script_ = cam_script;
-
-		SetRenderViewDesc(
-			{
-				.camera = cam,
-				.rtg = sc_color_rtg,
-				.clear_settings = color_rtg_clear_setting,
-				.pass_order = { kSCOpaquePassID, sc::kSCEffectPassID, kScBlitPass, render_pass::ID::Present }
-			}
-		);
-
-		GetCollisionSystem2D()->SetCellSize(sc::kCellSize);
-		SetCollisionMask(0, 0, true);
-
-		// Common Info Buffer
-		sc_common_info_buffer_ = EntityManager::CreateEntity<engine::ConstantBuffer>();
-		ENSURE(sc_common_info_buffer_->Create<SCCommonInfoCB>());
-		RenderManager::GetInst().GetPerFrameBindingTable().AddConstantBuffer(ShaderStage::Vertex | ShaderStage::Pixel, REG_B_SC_COMMON_INFO, sc_common_info_buffer_);
-
-		// TODO: 마우스 커서 Clip 켜기
-	}
 	void MainGameScene::SyncUnits()
 	{
 		using namespace engine;

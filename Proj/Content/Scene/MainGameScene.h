@@ -100,7 +100,6 @@ namespace sc
         SCSim::Player GetLocalPlayer() const { return local_player_; }
 
     private:
-        void DefaultEngineSetting();
         void SyncUnits();
         void SyncSprites();
         void SyncMegatileStates();

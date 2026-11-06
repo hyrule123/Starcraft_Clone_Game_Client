@@ -46,9 +46,7 @@ namespace sc
 	{
 		using namespace engine;
 
-		if (has_initialized_) { return; }
-
-		has_initialized_ = true;
+		CHECK_F(has_initialized_ == false, "SCResourceManager::Init() called multiple times.");
 
 		mpq_dir_ = ResourceManager::GetInst().GetResourceDir() / "SCSim" / "mpq";
 
@@ -142,7 +140,7 @@ namespace sc
 	{
 		using namespace engine;
 
-		std::shared_ptr<VertexShader> vs = ResourceManager::GetInst().LoadFromFile<VertexShader>("Shader/SCImage_VS.cso");
+		std::shared_ptr<VertexShader> vs = ResourceManager::GetInst().Load<VertexShader>("Shader/SCImage_VS.cso");
 
 		// Input Layout: 공유해서 사용하므로 캐싱
 		std::array<D3D11_INPUT_ELEMENT_DESC, 2> desc = {};
@@ -240,7 +238,7 @@ namespace sc
 		CHECK_F(depth_key_write_dss_, "CreateHpBarMaterial must be called after CreateDepthStencilStates");
 		CHECK_F(hp_bar_material_ == nullptr, "Double initialization");
 
-		std::shared_ptr<VertexShader> vs = ResourceManager::GetInst().LoadFromFile<VertexShader>("Shader/SCHpBar_VS.cso");
+		std::shared_ptr<VertexShader> vs = ResourceManager::GetInst().Load<VertexShader>("Shader/SCHpBar_VS.cso");
 		CHECK_F(vs, "Failed to load SCHpBar_VS.");
 
 		std::shared_ptr<PipelineState> state = EntityManager::CreateEntity<PipelineState>();

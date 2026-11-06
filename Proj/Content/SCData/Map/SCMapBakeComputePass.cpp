@@ -27,7 +27,7 @@ namespace sc
 	{}
 	std::shared_ptr<engine::ComputeShader> SCMapBakeComputePass::LoadComputeShader()
 	{
-		std::shared_ptr<engine::ComputeShader> cs = engine::ResourceManager::GetInst().LoadFromFile<engine::ComputeShader>("Shader/SCMapBaker_CS.cso");
+		std::shared_ptr<engine::ComputeShader> cs = engine::ResourceManager::GetInst().Load<engine::ComputeShader>("Shader/SCMapBaker_CS.cso");
 		ASSERT(cs != nullptr);
 		return cs;
 	}
