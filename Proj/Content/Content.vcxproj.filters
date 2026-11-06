@@ -126,7 +126,10 @@
     <ClInclude Include="SCData\SCCommandSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SceneTransitionTestScene.h">
+    <ClInclude Include="Scene\SceneTransitionTestScene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene\LoadingScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -224,7 +227,10 @@
     <ClCompile Include="SCData\SCCommandSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SceneTransitionTestScene.cpp">
+    <ClCompile Include="Scene\SceneTransitionTestScene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene\LoadingScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

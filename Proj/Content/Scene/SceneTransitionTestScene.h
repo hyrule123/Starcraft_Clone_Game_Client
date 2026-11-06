@@ -14,6 +14,7 @@ namespace sc
 
         virtual void Init() override;
         
+    protected:
         virtual void OnFrameStart() override;
     };
 }

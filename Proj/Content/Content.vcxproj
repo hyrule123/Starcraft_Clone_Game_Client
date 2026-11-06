@@ -218,9 +218,10 @@
     <ClInclude Include="GameObject\SCUnitObj.h" />
     <ClInclude Include="GameObject\SCHpBarObj.h" />
     <ClInclude Include="Component\SCHpBarRenderer.h" />
+    <ClInclude Include="Scene\LoadingScene.h" />
     <ClInclude Include="SCData\SCCommandSystem.h" />
     <ClInclude Include="SCData\SCCommon.h" />
-    <ClInclude Include="SceneTransitionTestScene.h" />
+    <ClInclude Include="Scene\SceneTransitionTestScene.h" />
     <ClInclude Include="Script\BuildTestScript.h" />
     <ClInclude Include="Script\EmpTestScript.h" />
     <ClInclude Include="GameObject\SCImageObj.h" />
@@ -258,8 +259,9 @@
     <ClCompile Include="GameObject\SCUnitObj.cpp" />
     <ClCompile Include="GameObject\SCHpBarObj.cpp" />
     <ClCompile Include="Component\SCHpBarRenderer.cpp" />
+    <ClCompile Include="Scene\LoadingScene.cpp" />
     <ClCompile Include="SCData\SCCommandSystem.cpp" />
-    <ClCompile Include="SceneTransitionTestScene.cpp" />
+    <ClCompile Include="Scene\SceneTransitionTestScene.cpp" />
     <ClCompile Include="Script\BuildTestScript.cpp" />
     <ClCompile Include="Script\EmpTestScript.cpp" />
     <ClCompile Include="GameObject\SCImageObj.cpp" />

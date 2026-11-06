@@ -10,8 +10,8 @@
 
 #include <Content/SCData/SCResourceManager.h>
 
+#include <Content/Scene/LoadingScene.h>
 #include <Content/Scene/MainGameScene.h>
-#include <thread>
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -22,18 +22,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     sc::SCResourceManager::GetInst().Init();
 
-    std::unique_ptr<sc::MainGameScene> scene;
-
-    {
-        std::jthread worker([&scene]()
-            {
-                scene = engine::EntityManager::CreateEntity<sc::MainGameScene>();
-            });
-    }	// 스코프 종료 시 join
-
-    engine::SceneManager::GetInst().ChangeScene(std::move(scene));
-
-    //engine::SceneManager::GetInst().ChangeScene("MainGameScene");
+    auto loading_scene = engine::EntityManager::CreateEntity<sc::LoadingScene>(
+        []()
+        {
+            return engine::EntityManager::CreateEntity<sc::MainGameScene>();
+        });
+    engine::SceneManager::GetInst().ChangeScene(std::move(loading_scene));
 
     return engine::EngineMain::GetInst().Run();
 }
