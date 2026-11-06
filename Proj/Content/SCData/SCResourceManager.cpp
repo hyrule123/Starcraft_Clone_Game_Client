@@ -47,6 +47,7 @@ namespace sc
 		using namespace engine;
 
 		CHECK_F(has_initialized_ == false, "SCResourceManager::Init() called multiple times.");
+		has_initialized_ = true;
 
 		mpq_dir_ = ResourceManager::GetInst().GetResourceDir() / "SCSim" / "mpq";
 

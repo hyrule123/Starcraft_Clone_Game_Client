@@ -5,6 +5,8 @@
 
 namespace sc
 {
+
+
 	LoadingScene::LoadingScene(std::function<std::unique_ptr<engine::Scene>()> create_scene_func)
 		: Super(LoadingScene::kClassConcreteName)
 		, create_scene_func_(std::move(create_scene_func))
@@ -13,11 +15,20 @@ namespace sc
 	LoadingScene::~LoadingScene()
 	{}
 
+	std::unique_ptr<LoadingScene> LoadingScene::CreateByName(engine::HashedString scene_name)
+	{
+		return engine::EntityManager::CreateEntity<LoadingScene>(
+			[scene_name = std::move(scene_name)]()
+			{
+				return engine::EntityManager::GetInst().CreateEntityAs<engine::Scene>(scene_name);
+			});
+	}
+
 	void LoadingScene::Init()
 	{
 		Super::Init();
 
-		DEBUG_LOG("LoadingScene: Init() called. Starting worker thread to create scene...");
+		DEBUG_LOG("LoadingScene: Init() called. Preparing to load scene.");
 	}
 
 	void LoadingScene::OnActivate()
@@ -41,7 +52,6 @@ namespace sc
 		{
 			return;
 		}
-
 		worker_.join();
 
 		CHECK_F(loaded_scene_ != nullptr, "LoadingScene: failed to create scene");
@@ -57,4 +67,5 @@ namespace sc
 		}
 		Super::OnShutdown();
 	}
+
 }

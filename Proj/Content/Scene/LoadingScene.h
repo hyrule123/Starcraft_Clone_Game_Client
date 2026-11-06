@@ -7,25 +7,27 @@
 
 namespace sc
 {
-    class Scene;
     class LoadingScene :
         public engine::Scene
     {
 		ENTITY_INFO(LoadingScene, engine::Scene);
 
     public:
-        LoadingScene(std::function<std::unique_ptr<Scene>()> createSceneFunc);
+        LoadingScene(std::function<std::unique_ptr<Scene>()> create_scene_func);
 		virtual ~LoadingScene() override;
 
+        static std::unique_ptr<LoadingScene> CreateByName(engine::HashedString next_scene_name);
+
         virtual void Init() override;
+    protected:
         virtual void OnActivate() override;
 		virtual void OnFrameStart() override;
 
         virtual void OnShutdown() override;
 
     private:
-        std::function<std::unique_ptr<Scene>()> create_scene_func_ = {};
-		std::unique_ptr<Scene> loaded_scene_ = {};
+        std::function<std::unique_ptr<engine::Scene>()> create_scene_func_ = {};
+		std::unique_ptr<engine::Scene> loaded_scene_ = {};
         std::atomic_bool is_done_ = {};
 		std::jthread worker_ = {};
     };

@@ -4,6 +4,8 @@
 #include <Engine/Manager/InputManager.h>
 #include <Engine/Manager/SceneManager.h>
 
+#include <Content/Scene/LoadingScene.h>
+
 namespace sc
 {
 	SceneTransitionTestScene::SceneTransitionTestScene()
@@ -23,7 +25,7 @@ namespace sc
 
 		if (InputManager::GetInst().GetKeyDown(KeyCode::kF9))
 		{
-			SceneManager::GetInst().ChangeScene("MainGameScene");
+			SceneManager::GetInst().ChangeScene(sc::LoadingScene::CreateByName(HashedStringView("MainGameScene")));
 		}
 	}
 }

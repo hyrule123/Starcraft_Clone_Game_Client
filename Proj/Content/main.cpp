@@ -22,11 +22,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     sc::SCResourceManager::GetInst().Init();
 
-    auto loading_scene = engine::EntityManager::CreateEntity<sc::LoadingScene>(
-        []()
-        {
-            return engine::EntityManager::CreateEntity<sc::MainGameScene>();
-        });
+    std::unique_ptr<sc::LoadingScene> loading_scene = sc::LoadingScene::CreateByName(engine::HashedStringView("MainGameScene"));
     engine::SceneManager::GetInst().ChangeScene(std::move(loading_scene));
 
     return engine::EngineMain::GetInst().Run();
