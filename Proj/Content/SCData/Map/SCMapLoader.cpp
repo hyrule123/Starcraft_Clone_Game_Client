@@ -779,7 +779,7 @@ namespace sc
 	std::optional<SCMapLoadingData> SCMapLoader::LoadMapLoadingData(const std::filesystem::path& map_path)
 	{
 		MPQArchive mpq_archive;
-		if (false == mpq_archive.OpenMPQFile(map_path))
+		if (false == mpq_archive.OpenArchive(map_path))
 		{
 			ERR_MSG("Failed to open MPQ archive.");
 			return std::nullopt;

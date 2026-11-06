@@ -220,6 +220,7 @@
     <ClInclude Include="Component\SCHpBarRenderer.h" />
     <ClInclude Include="SCData\SCCommandSystem.h" />
     <ClInclude Include="SCData\SCCommon.h" />
+    <ClInclude Include="SceneTransitionTestScene.h" />
     <ClInclude Include="Script\BuildTestScript.h" />
     <ClInclude Include="Script\EmpTestScript.h" />
     <ClInclude Include="GameObject\SCImageObj.h" />
@@ -258,6 +259,7 @@
     <ClCompile Include="GameObject\SCHpBarObj.cpp" />
     <ClCompile Include="Component\SCHpBarRenderer.cpp" />
     <ClCompile Include="SCData\SCCommandSystem.cpp" />
+    <ClCompile Include="SceneTransitionTestScene.cpp" />
     <ClCompile Include="Script\BuildTestScript.cpp" />
     <ClCompile Include="Script\EmpTestScript.cpp" />
     <ClCompile Include="GameObject\SCImageObj.cpp" />

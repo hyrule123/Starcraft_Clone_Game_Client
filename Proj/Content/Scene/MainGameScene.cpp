@@ -13,6 +13,7 @@
 #include <Engine/Manager/RenderManager.h>
 #include <Engine/Manager/TimeManager.h>
 #include <Engine/Manager/InputManager.h>
+#include <Engine/Manager/SceneManager.h>
 
 #include <Engine/Resource/GPU/RenderTargetGroup.h>
 #include <Engine/Resource/GPU/Buffer/RenderTarget.h>
@@ -326,6 +327,12 @@ namespace sc
 	void MainGameScene::OnFrameStart()
 	{
 		Super::OnFrameStart();
+
+		if (engine::InputManager::GetInst().GetKeyDown(engine::KeyCode::kF9))
+		{
+			engine::SceneManager::GetInst().ChangeScene("SceneTransitionTestScene");
+			return;
+		}
 
 		if (is_map_loaded_ == false)
 		{

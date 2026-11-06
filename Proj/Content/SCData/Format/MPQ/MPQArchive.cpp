@@ -15,31 +15,60 @@ namespace sc
 {
 	MPQArchive::MPQArchive()
 	{}
-	MPQArchive::~MPQArchive()
+
+	MPQArchive::MPQArchive(MPQArchive&& other) noexcept
+		: archive_handle_(std::exchange(other.archive_handle_, nullptr))
 	{}
 
-	bool MPQArchive::OpenMPQFile(const std::filesystem::path & file_path)
+	MPQArchive& MPQArchive::operator=(MPQArchive&& other) noexcept
 	{
+		if (this != &other)
+		{
+			CloseArchive();
+			archive_handle_ = std::exchange(other.archive_handle_, nullptr);
+		}
+		return *this;
+	}
+
+	MPQArchive::~MPQArchive()
+	{
+		CloseArchive();
+	}
+
+	bool MPQArchive::OpenArchive(const std::filesystem::path & file_path)
+	{
+		CloseArchive();
+
 		//파일 로드
-		MPQFile mpq_file;
-		bool result = SFileOpenArchive(file_path.wstring().c_str(), 0, 0, &mpq_file.handle_);
+		bool result = SFileOpenArchive(file_path.wstring().c_str(), 0, 0, &archive_handle_);
 		if (result == false)
 		{
 			MPQErrMessage("Failed to open MPQ archive.");
 			return false;
 		}
-		archive_mpq_ = std::move(mpq_file);
 		return true;
+	}
+
+	void MPQArchive::CloseArchive()
+	{
+		if (archive_handle_)
+		{
+			if (false == SFileCloseArchive(archive_handle_))
+			{
+				MPQErrMessage("Failed to close MPQ archive.");
+			}
+			archive_handle_ = nullptr;
+		}
 	}
 
 	bool MPQArchive::HasInnerFile(const std::filesystem::path& mpq_inner_file_path) const
 	{
-		return SFileHasFile(archive_mpq_.handle_, mpq_inner_file_path.string().c_str());
+		return SFileHasFile(archive_handle_, mpq_inner_file_path.string().c_str());
 	}
 
 	MPQFile MPQArchive::OpenInnerFile(const std::filesystem::path& mpq_inner_file_path) const
 	{
-		if (archive_mpq_.IsValid() == false)
+		if (archive_handle_ == nullptr)
 		{
 			ERR_MSG("MPQ archive is not opened.");
 			return {};
@@ -48,7 +77,7 @@ namespace sc
 		MPQFile inner_file;
 
 		// MPQ 파일 내부에서 파일 탐색
-		bool result = SFileOpenFileEx(archive_mpq_.handle_, mpq_inner_file_path.string().c_str(), 0, &inner_file.handle_);
+		bool result = SFileOpenFileEx(archive_handle_, mpq_inner_file_path.string().c_str(), 0, &inner_file.handle_);
 		if (result == false)
 		{
 			MPQErrMessage("Failed to open " + mpq_inner_file_path.string() + " file.");

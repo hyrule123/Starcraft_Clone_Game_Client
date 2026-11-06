@@ -16,7 +16,7 @@ namespace sc
         }
 
         std::unique_ptr<MPQArchive> archive = std::make_unique<MPQArchive>();
-        if (!archive->OpenMPQFile(file_path))
+        if (!archive->OpenArchive(file_path))
         {
             return false;  // 필수가 없거나, 선택이라도 존재하는데 손상된 경우
         }

@@ -1,6 +1,5 @@
 #pragma once
 #include <Engine/Core/CoreMinimal.h>
-
 #include <Content/SCData/Format/MPQ/MPQFile.h>
 
 namespace sc
@@ -9,9 +8,15 @@ namespace sc
 	{
 	public:
 		MPQArchive();
+		MPQArchive(const MPQArchive&) = delete;
+		MPQArchive& operator=(const MPQArchive&) = delete;
+		MPQArchive(MPQArchive&&) noexcept;
+		MPQArchive& operator=(MPQArchive&&) noexcept;
 		~MPQArchive();
 
-		bool OpenMPQFile(const std::filesystem::path& file_path);
+		bool OpenArchive(const std::filesystem::path& file_path);
+		void CloseArchive();
+
 		bool HasInnerFile(const std::filesystem::path& mpq_inner_file_path) const;
 		[[nodiscard]] MPQFile OpenInnerFile(const std::filesystem::path& mpq_inner_file_path) const;
 
@@ -39,6 +44,6 @@ namespace sc
 		}
 
 	private:
-		MPQFile archive_mpq_ = {};
+		void* archive_handle_ = {};
 	};
 }
