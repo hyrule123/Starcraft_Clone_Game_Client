@@ -41,6 +41,15 @@ namespace sc
 
 		Super::Update();
 
+		if (InputManager::GetInst().GetKey(KeyCode::kNum1))
+		{
+			Component* com = GetOwnerGameObject()->GetComponent("SpriteRenderer");
+			if (com)
+			{
+				com->Destroy();
+			}
+		}
+
 		const float delta_time = TimeManager::GetInst().GetDeltaTime();
 		if (is_move_locked_ == false)
 		{

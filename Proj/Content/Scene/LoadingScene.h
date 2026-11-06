@@ -5,11 +5,6 @@
 #include <thread>
 #include <atomic>
 
-namespace engine
-{
-    class Texture2D;
-}
-
 namespace sc
 {
     class LoadingScene :
@@ -35,8 +30,6 @@ namespace sc
 		std::unique_ptr<engine::Scene> loaded_scene_ = {};
         std::atomic_bool is_done_ = {};
 		std::jthread worker_ = {};
-
-        std::shared_ptr<engine::Texture2D> test_tex_ = {};
     };
 }
 

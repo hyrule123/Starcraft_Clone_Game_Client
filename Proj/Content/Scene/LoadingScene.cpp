@@ -3,9 +3,6 @@
 
 #include <Engine/Manager/SceneManager.h>
 
-#include <Engine/Manager/ResourceManager.h>
-#include <Engine/Resource/GPU/Buffer/Texture2D.h>
-
 namespace sc
 {
 
@@ -47,8 +44,6 @@ namespace sc
 
 				loaded_scene_ = create_scene_func_();
 
-				test_tex_ = engine::ResourceManager::GetInst().LoadUncached<engine::Texture2D>("Texture2D/Magenta.png");
-
 				CoUninitialize();
 				is_done_.store(true, std::memory_order_release);
 			});
@@ -63,7 +58,6 @@ namespace sc
 			return;
 		}
 		worker_.join();
-		test_tex_ = nullptr;
 
 		CHECK_F(loaded_scene_ != nullptr, "LoadingScene: failed to create scene");
 		engine::SceneManager::GetInst().ChangeScene(std::move(loaded_scene_));

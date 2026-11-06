@@ -28,6 +28,7 @@
 #include <Engine/Game/GameObject.h>
 #include <Engine/Game/Component/Camera.h>
 #include <Engine/Game/Component/Transform.h>
+#include <Engine/Game/Component/SpriteRenderer.h>
 
 #include <Content/Component/SCMapRenderer.h>
 
@@ -175,6 +176,8 @@ namespace sc
 		camera_move_script_ = cam_script;
 
 		SetMainCamera(cam);
+
+		camobj->AddComponent<SpriteRenderer>();
 
 		// ===== Common Info Buffer =====
 		// per-frame 테이블 등록은 OnActivate()에서 진행
