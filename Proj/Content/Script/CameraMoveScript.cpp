@@ -41,15 +41,6 @@ namespace sc
 
 		Super::Update();
 
-		if (InputManager::GetInst().GetKey(KeyCode::kNum1))
-		{
-			Component* com = GetOwnerGameObject()->GetComponent("SpriteRenderer");
-			if (com)
-			{
-				com->Destroy();
-			}
-		}
-
 		const float delta_time = TimeManager::GetInst().GetDeltaTime();
 		if (is_move_locked_ == false)
 		{
@@ -78,7 +69,7 @@ namespace sc
 		if(pos_update_timer_ >= pos_update_interval_)
 		{
 			pos_update_timer_ = 0.0f;
-			DEBUG_LOG("Camera Position: {}, {}, {}", dx_cam_pos.x, dx_cam_pos.y, local_pos.z);
+			//DEBUG_LOG("Camera Position: {}, {}, {}", dx_cam_pos.x, dx_cam_pos.y, local_pos.z);
 		}
 	}
 

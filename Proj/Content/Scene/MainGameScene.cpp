@@ -28,7 +28,6 @@
 #include <Engine/Game/GameObject.h>
 #include <Engine/Game/Component/Camera.h>
 #include <Engine/Game/Component/Transform.h>
-#include <Engine/Game/Component/SpriteRenderer.h>
 
 #include <Content/Component/SCMapRenderer.h>
 
@@ -177,8 +176,6 @@ namespace sc
 
 		SetMainCamera(cam);
 
-		camobj->AddComponent<SpriteRenderer>();
-
 		// ===== Common Info Buffer =====
 		// per-frame 테이블 등록은 OnActivate()에서 진행
 		sc_common_info_buffer_ = EntityManager::CreateEntity<engine::ConstantBuffer>();
@@ -191,7 +188,7 @@ namespace sc
 		sc_sim_ctx_ = SCSim_Create(mpq_dir.string().c_str());
 		CHECK_F(sc_sim_ctx_ != nullptr, "Failed to create SCSimContext: {}", SCSim_GetLastError());
 
-		std::filesystem::path map_path = res_dir / "SCMap" / "(4)Fighting Spirit 1.4.scx";
+		std::filesystem::path map_path = res_dir / "SCMap" / "(4)Fighting Spirit 1.3(Tr).scx";
 		bool result = LoadMap(map_path, true);
 		CHECK_F(result, "Failed to load map: {}", map_path.string());
 
@@ -497,7 +494,7 @@ namespace sc
 		const auto& res_dir = ResourceManager::GetInst().GetResourceDir();
 
 		// SCSimulator Load
-		bool result = SCSim_LoadMap(sc_sim_ctx_, map_path.string().c_str(), true);
+		bool result = SCSim_LoadMap(sc_sim_ctx_, map_path.string().c_str(), create_map_units);
 		if (!result)
 		{
 			ERR_MSG("Failed to load map: {}", SCSim_GetLastError());
